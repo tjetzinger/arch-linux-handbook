@@ -334,7 +334,7 @@ resume=/dev/mapper/cryptroot resume_offset=126887168
 **fstab entries**:
 ```bash
 # @swap subvolume
-UUID=<SWAP-UUID>  /swap  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@swap  0 0
+UUID=7baf5627-b3c5-4add-8b0e-fdd3488f00e0  /swap  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@swap  0 0
 /swap/swapfile none swap defaults 0 0
 ```
 

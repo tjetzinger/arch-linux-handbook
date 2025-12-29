@@ -8,12 +8,12 @@ Regular maintenance tasks for the Btrfs filesystem.
 |-----------|-------------|---------|
 | `@arch` | `/` | Root filesystem |
 | `@arch-live` | `/mnt/arch-live` | Live environment |
-| `@Documents` | `~/Documents` | User documents |
+| `@Documents` | `/home/tt/Documents` | User documents |
 | `@.snapshots` | `/.snapshots` | Snapper snapshots |
 | `@vm` | `/mnt/vm` | Virtual machines |
 
 **Device:** `/dev/mapper/cryptroot`
-**UUID:** `<SWAP-UUID>`
+**UUID:** `7baf5627-b3c5-4add-8b0e-fdd3488f00e0`
 
 ---
 
@@ -101,7 +101,7 @@ Btrfs can fragment over time, especially with databases and VMs.
 sudo btrfs filesystem defragment /path/to/file
 
 # Defrag directory recursively
-sudo btrfs filesystem defragment -r ~/Documents
+sudo btrfs filesystem defragment -r /home/tt/Documents
 
 # Defrag with compression
 sudo btrfs filesystem defragment -r -czstd /path/

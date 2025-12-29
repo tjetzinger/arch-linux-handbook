@@ -64,7 +64,7 @@ title Arch Linux (Zen X1C)
 linux /vmlinuz-linux-zen-x1c
 initrd /intel-ucode.img
 initrd /initramfs-linux-zen-x1c.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=... rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=... rootflags=subvol=@arch rw
 ```
 
 ## Usage

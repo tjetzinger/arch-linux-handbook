@@ -64,7 +64,7 @@ Follow documents 01-08 in order.
 # 1. Boot Arch ISO
 # 2. Connect to internet
 # 3. Clone this repo
-git clone https://github.com/<username>/arch-linux-guides
+git clone https://github.com/youruser/arch-linux-guides
 cd arch-linux-guides/installation/scripts
 
 # 4. Edit configuration

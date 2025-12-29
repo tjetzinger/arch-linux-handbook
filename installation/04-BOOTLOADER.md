@@ -109,7 +109,7 @@ EOF
 ```bash
 # LUKS partition UUID (for rd.luks.name)
 blkid -s UUID -o value /dev/nvme0n1p2
-# Example: <LUKS-UUID>
+# Example: dd8c7166-cbef-454c-a046-9a7efc26bb60
 
 # EFI partition UUID (for keyfile location)
 blkid -s UUID -o value /dev/nvme0n1p1
@@ -176,7 +176,7 @@ title   Arch Linux
 linux   /EFI/arch/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@arch rw
 EOF
 ```
 
@@ -188,7 +188,7 @@ title   Arch Linux LTS
 linux   /EFI/arch/vmlinuz-linux-lts
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux-lts.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@arch rw
 EOF
 ```
 
@@ -221,12 +221,12 @@ title   Arch Linux
 linux   /EFI/arch/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch rw
 EOF
 ```
 
 Replace:
-- `<LUKS-UUID>` with your LUKS UUID
+- `dd8c7166-cbef-454c-a046-9a7efc26bb60` with your LUKS UUID
 - `CABD-EB33` with your EFI partition UUID
 
 **Options explained:**
@@ -244,7 +244,7 @@ title   Arch Linux LTS
 linux   /EFI/arch/vmlinuz-linux-lts
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux-lts.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch rw
 EOF
 ```
 
@@ -260,7 +260,7 @@ title   Arch Linux Live (Recovery)
 linux   /EFI/arch-live/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch-live/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s rootflags=subvol=@arch-live rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=CABD-EB33 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch-live rw
 EOF
 ```
 

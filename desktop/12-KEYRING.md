@@ -130,7 +130,7 @@ ssh-add -D
 /usr/lib/seahorse/ssh-askpass ~/.ssh/id_ed25519
 
 # Or via secret-tool
-secret-tool store --label="SSH Key" unique "ssh-store:~/.ssh/id_ed25519"
+secret-tool store --label="SSH Key" unique "ssh-store:/home/tt/.ssh/id_ed25519"
 ```
 
 ## Troubleshooting
@@ -163,10 +163,10 @@ secret-tool store --label="SSH Key" unique "ssh-store:~/.ssh/id_ed25519"
 
 ```bash
 # Find the stored passphrase
-secret-tool search --all unique "ssh-store:~/.ssh/id_ed25519"
+secret-tool search --all unique "ssh-store:/home/tt/.ssh/id_ed25519"
 
 # Clear it
-secret-tool clear unique "ssh-store:~/.ssh/id_ed25519"
+secret-tool clear unique "ssh-store:/home/tt/.ssh/id_ed25519"
 
 # Restart agent
 systemctl --user restart gcr-ssh-agent.socket

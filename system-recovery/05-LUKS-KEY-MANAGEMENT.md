@@ -8,7 +8,7 @@ Guide for managing LUKS encryption keys and headers on this system.
 |----------|-------|
 | Device | `/dev/nvme0n1p2` |
 | LUKS Version | 2 |
-| UUID | `<LUKS-UUID>` |
+| UUID | `dd8c7166-cbef-454c-a046-9a7efc26bb60` |
 | Cipher | `aes-xts-plain64` |
 | Key Size | 512 bits |
 | PBKDF | argon2id |
@@ -114,12 +114,12 @@ sudo cryptsetup luksChangeKey /dev/nvme0n1p2
 Your system uses a keyfile for automatic unlocking at boot:
 
 ```
-rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=<EFI-UUID>
+rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657
 ```
 
 This means:
 - Keyfile: `/luks-keyfile.bin`
-- Located on: Partition with UUID `<EFI-UUID>` (likely boot/ESP)
+- Located on: Partition with UUID `c55a9bf0-7a6b-4299-ab21-1e3af3d36657` (likely boot/ESP)
 - Timeout: 5 seconds (`keyfile-timeout=5s`), then falls back to password
 
 ### Regenerate Boot Keyfile
@@ -290,7 +290,7 @@ title   Arch Linux (USB Key)
 linux   /EFI/arch/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-key.bin:UUID=${USB_UUID} rd.luks.options=<LUKS-UUID>=keyfile-timeout=10s rootflags=subvol=@arch rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-key.bin:UUID=${USB_UUID} rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=10s rootflags=subvol=@arch rw
 EOF
 ```
 
@@ -336,11 +336,11 @@ Instead of separate entries, modify main entry to check USB then boot partition:
 
 ```bash
 # Boot checks USB first, then boot partition keyfile, then password
-options rd.luks.name=<LUKS-UUID>=cryptroot \
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot \
     root=/dev/mapper/cryptroot \
-    rd.luks.key=<LUKS-UUID>=/luks-key.bin:UUID=<USB_UUID> \
-    rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=<EFI-UUID> \
-    rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s \
+    rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-key.bin:UUID=<USB_UUID> \
+    rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 \
+    rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s \
     rootflags=subvol=@arch rw
 ```
 

@@ -83,7 +83,7 @@ boltctl forget <uuid>
 
 ```
 Razer Core X
-├─ uuid: <TPM-UUID>
+├─ uuid: cd010000-0070-6508-23bc-ab8042105201
 ├─ generation: Thunderbolt 3
 ├─ policy: iommu
 └─ speed: 40 Gb/s (2 lanes × 20 Gb/s)
@@ -188,7 +188,7 @@ docker logs ollama 2>&1 | grep -i "inference compute"
 
 ## Ollama Configuration
 
-**Location:** `~/Workspace/containers/open-webui-stack/`
+**Location:** `/home/tt/Workspace/containers/open-webui-stack/`
 
 | Service | Purpose |
 |---------|---------|
@@ -308,7 +308,7 @@ boltctl list
 # Should show "authorized"
 
 # If not authorized
-boltctl authorize <TPM-UUID>
+boltctl authorize cd010000-0070-6508-23bc-ab8042105201
 ```
 
 ### nvidia-smi Fails

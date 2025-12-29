@@ -266,7 +266,7 @@ volumes:
 
 ```bash
 # Cron job for daily backup
-0 2 * * * ~/scripts/backup-docker.sh
+0 2 * * * /home/tt/scripts/backup-docker.sh
 ```
 
 ### 5. Document Volume Contents

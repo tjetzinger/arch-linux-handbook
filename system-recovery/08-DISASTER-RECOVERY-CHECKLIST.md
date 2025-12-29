@@ -174,7 +174,7 @@ mount -o subvol=@arch /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/{boot,.snapshots,home/tt/Documents,mnt/vm}
 mount /dev/nvme0n1p1 /mnt/boot
 mount -o subvol=@.snapshots /dev/mapper/cryptroot /mnt/.snapshots
-mount -o subvol=@Documents /dev/mapper/cryptroot /mnt~/Documents
+mount -o subvol=@Documents /dev/mapper/cryptroot /mnt/home/tt/Documents
 mount -o subvol=@vm /dev/mapper/cryptroot /mnt/mnt/vm
 
 # 7. Mount Borg backup source

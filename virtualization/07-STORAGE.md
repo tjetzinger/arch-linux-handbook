@@ -256,7 +256,7 @@ borg create --compression zstd /backup/vms::win11-{now} /mnt/vm/win11.qcow2
 
 <filesystem type='mount' accessmode='passthrough'>
   <driver type='virtiofs'/>
-  <source dir='~/shared'/>
+  <source dir='/home/tt/shared'/>
   <target dir='hostshare'/>
 </filesystem>
 ```
@@ -283,7 +283,7 @@ echo "hostshare /mnt/shared virtiofs defaults 0 0" | sudo tee -a /etc/fstab
 
 ```xml
 <filesystem type='mount' accessmode='mapped'>
-  <source dir='~/shared'/>
+  <source dir='/home/tt/shared'/>
   <target dir='hostshare'/>
 </filesystem>
 ```

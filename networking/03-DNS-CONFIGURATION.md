@@ -15,7 +15,7 @@ systemd-resolved integration with Tailscale MagicDNS.
 │    ┌─────────────────────┼─────────────────────┐            │
 │    ↓                     ↓                     ↓            │
 │ tailscale0           wlan0                 Global           │
-│ 100.100.100.100   192.168.178.1          9.9.9.9           │
+│ 100.x.x.x   192.168.178.1          9.9.9.9           │
 │ (MagicDNS)        (Router)            (Fallback)        │
 │    │                     │                                   │
 │    ↓                     ↓                                   │
@@ -50,7 +50,7 @@ resolvectl statistics
 
 | Interface | DNS Server | Domain |
 |-----------|------------|--------|
-| tailscale0 | 100.100.100.100 | example.com, ~. |
+| tailscale0 | 100.x.x.x | example.com, ~. |
 | wlan0 | 192.168.178.1 | router.local |
 | Global | 9.9.9.9 | (fallback) |
 
@@ -61,7 +61,7 @@ MagicDNS provides automatic DNS for your tailnet.
 ### How It Works
 
 1. Tailscale sets up DNS on the `tailscale0` interface
-2. DNS server: `100.100.100.100` (Tailscale's internal resolver)
+2. DNS server: `100.x.x.x` (Tailscale's internal resolver)
 3. Search domain: Your tailnet domain (e.g., `example.com`)
 
 ### DNS Names for Devices
@@ -97,10 +97,10 @@ systemd-resolved automatically routes queries to the correct DNS server based on
 
 | Query | Routed To |
 |-------|-----------|
-| `nas.example.com` | 100.100.100.100 (Tailscale) |
-| `nas` | 100.100.100.100 (via search domain) |
+| `nas.example.com` | 100.x.x.x (Tailscale) |
+| `nas` | 100.x.x.x (via search domain) |
 | `printer.router.local` | 192.168.178.1 (Router) |
-| `google.com` | 100.100.100.100 (default route via Tailscale) |
+| `google.com` | 100.x.x.x (default route via Tailscale) |
 
 ### Verify Split DNS
 
@@ -120,7 +120,7 @@ resolvectl query google.com
 When using Mullvad exit node:
 
 ```
-DNS Query → systemd-resolved → Tailscale (100.100.100.100)
+DNS Query → systemd-resolved → Tailscale (100.x.x.x)
                                     ↓
                              Mullvad Exit Node
                                     ↓
@@ -237,7 +237,7 @@ resolvectl query --legend=no nas.example.com
 resolvectl query -t A --legend=no nas.example.com
 
 # Direct query to specific server
-dig @100.100.100.100 nas.example.com
+dig @100.x.x.x nas.example.com
 ```
 
 ### Common Issues

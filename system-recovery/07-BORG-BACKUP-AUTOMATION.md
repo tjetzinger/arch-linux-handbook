@@ -67,10 +67,10 @@ borg create \
     --progress \
     --compression zstd,3 \
     --exclude-caches \
-    --exclude '~/Documents' \
-    --exclude '~/Downloads' \
-    --exclude '~/vm-backups' \
-    --exclude '~/Workspace/containers/open-webui-stack/ollama' \
+    --exclude '/home/tt/Documents' \
+    --exclude '/home/tt/Downloads' \
+    --exclude '/home/tt/vm-backups' \
+    --exclude '/home/tt/Workspace/containers/open-webui-stack/ollama' \
     --exclude '/home/*/.lmstudio/models' \
     --exclude '/home/*/.local/share/waydroid' \
     --exclude '/home/*/.local/share/Trash' \
@@ -94,7 +94,7 @@ borg create \
     --exclude 'node_modules' \
     --exclude '.git/objects' \
     "$REPO::$BACKUP_NAME" \
-    ~ \
+    /home/tt \
     /etc \
     /boot \
     /usr/local \
@@ -124,7 +124,7 @@ echo "Backup finished successfully"
 
 | Path | Contents |
 |------|----------|
-| `~` | User data (excluding large caches) |
+| `/home/tt` | User data (excluding large caches) |
 | `/etc` | System configuration |
 | `/boot` | Kernel, initramfs, bootloader |
 | `/usr/local` | Custom scripts and binaries |
@@ -228,7 +228,7 @@ sudo systemctl disable borg-backup.timer
 
 ```bash
 # Auto-mounts when accessing /mnt/borg-backup (for docking station use)
-UUID=<DATA-UUID>  /mnt/borg-backup  ext4  rw,noatime,nofail,x-systemd.automount,x-systemd.device-timeout=5,x-systemd.idle-timeout=0  0 2
+UUID=e767669c-10e1-47b8-81d0-10d0cb231dd9  /mnt/borg-backup  ext4  rw,noatime,nofail,x-systemd.automount,x-systemd.device-timeout=5,x-systemd.idle-timeout=0  0 2
 ```
 
 ### Manual Mount

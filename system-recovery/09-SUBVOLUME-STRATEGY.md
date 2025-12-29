@@ -10,7 +10,7 @@ Top-level (subvolid=5)
 │   ├── var/lib/portables          (nested subvol)
 │   └── var/lib/machines           (nested subvol)
 ├── @arch-live     → /mnt/arch-live (not snapshotted)
-├── @Documents     → ~/Documents (not snapshotted by root config)
+├── @Documents     → /home/tt/Documents (not snapshotted by root config)
 ├── @.snapshots    → /.snapshots    (snapper metadata)
 └── @vm            → /mnt/vm        (not snapshotted)
 ```
@@ -74,7 +74,7 @@ sudo mv /path/to/existing/data /mnt/@newsubvol/
 sudo umount /mnt
 
 # 5. Add to fstab
-echo "UUID=<SWAP-UUID>  /mount/point  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@newsubvol  0 0" | sudo tee -a /etc/fstab
+echo "UUID=7baf5627-b3c5-4add-8b0e-fdd3488f00e0  /mount/point  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@newsubvol  0 0" | sudo tee -a /etc/fstab
 
 # 6. Create mount point and mount
 sudo mkdir -p /mount/point
@@ -203,7 +203,7 @@ rm -rf /mnt/@arch/var/log/*
 umount /mnt
 
 # 6. Update fstab (from chroot or running system)
-echo "UUID=<SWAP-UUID>  /var/log  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@log  0 0" >> /etc/fstab
+echo "UUID=7baf5627-b3c5-4add-8b0e-fdd3488f00e0  /var/log  btrfs  rw,relatime,ssd,discard,space_cache=v2,subvol=/@log  0 0" >> /etc/fstab
 
 # 7. Mount new subvolume
 mount /var/log
@@ -258,7 +258,7 @@ Limit space per subvolume:
 sudo btrfs quota enable /
 
 # Set quota on subvolume
-sudo btrfs qgroup limit 100G ~/Downloads
+sudo btrfs qgroup limit 100G /home/tt/Downloads
 
 # Check usage
 sudo btrfs qgroup show /

@@ -179,7 +179,7 @@ Edit properties in `/var/lib/waydroid/waydroid.cfg`:
 ```ini
 [waydroid]
 # Shared folder (accessible from Android as /sdcard/Download/host)
-mount_data = ~/Downloads
+mount_data = /home/tt/Downloads
 ```
 
 ### Network Configuration
@@ -404,7 +404,7 @@ Share directories between host and Android:
 ```ini
 [waydroid]
 # Add this line to share Downloads folder
-mount_data = ~/Downloads
+mount_data = /home/tt/Downloads
 ```
 
 Access in Android: `/sdcard/Download/host/`

@@ -99,7 +99,7 @@ tailscale set --accept-dns
 resolvectl status tailscale0
 
 # Direct query to Tailscale DNS
-dig @100.100.100.100 nas.example.com
+dig @100.x.x.x nas.example.com
 
 # Flush DNS cache
 resolvectl flush-caches
@@ -349,7 +349,7 @@ tailscale debug prefs
 # DNS
 resolvectl status
 resolvectl flush-caches
-dig @100.100.100.100 nas.example.com
+dig @100.x.x.x nas.example.com
 
 # Network
 ip addr show tailscale0

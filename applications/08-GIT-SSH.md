@@ -203,7 +203,7 @@ Host *
 | pve | pve | root | Proxmox VE |
 | kali | kali | kali | Kali Linux |
 | debian | debian | tt | Debian server |
-| pi | pi | tt | Raspberry Pi |
+| rpi | pi | tt | Raspberry Pi |
 | pi2 | pi2 | tt | Raspberry Pi 2 |
 
 ### Global Settings

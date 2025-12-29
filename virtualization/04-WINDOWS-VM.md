@@ -14,7 +14,7 @@ Windows 11 setup with UEFI, Secure Boot, TPM, and performance optimizations.
 | Firmware | UEFI with Secure Boot |
 | TPM | 2.0 (emulated via swtpm) |
 | Display | SPICE with QXL |
-| Shared folder | ~ via virtiofs |
+| Shared folder | /home/tt via virtiofs |
 
 ## Windows 11 Requirements
 
@@ -167,7 +167,7 @@ fsutil behavior query DisableDeleteNotify
 
 ### Current Setup
 
-The win11 VM shares `~` from the host.
+The win11 VM shares `/home/tt` from the host.
 
 ### XML Configuration
 
@@ -175,7 +175,7 @@ The win11 VM shares `~` from the host.
 <filesystem type='mount' accessmode='passthrough'>
   <driver type='virtiofs'/>
   <binary path='/usr/lib/virtiofsd'/>
-  <source dir='~'/>
+  <source dir='/home/tt'/>
   <target dir='x1-home'/>
 </filesystem>
 ```
@@ -205,7 +205,7 @@ net use Z: \\?\virtiofs\x1-home
 
 1. Add Hardware > Filesystem
 2. Driver: virtiofs
-3. Source path: ~
+3. Source path: /home/tt
 4. Target path: x1-home
 
 ## CPU Pinning

@@ -47,7 +47,7 @@ The boot partition contains:
 #!/bin/bash
 # /usr/local/bin/backup-boot
 
-BACKUP_DIR="~/Documents/boot-backups"
+BACKUP_DIR="/home/tt/Documents/boot-backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/boot-${DATE}.tar.gz"
 
@@ -69,7 +69,7 @@ ls -lh "$BACKUP_FILE"
 #!/bin/bash
 # /usr/local/bin/backup-boot-rsync
 
-BACKUP_DIR="~/Documents/boot-mirror"
+BACKUP_DIR="/home/tt/Documents/boot-mirror"
 mkdir -p "$BACKUP_DIR"
 
 sudo rsync -av --delete /boot/ "$BACKUP_DIR/"
@@ -128,7 +128,7 @@ sudo tee /usr/local/bin/backup-boot << 'EOF'
 #!/bin/bash
 set -e
 
-BACKUP_DIR="~/Documents/boot-backups"
+BACKUP_DIR="/home/tt/Documents/boot-backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/boot-${DATE}.tar.gz"
 
@@ -152,11 +152,11 @@ sudo chmod +x /usr/local/bin/backup-boot
 
 ```bash
 # From tar backup
-BACKUP="~/Documents/boot-backups/boot-20241213_120000.tar.gz"
+BACKUP="/home/tt/Documents/boot-backups/boot-20241213_120000.tar.gz"
 sudo tar -xzf "$BACKUP" -C /
 
 # From rsync mirror
-sudo rsync -av ~/Documents/boot-mirror/ /boot/
+sudo rsync -av /home/tt/Documents/boot-mirror/ /boot/
 
 # Reinstall bootloader to be safe
 sudo bootctl update
@@ -171,10 +171,10 @@ mount -o subvol=@arch /dev/mapper/cryptroot /mnt
 mount /dev/nvme0n1p1 /mnt/boot
 
 # 2. Access backup (example: from encrypted home)
-mount -o subvol=@Documents /dev/mapper/cryptroot /mnt~/Documents
+mount -o subvol=@Documents /dev/mapper/cryptroot /mnt/home/tt/Documents
 
 # 3. Restore boot
-tar -xzf /mnt~/Documents/boot-backups/boot-*.tar.gz -C /mnt/
+tar -xzf /mnt/home/tt/Documents/boot-backups/boot-*.tar.gz -C /mnt/
 
 # 4. Reinstall bootloader
 arch-chroot /mnt

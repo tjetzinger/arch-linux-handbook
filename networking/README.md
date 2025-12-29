@@ -53,7 +53,7 @@ Tailscale VPN, DNS configuration, and network integration guides.
 | nas | 100.x.x.x | Linux | NAS server |
 | rpi | 100.x.x.x | Linux | Raspberry Pi |
 | phone | 100.x.x.x | Android | Phone |
-| desktop | 100.x.x.x | macOS | Mac |
+| desktop | 100.x.x.x | macOS | Mac Mini |
 | mobile | 100.x.x.x | iOS | iPhone |
 
 ## Documentation Index

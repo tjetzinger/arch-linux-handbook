@@ -25,7 +25,7 @@ title   Arch Linux (Snapshot 1575: Before Plasma)
 linux   /EFI/arch/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=<EFI-UUID> rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s rootflags=subvol=@.snapshots/1575/snapshot rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@.snapshots/1575/snapshot rw
 EOF
 ```
 
@@ -105,7 +105,7 @@ title   Arch Linux (Snap ${SNAPSHOT_NUM}: ${CUSTOM_DESC})
 linux   /EFI/arch/vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /EFI/arch/initramfs-linux.img
-options rd.luks.name=<LUKS-UUID>=cryptroot root=/dev/mapper/cryptroot rd.luks.key=<LUKS-UUID>=/luks-keyfile.bin:UUID=<EFI-UUID> rd.luks.options=<LUKS-UUID>=keyfile-timeout=5s rootflags=subvol=@.snapshots/${SNAPSHOT_NUM}/snapshot rw
+options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@.snapshots/${SNAPSHOT_NUM}/snapshot rw
 ENTRY
 
 echo "Created: ${ENTRY_FILE}"

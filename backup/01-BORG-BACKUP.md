@@ -15,17 +15,17 @@ Incremental, deduplicated backups using BorgBackup to external SSD.
 ## Backup Scope
 
 ### Included
-- `~` (configs, workspace, projects)
+- `/home/tt` (configs, workspace, projects)
 - `/etc` (full system configuration)
 - `/root`
 
 ### Excluded
 Large/re-downloadable directories:
 ```
-~/Documents
-~/Downloads
-~/vm-backups
-~/Workspace/containers/open-webui-stack/ollama
+/home/tt/Documents
+/home/tt/Downloads
+/home/tt/vm-backups
+/home/tt/Workspace/containers/open-webui-stack/ollama
 ~/.lmstudio/models
 ~/.local/share/waydroid
 ~/.local/share/Trash
@@ -57,7 +57,7 @@ __pycache__
 ### Legacy (user-level, disabled)
 | File | Purpose |
 |------|---------|
-| `~/.local/bin/borg-backup` | User backup script |
+| `/home/tt/.local/bin/borg-backup` | User backup script |
 | `~/.config/systemd/user/borg-backup.*` | User service/timer |
 
 ## Commands
@@ -151,7 +151,7 @@ Store `borg-key-backup.txt` securely offline (USB, printed, password manager).
 
 fstab entry (auto-mounts when connected, doesn't block boot if missing):
 ```
-UUID=<DATA-UUID>  /mnt/borg-backup  ext4  rw,nofail,x-systemd.device-timeout=1  0 2
+UUID=e767669c-10e1-47b8-81d0-10d0cb231dd9  /mnt/borg-backup  ext4  rw,nofail,x-systemd.device-timeout=1  0 2
 ```
 
 ## Migration to Larger Drive

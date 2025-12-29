@@ -91,8 +91,8 @@ sudo btrfs device stats /
 
 | Component | UUID |
 |-----------|------|
-| LUKS partition | `<LUKS-UUID>` |
-| Btrfs filesystem | `<SWAP-UUID>` |
+| LUKS partition | `dd8c7166-cbef-454c-a046-9a7efc26bb60` |
+| Btrfs filesystem | `7baf5627-b3c5-4add-8b0e-fdd3488f00e0` |
 
 ---
 

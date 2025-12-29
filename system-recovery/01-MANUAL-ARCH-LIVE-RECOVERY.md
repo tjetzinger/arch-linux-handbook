@@ -14,7 +14,7 @@ This guide covers manual system recovery using the arch-live boot entry when the
 |-----------|-------|
 | Encrypted partition | `/dev/nvme0n1p2` |
 | LUKS name | `cryptroot` |
-| Btrfs UUID | `<SWAP-UUID>` |
+| Btrfs UUID | `7baf5627-b3c5-4add-8b0e-fdd3488f00e0` |
 | Root subvolume | `@arch` |
 | Snapshots subvolume | `@.snapshots` |
 

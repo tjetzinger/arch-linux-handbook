@@ -1,21 +1,6 @@
-# Arch Linux Handbook
+# Arch Linux Guides
 
-Comprehensive documentation for Arch Linux installation, configuration, and maintenance on modern hardware.
-
-## About
-
-This repository contains battle-tested guides covering:
-
-- **Full-disk encryption** with LUKS2 + Btrfs + systemd-boot
-- **Automated snapshots** with Snapper for easy rollback
-- **Disaster recovery** procedures and backup strategies
-- **Networking** with Tailscale VPN and Mullvad exit nodes
-- **Virtualization** using KVM/QEMU with libvirt
-- **Containers** with Docker and Traefik reverse proxy
-- **Hyprland** desktop environment configuration
-- **Hardware optimization** for ThinkPad X1 Carbon Gen 11
-
-All documentation follows a practical, command-first approach with copy-paste ready examples.
+Technical documentation for Arch Linux installation, recovery, and maintenance.
 
 ## Contents
 
@@ -29,10 +14,10 @@ All documentation follows a practical, command-first approach with copy-paste re
 | [systemd/](./systemd/) | Systemd services, timers, and configuration |
 | [hardware/](./hardware/) | ThinkPad X1 Carbon Gen 11 hardware configuration |
 | [desktop/](./desktop/) | Hyprland/ML4W desktop environment configuration |
-| [applications/](./applications/) | Applications and configurations |
-| [scripts/](./scripts/) | Hyprland automation scripts |
+| [applications/](./applications/) | Installed applications and configurations |
+| [scripts/](./scripts/) | Hyprland and ML4W automation scripts |
 
-## System Stack
+## System Overview
 
 | Component | Choice |
 |-----------|--------|
@@ -52,19 +37,31 @@ All documentation follows a practical, command-first approach with copy-paste re
 ## Quick Start
 
 ### Fresh Installation
-Follow the [Installation Guide](./installation/README.md) for a complete Arch Linux setup with LUKS encryption and Btrfs.
+Follow the [Installation Guide](./installation/README.md) or use the automated scripts.
 
 ### System Recovery
-See [System Recovery](./system-recovery/README.md) for snapshot rollback and disaster recovery procedures.
+See [System Recovery](./system-recovery/README.md) for recovery procedures.
 
 ### Networking
-See [Networking](./networking/README.md) for Tailscale VPN and DNS configuration.
+See [Networking](./networking/README.md) for Tailscale and DNS configuration.
 
 ### Virtualization
-See [Virtualization](./virtualization/README.md) for KVM/QEMU setup and Windows 11 VMs.
+See [Virtualization](./virtualization/README.md) for VM setup and management.
 
 ### Docker
-See [Docker](./docker/README.md) for container infrastructure with Traefik reverse proxy.
+See [Docker](./docker/README.md) for container infrastructure with Traefik.
+
+### Systemd
+See [Systemd](./systemd/README.md) for services, timers, and power management.
+
+### Hardware
+See [Hardware](./hardware/README.md) for ThinkPad-specific configuration.
+
+### Desktop
+See [Desktop](./desktop/README.md) for Hyprland/ML4W configuration.
+
+### Applications
+See [Applications](./applications/README.md) for installed apps and configurations.
 
 ## Documentation Index
 
@@ -168,7 +165,7 @@ See [Docker](./docker/README.md) for container infrastructure with Traefik rever
 | 07-NOTIFICATIONS | SwayNC notification center |
 | 08-LOCKSCREEN | hyprlock and hypridle |
 | 09-THEMING | Colors, wallpapers, pywal |
-| 10-TERMINALS | Terminal emulators |
+| 10-TERMINALS | Warp (primary), Kitty (backup) |
 | 11-CUSTOMIZATION | Adding custom configurations |
 | 12-KEYRING | GNOME Keyring credential storage |
 
@@ -176,8 +173,8 @@ See [Docker](./docker/README.md) for container infrastructure with Traefik rever
 | Document | Description |
 |----------|-------------|
 | 01-OVERVIEW | Application inventory and config locations |
-| 02-BROWSERS | Chrome, Firefox |
-| 03-NEOVIM | Neovim with Lazy.nvim |
+| 02-BROWSERS | Chrome (primary), Firefox |
+| 03-NEOVIM | Neovim with 52 plugins (Lazy.nvim) |
 | 04-EDITORS | VS Code, Cursor |
 | 05-FILE-MANAGERS | Nautilus, Superfile |
 | 06-MEDIA | VLC, mpv, GIMP, yt-dlp |
@@ -199,28 +196,77 @@ See [Docker](./docker/README.md) for container infrastructure with Traefik rever
 | 05-UTILITIES | XDG portal, GTK sync, config reload |
 | 06-CUSTOMIZATION | Creating custom scripts |
 
-## Usage Notes
+## Quick Reference
 
-- **UUIDs**: Documents use placeholders like `<LUKS-UUID>`, `<EFI-UUID>` - replace with your actual partition UUIDs
-- **Paths**: Home directory paths use `~` - expand to your actual home directory
-- **Hardware**: While optimized for ThinkPad X1 Carbon Gen 11, most guides apply to any Arch Linux system
+### Before Risky Changes
+```bash
+sudo snapper create -d "Before <change>"
+```
 
-## Contributing
+### Undo Package Changes
+```bash
+snapper list | tail -5
+sudo snapper undochange <pre>..<post>
+```
 
-Found an error or have improvements? Contributions are welcome:
+### Emergency Recovery
+1. Boot `Arch Linux Live` from systemd-boot menu
+2. `cryptsetup open /dev/nvme0n1p2 cryptroot`
+3. `mount -o subvolid=5 /dev/mapper/cryptroot /mnt`
+4. Restore from snapshot
 
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+### Network Troubleshooting
+```bash
+tailscale status
+tailscale netcheck
+resolvectl status | head -30
+```
+
+### VM Management
+```bash
+virsh list --all
+virsh start win11
+virt-viewer win11
+```
+
+### Service Management
+```bash
+systemctl status <service>
+systemctl --failed
+journalctl -u <service> -f
+```
+
+### Hardware Info
+```bash
+sensors                    # Temperatures
+upower -i /org/freedesktop/UPower/devices/battery_BAT0
+fwupdmgr get-updates      # Firmware updates
+```
+
+### Desktop
+```bash
+hyprctl reload             # Reload Hyprland config
+waypaper                   # Wallpaper selector
+swaync-client -t           # Toggle notifications
+hyprlock                   # Lock screen
+```
+
+### Applications
+```bash
+nvim                       # Neovim editor
+code                       # VS Code
+gh pr create               # Create pull request
+ssh nas                    # SSH to NAS
+```
+
+### Scripts
+```bash
+~/.config/hypr/scripts/power.sh lock        # Lock screen
+~/.config/hypr/scripts/screenshot.sh        # Screenshot menu
+~/.config/hypr/scripts/toggle-monitors.sh auto  # Auto monitor config
+~/.config/hypr/scripts/gamemode.sh          # Toggle game mode
+```
 
 ## License
 
-This documentation is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-
-You are free to:
-- **Share** - copy and redistribute the material
-- **Adapt** - remix, transform, and build upon the material
-
-Under the following terms:
-- **Attribution** - give appropriate credit
-- **ShareAlike** - distribute contributions under the same license
+Personal documentation - use at your own risk.

@@ -8,7 +8,7 @@ The Borg backup contains **data and configs only**, not a full system:
 
 | Included | NOT Included |
 |----------|--------------|
-| `~` | Base system (`/usr`, `/lib`, `/bin`) |
+| `/home/tt` | Base system (`/usr`, `/lib`, `/bin`) |
 | `/etc` | Installed packages |
 | `/boot` | Package database |
 | `/usr/local` | System directories |
@@ -188,7 +188,7 @@ cd /mnt
 borg extract --progress $BORG_REPO::x1-2025-12-22_171702 home/tt
 
 # Fix ownership
-chown -R 1000:1000 /mnt~
+chown -R 1000:1000 /mnt/home/tt
 ```
 
 ### Step 11: Chroot and Configure System
@@ -292,7 +292,7 @@ nmcli device wifi connect "SSID" password "PASSWORD"
 # Install desktop (Hyprland)
 sudo pacman -S hyprland waybar wofi kitty
 
-# Configs already restored in ~
+# Configs already restored in /home/tt
 ```
 
 ---

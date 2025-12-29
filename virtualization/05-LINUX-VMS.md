@@ -241,7 +241,7 @@ virsh edit arch
 
 <filesystem type='mount' accessmode='passthrough'>
   <driver type='virtiofs'/>
-  <source dir='~/shared'/>
+  <source dir='/home/tt/shared'/>
   <target dir='shared'/>
 </filesystem>
 ```
@@ -255,7 +255,7 @@ sudo mount -t virtiofs shared /mnt/shared
 
 ```xml
 <filesystem type='mount' accessmode='mapped'>
-  <source dir='~/shared'/>
+  <source dir='/home/tt/shared'/>
   <target dir='shared'/>
 </filesystem>
 ```
