@@ -364,6 +364,101 @@ hyprpm update
 hyprctl reload
 ```
 
+## ML4W 2.9.9.5 Wallpaper Engine Migration (2025-12-30)
+
+ML4W 2.9.9.5 changed the default wallpaper engine from **hyprpaper** to **swww**.
+
+### Symptoms
+
+- No wallpaper visible after ML4W update
+- hyprpaper running but displaying blank screen
+- `waypaper --restore` appears to work but no wallpaper shows
+
+### Install swww
+
+```bash
+sudo pacman -S swww
+```
+
+### Configure ML4W to Use swww
+
+```bash
+# Set swww as wallpaper engine
+echo "swww" > ~/.config/ml4w/settings/wallpaper-engine.sh
+
+# Update waypaper backend
+sed -i 's/backend = hyprpaper/backend = swww/' ~/.config/waypaper/config.ini
+```
+
+### Start swww and Set Wallpaper
+
+```bash
+# Stop hyprpaper (if running)
+pkill hyprpaper
+
+# Start swww daemon
+swww-daemon &
+
+# Set wallpaper
+swww img ~/wallpaper/your-wallpaper.jpg
+
+# Or use waypaper
+waypaper --restore
+```
+
+### Verify Configuration
+
+```bash
+# Check wallpaper engine setting
+cat ~/.config/ml4w/settings/wallpaper-engine.sh
+# Should show: swww
+
+# Check waypaper backend
+grep "backend" ~/.config/waypaper/config.ini
+# Should show: backend = swww
+
+# Check running daemon
+pgrep -a swww
+# Should show: swww-daemon
+```
+
+### hyprpaper vs swww
+
+| Feature | hyprpaper | swww |
+|---------|-----------|------|
+| ML4W default | Pre-2.9.9.5 | 2.9.9.5+ |
+| Transition effects | No | Yes |
+| Memory usage | Lower | Higher |
+| Config file | hyprpaper.conf | IPC only |
+
+### Keep hyprpaper Installed
+
+hyprpaper is a dependency of `ml4w-hyprland-git` and cannot be removed:
+
+```bash
+# This will fail:
+sudo pacman -Rns hyprpaper
+# error: removing hyprpaper breaks dependency required by ml4w-hyprland-git
+
+# hyprpaper stays installed but won't autostart
+# ML4W checks wallpaper-engine.sh to decide which daemon to launch
+```
+
+### Init Script Reference
+
+**File:** `~/.config/hypr/scripts/init-wallpaper-engine.sh`
+
+```bash
+wallpaper_engine=$(cat $HOME/.config/ml4w/settings/wallpaper-engine.sh)
+if [ "$wallpaper_engine" == "swww" ]; then
+    echo ":: Using swww"
+    swww init
+    swww-daemon --format xrgb
+elif [ "$wallpaper_engine" == "hyprpaper" ]; then
+    echo ":: Using hyprpaper"
+fi
+```
+
 ## Related
 
 - [03-KEYBINDINGS](./03-KEYBINDINGS.md) - Keybinding configuration
