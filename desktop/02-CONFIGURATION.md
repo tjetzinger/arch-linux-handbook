@@ -166,21 +166,21 @@ input {
 
 **File:** `~/.config/hypr/conf/ml4w.conf`
 
-ML4W-specific window rules:
+ML4W-specific window rules (Hyprland 0.53.0+ syntax):
 
 ```bash
 # Pavucontrol floating
-windowrule = float,class:(.*org.pulseaudio.pavucontrol.*)
-windowrule = size 700 600,class:(.*org.pulseaudio.pavucontrol.*)
-windowrule = center,class:(.*org.pulseaudio.pavucontrol.*)
+windowrulev2 = float, class:(.*org.pulseaudio.pavucontrol.*)
+windowrulev2 = size 700 600, class:(.*org.pulseaudio.pavucontrol.*)
+windowrulev2 = center, class:(.*org.pulseaudio.pavucontrol.*)
 
 # Waypaper
-windowrule = float,class:(.*waypaper.*)
-windowrule = size 900 700,class:(.*waypaper.*)
+windowrulev2 = float, class:(.*waypaper.*)
+windowrulev2 = size 900 700, class:(.*waypaper.*)
 
-# SwayNC blur
-layerrule = blur, swaync-control-center
-layerrule = blur, swaync-notification-window
+# SwayNC blur (0.53.0+ syntax)
+layerrule = blur on, match:namespace swaync-control-center
+layerrule = blur on, match:namespace swaync-notification-window
 ```
 
 ## Sourcing Pattern
@@ -285,6 +285,83 @@ journalctl --user -f
 
 # List all config options
 hyprctl getoption <option>
+```
+
+## Hyprland 0.53.0 Migration (2025-12-30)
+
+Hyprland 0.53.0 introduced breaking changes requiring config updates.
+
+### Check for Config Errors
+
+```bash
+hyprctl configerrors
+```
+
+### windowrule → windowrulev2
+
+Old syntax no longer works:
+```bash
+# OLD (broken in 0.53.0)
+windowrule = float, title:^(pavucontrol)$
+windowrule = tile, class:^(Firefox)$
+```
+
+New syntax:
+```bash
+# NEW (0.53.0+)
+windowrulev2 = float, title:^(pavucontrol)$
+windowrulev2 = tile, class:^(Firefox)$
+```
+
+### layerrule Syntax
+
+Old syntax:
+```bash
+# OLD (broken in 0.53.0)
+layerrule = blur, swaync-control-center
+layerrule = ignorezero, swaync-control-center
+layerrule = ignorealpha 0.5, swaync-control-center
+```
+
+New syntax:
+```bash
+# NEW (0.53.0+)
+layerrule = blur on, match:namespace swaync-control-center
+layerrule = ignore_alpha 0.5, match:namespace swaync-control-center
+```
+
+**Note:** `ignorezero` is deprecated - use `ignore_alpha` instead.
+
+### Plugin Rebuild
+
+Plugins must be rebuilt after Hyprland upgrades:
+
+```bash
+# Update all plugins
+hyprpm update
+
+# Verify plugin status
+hyprpm list
+```
+
+### Files Modified for 0.53.0
+
+| File | Changes |
+|------|---------|
+| `conf/ml4w.conf` | `windowrule` → `windowrulev2`, layerrule syntax |
+| `conf/windowrules/default.conf` | `windowrule` → `windowrulev2` |
+
+### Quick Fix Script
+
+```bash
+# Check for errors
+hyprctl configerrors
+
+# Rebuild plugins
+hyprpm update
+
+# Reload config
+hyprctl reload
 ```
 
 ## Related
