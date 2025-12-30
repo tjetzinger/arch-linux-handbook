@@ -1,0 +1,322 @@
+=== Test 2: UCSI Disabled - USB 3.0 Hot-Plug Test ===
+ThinkPad X1 Carbon Gen 11 + ThinkPad USB-C Dock Gen2 (40AS)
+
+=== System Info ===
+Linux x1 6.18.2-zen2-1-zen-x1c #12 ZEN SMP PREEMPT_DYNAMIC Mon, 29 Dec 2025 11:14:55 +0000 x86_64 GNU/Linux
+
+=== UCSI Module Status ===
+(none - blacklisted via /etc/modprobe.d/disable-ucsi.conf)
+
+=== Boot State (BEFORE hot-plug, USB 3.0 WORKING) ===
+Ethernet: Bus 002 Device 003: ID 17ef:a387 @ 5000M (SuperSpeed)
+USB3.1 Hub: Bus 002 Device 002: ID 17ef:a391 @ 10000M
+
+=== Current State (AFTER hot-plug, USB 3.0 MISSING) ===
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 003: ID 06cb:00fc Synaptics, Inc. Prometheus Fingerprint Reader
+Bus 003 Device 004: ID 1050:0407 Yubico.com Yubikey 4/5 OTP+U2F+CCID
+Bus 003 Device 006: ID 04f2:b751 Chicony Electronics Co., Ltd Integrated Camera
+Bus 003 Device 007: ID 8087:0033 Intel Corp. AX211 Bluetooth
+Bus 003 Device 014: ID 17ef:a392 Lenovo USB2.0 Hub
+Bus 003 Device 015: ID 17ef:a394 Lenovo USB2.0 Hub
+Bus 003 Device 016: ID 17ef:a395 Lenovo USB2.0 Hub
+Bus 003 Device 017: ID 17ef:a38f Lenovo 40AS
+Bus 003 Device 018: ID 17ef:a396 Lenovo ThinkPad USB-C Dock Gen2 USB Audio
+Bus 003 Device 019: ID 0bda:5411 Realtek Semiconductor Corp. RTS5411 Hub
+Bus 003 Device 020: ID 0bda:5411 Realtek Semiconductor Corp. RTS5411 Hub
+Bus 003 Device 021: ID 328f:2001 eMeet eMeet Luna
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+=== USB Tree (Bus 002 SuperSpeed is EMPTY) ===
+/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/1p, 480M
+/:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/4p, 20000M/x2
+/:  Bus 003.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/12p, 480M
+    |__ Port 003: Dev 014, If 0, Class=Hub, Driver=hub/4p, 480M
+        |__ Port 003: Dev 015, If 0, Class=Hub, Driver=hub/4p, 480M
+            |__ Port 003: Dev 016, If 0, Class=Hub, Driver=hub/4p, 480M
+                |__ Port 001: Dev 017, If 0, Class=Billboard, Driver=[none], 12M
+                |__ Port 001: Dev 017, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+                |__ Port 002: Dev 018, If 0, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 018, If 1, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 018, If 2, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 018, If 3, Class=Human Interface Device, Driver=usbhid, 12M
+                |__ Port 003: Dev 019, If 0, Class=Hub, Driver=hub/4p, 480M
+                |__ Port 004: Dev 020, If 0, Class=Hub, Driver=hub/4p, 480M
+                    |__ Port 001: Dev 021, If 0, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 021, If 1, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 021, If 2, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 021, If 3, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 006: Dev 003, If 0, Class=Vendor Specific Class, Driver=[none], 12M
+    |__ Port 007: Dev 004, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 007: Dev 004, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 007: Dev 004, If 2, Class=Chip/SmartCard, Driver=[none], 12M
+    |__ Port 008: Dev 006, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 1, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 2, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 3, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 4, Class=Application Specific Interface, Driver=[none], 480M
+    |__ Port 010: Dev 007, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 010: Dev 007, If 1, Class=Wireless, Driver=btusb, 12M
+/:  Bus 004.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/4p, 10000M
+
+=== Kernel Logs (hot-plug sequence) ===
+Dez 30 19:31:09 archlinux kernel: Command line: initrd=\intel-ucode.img initrd=\initramfs-linux-zen-x1c.img rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch resume=/dev/mapper/cryptroot resume_offset=126887168 xhci_hcd.quirks=0x80 rw
+Dez 30 19:31:09 archlinux kernel: Kernel command line: initrd=\intel-ucode.img initrd=\initramfs-linux-zen-x1c.img rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch resume=/dev/mapper/cryptroot resume_offset=126887168 xhci_hcd.quirks=0x80 rw
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver usbfs
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver hub
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new device driver usb
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: new USB bus registered, assigned bus number 1
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: hcc params 0x20007fc1 hci version 0x120 quirks 0x0000000200009890
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: new USB bus registered, assigned bus number 2
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:0d.0: Host supports USB 3.2 Enhanced SuperSpeed
+Dez 30 19:31:09 archlinux kernel: usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18
+Dez 30 19:31:09 archlinux kernel: usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Dez 30 19:31:09 archlinux kernel: usb usb1: Product: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: usb usb1: Manufacturer: Linux 6.18.2-zen2-1-zen-x1c xhci-hcd
+Dez 30 19:31:09 archlinux kernel: usb usb1: SerialNumber: 0000:00:0d.0
+Dez 30 19:31:09 archlinux kernel: hub 1-0:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 1-0:1.0: 1 port detected
+Dez 30 19:31:09 archlinux kernel: usb usb2: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.18
+Dez 30 19:31:09 archlinux kernel: usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Dez 30 19:31:09 archlinux kernel: usb usb2: Product: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: usb usb2: Manufacturer: Linux 6.18.2-zen2-1-zen-x1c xhci-hcd
+Dez 30 19:31:09 archlinux kernel: usb usb2: SerialNumber: 0000:00:0d.0
+Dez 30 19:31:09 archlinux kernel: hub 2-0:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 2-0:1.0: 4 ports detected
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: new USB bus registered, assigned bus number 3
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: hcc params 0x20007fc1 hci version 0x120 quirks 0x0000100200009890
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: new USB bus registered, assigned bus number 4
+Dez 30 19:31:09 archlinux kernel: xhci_hcd 0000:00:14.0: Host supports USB 3.1 Enhanced SuperSpeed
+Dez 30 19:31:09 archlinux kernel: usb usb3: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.18
+Dez 30 19:31:09 archlinux kernel: usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Dez 30 19:31:09 archlinux kernel: usb usb3: Product: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: usb usb3: Manufacturer: Linux 6.18.2-zen2-1-zen-x1c xhci-hcd
+Dez 30 19:31:09 archlinux kernel: usb usb3: SerialNumber: 0000:00:14.0
+Dez 30 19:31:09 archlinux kernel: hub 3-0:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 3-0:1.0: 12 ports detected
+Dez 30 19:31:09 archlinux kernel: usb usb4: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 6.18
+Dez 30 19:31:09 archlinux kernel: usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+Dez 30 19:31:09 archlinux kernel: usb usb4: Product: xHCI Host Controller
+Dez 30 19:31:09 archlinux kernel: usb usb4: Manufacturer: Linux 6.18.2-zen2-1-zen-x1c xhci-hcd
+Dez 30 19:31:09 archlinux kernel: usb usb4: SerialNumber: 0000:00:14.0
+Dez 30 19:31:09 archlinux kernel: hub 4-0:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 4-0:1.0: 4 ports detected
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver usbserial_generic
+Dez 30 19:31:09 archlinux kernel: usbserial: USB Serial support registered for generic
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver usbhid
+Dez 30 19:31:09 archlinux kernel: usbhid: USB HID core driver
+Dez 30 19:31:09 archlinux kernel: usb 3-3: new high-speed USB device number 2 using xhci_hcd
+Dez 30 19:31:09 archlinux kernel: usb 3-3: New USB device found, idVendor=17ef, idProduct=a392, bcdDevice= d.24
+Dez 30 19:31:09 archlinux kernel: usb 3-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:09 archlinux kernel: usb 3-3: Product: USB2.0 Hub
+Dez 30 19:31:09 archlinux kernel: usb 3-3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:31:09 archlinux kernel: hub 3-3:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 3-3:1.0: 4 ports detected
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver usb-storage
+Dez 30 19:31:09 archlinux kernel: usbcore: registered new interface driver uas
+Dez 30 19:31:09 archlinux kernel: usb 2-3: new SuperSpeed Plus Gen 2x1 USB device number 2 using xhci_hcd
+Dez 30 19:31:09 archlinux kernel: usb 2-3: New USB device found, idVendor=17ef, idProduct=a391, bcdDevice= d.24
+Dez 30 19:31:09 archlinux kernel: usb 2-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:09 archlinux kernel: usb 2-3: Product: USB3.1 Hub
+Dez 30 19:31:09 archlinux kernel: usb 2-3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:31:09 archlinux kernel: hub 2-3:1.0: USB hub found
+Dez 30 19:31:09 archlinux kernel: hub 2-3:1.0: 4 ports detected
+Dez 30 19:31:10 archlinux kernel: usb 3-6: new full-speed USB device number 3 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 3-6: New USB device found, idVendor=06cb, idProduct=00fc, bcdDevice= 0.00
+Dez 30 19:31:10 archlinux kernel: usb 3-6: New USB device strings: Mfr=0, Product=0, SerialNumber=1
+Dez 30 19:31:10 archlinux kernel: usb 3-6: SerialNumber: db57050a6c40
+Dez 30 19:31:10 archlinux kernel: usb 3-7: new full-speed USB device number 4 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 3-7: New USB device found, idVendor=1050, idProduct=0407, bcdDevice= 4.35
+Dez 30 19:31:10 archlinux kernel: usb 3-7: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:10 archlinux kernel: usb 3-7: Product: Yubikey 4 OTP+U2F+CCID
+Dez 30 19:31:10 archlinux kernel: usb 3-7: Manufacturer: Yubico
+Dez 30 19:31:10 archlinux kernel: input: Yubico Yubikey 4 OTP+U2F+CCID as /devices/pci0000:00/0000:00:14.0/usb3/3-7/3-7:1.0/0003:1050:0407.0001/input/input6
+Dez 30 19:31:10 archlinux kernel: hid-generic 0003:1050:0407.0001: input,hidraw0: USB HID v1.10 Keyboard [Yubico Yubikey 4 OTP+U2F+CCID] on usb-0000:00:14.0-7/input0
+Dez 30 19:31:10 archlinux kernel: hid-generic 0003:1050:0407.0002: hiddev96,hidraw1: USB HID v1.10 Device [Yubico Yubikey 4 OTP+U2F+CCID] on usb-0000:00:14.0-7/input1
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: new SuperSpeed USB device number 3 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: New USB device found, idVendor=17ef, idProduct=a387, bcdDevice=31.03
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=6
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: Product: USB-C Dock Ethernet
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: Manufacturer: Realtek
+Dez 30 19:31:10 archlinux kernel: usb 2-3.1: SerialNumber: 301000001
+Dez 30 19:31:10 archlinux kernel: usb 3-3.3: new high-speed USB device number 5 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 2-3.3: new SuperSpeed Plus Gen 2x1 USB device number 4 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 2-3.3: New USB device found, idVendor=17ef, idProduct=a393, bcdDevice= d.23
+Dez 30 19:31:10 archlinux kernel: usb 2-3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:10 archlinux kernel: usb 2-3.3: Product: USB3.1 Hub
+Dez 30 19:31:10 archlinux kernel: usb 2-3.3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:31:10 archlinux kernel: hub 2-3.3:1.0: USB hub found
+Dez 30 19:31:10 archlinux kernel: hub 2-3.3:1.0: 4 ports detected
+Dez 30 19:31:10 archlinux kernel: usb 3-3.3: New USB device found, idVendor=17ef, idProduct=a394, bcdDevice= d.23
+Dez 30 19:31:10 archlinux kernel: usb 3-3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:10 archlinux kernel: usb 3-3.3: Product: USB2.0 Hub
+Dez 30 19:31:10 archlinux kernel: usb 3-3.3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:31:10 archlinux kernel: hub 3-3.3:1.0: USB hub found
+Dez 30 19:31:10 archlinux kernel: hub 3-3.3:1.0: 4 ports detected
+Dez 30 19:31:10 archlinux kernel: usb 3-8: new high-speed USB device number 6 using xhci_hcd
+Dez 30 19:31:10 archlinux kernel: usb 3-8: New USB device found, idVendor=04f2, idProduct=b751, bcdDevice=74.20
+Dez 30 19:31:10 archlinux kernel: usb 3-8: New USB device strings: Mfr=3, Product=1, SerialNumber=2
+Dez 30 19:31:10 archlinux kernel: usb 3-8: Product: Integrated Camera
+Dez 30 19:31:10 archlinux kernel: usb 3-8: Manufacturer: Chicony Electronics Co.,Ltd.
+Dez 30 19:31:10 archlinux kernel: usb 3-8: SerialNumber: 0001
+Dez 30 19:31:11 archlinux kernel: usb 3-10: new full-speed USB device number 7 using xhci_hcd
+Dez 30 19:31:11 archlinux kernel: usb 3-10: New USB device found, idVendor=8087, idProduct=0033, bcdDevice= 0.00
+Dez 30 19:31:11 archlinux kernel: usb 3-10: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: new SuperSpeed USB device number 5 using xhci_hcd
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: New USB device found, idVendor=0781, idProduct=55a9, bcdDevice= 1.00
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: Product:  SanDisk 3.2Gen1
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: Manufacturer:  USB
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.1: SerialNumber: 04019c7d8b5c73d8177e097bcbaaa506bb026fc3736d2b9d093938775b78efde8f800000000000000000000038bd8e6100016d18a955810776af77c8
+Dez 30 19:31:11 archlinux kernel: usb-storage 2-3.3.1:1.0: USB Mass Storage device detected
+Dez 30 19:31:11 archlinux kernel: scsi host0: usb-storage 2-3.3.1:1.0
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: new SuperSpeed Plus Gen 2x1 USB device number 6 using xhci_hcd
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: New USB device found, idVendor=0781, idProduct=558c, bcdDevice=10.12
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: New USB device strings: Mfr=2, Product=3, SerialNumber=1
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: Product: Extreme SSD
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: Manufacturer: SanDisk
+Dez 30 19:31:11 archlinux kernel: usb 2-3.3.4: SerialNumber: 323030334435343030373732
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3: new high-speed USB device number 8 using xhci_hcd
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3: New USB device found, idVendor=17ef, idProduct=a395, bcdDevice=60.70
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3: New USB device strings: Mfr=10, Product=11, SerialNumber=0
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3: Product: USB2.0 Hub
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3: Manufacturer: Lenovo
+Dez 30 19:31:11 archlinux kernel: hub 3-3.3.3:1.0: USB hub found
+Dez 30 19:31:11 archlinux kernel: hub 3-3.3.3:1.0: 4 ports detected
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: new full-speed USB device number 9 using xhci_hcd
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: New USB device found, idVendor=17ef, idProduct=a38f, bcdDevice= 0.00
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: Product: 40AS
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: Manufacturer: Cypress Semiconductor
+Dez 30 19:31:11 archlinux kernel: usb 3-3.3.3.1: SerialNumber: 1S40ASZKW1DAJ4
+Dez 30 19:31:11 archlinux kernel: hid-generic 0003:17EF:A38F.0003: hiddev97,hidraw2: USB HID v1.11 Device [Cypress Semiconductor 40AS] on usb-0000:00:14.0-3.3.3.1/input1
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: new full-speed USB device number 10 using xhci_hcd
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: New USB device found, idVendor=17ef, idProduct=a396, bcdDevice= 0.14
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: Product: ThinkPad USB-C Dock Gen2 USB Audio
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: Manufacturer: Lenovo
+Dez 30 19:31:12 archlinux kernel: usb 3-3.3.3.2: SerialNumber: 000000000000
+Dez 30 19:31:12 archlinux kernel: input: Lenovo ThinkPad USB-C Dock Gen2 USB Audio as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.2/3-3.3.3.2:1.3/0003:17EF:A396.0004/input/input8
+Dez 30 19:31:12 archlinux kernel: hid-generic 0003:17EF:A396.0004: input,hidraw3: USB HID v1.11 Device [Lenovo ThinkPad USB-C Dock Gen2 USB Audio] on usb-0000:00:14.0-3.3.3.2/input3
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.3: new high-speed USB device number 11 using xhci_hcd
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.3: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.3: Product: 4-Port USB 2.1 Hub
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.3: Manufacturer: Generic
+Dez 30 19:31:17 x1 kernel: hub 3-3.3.3.3:1.0: USB hub found
+Dez 30 19:31:17 x1 kernel: hub 3-3.3.3.3:1.0: 4 ports detected
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4: new high-speed USB device number 12 using xhci_hcd
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4: Product: 4-Port USB 2.1 Hub
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4: Manufacturer: Generic
+Dez 30 19:31:17 x1 kernel: hub 3-3.3.3.4:1.0: USB hub found
+Dez 30 19:31:17 x1 kernel: hub 3-3.3.3.4:1.0: 4 ports detected
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: new full-speed USB device number 13 using xhci_hcd
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: New USB device found, idVendor=328f, idProduct=2001, bcdDevice= 4.09
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: Product: eMeet Luna
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: Manufacturer: eMeet
+Dez 30 19:31:17 x1 kernel: usb 3-3.3.3.4.1: SerialNumber: 20080411
+Dez 30 19:31:17 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0005/input/input9
+Dez 30 19:31:17 x1 kernel: input: eMeet eMeet Luna Consumer Control as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0005/input/input10
+Dez 30 19:31:17 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0005/input/input11
+Dez 30 19:31:17 x1 kernel: hid-generic 0003:328F:2001.0005: input,hiddev98,hidraw4: USB HID v1.01 Device [eMeet eMeet Luna] on usb-0000:00:14.0-3.3.3.4.1/input3
+Dez 30 19:31:18 x1 kernel: ACPI: bus type thunderbolt registered
+Dez 30 19:31:19 x1 kernel: usbcore: registered new device driver r8152-cfgselector
+Dez 30 19:31:19 x1 kernel: usbcore: registered new interface driver r8152
+Dez 30 19:31:20 x1 kernel: cdc_ether 2-3.1:2.0 eth0: register 'cdc_ether' at usb-0000:00:0d.0-3.1, CDC Ethernet Device, 48:2a:e3:93:f7:45
+Dez 30 19:31:20 x1 kernel: usbcore: registered new interface driver cdc_ether
+Dez 30 19:31:21 x1 kernel: usbcore: registered new interface driver btusb
+Dez 30 19:31:21 x1 kernel: usbcore: registered new interface driver uvcvideo
+Dez 30 19:31:23 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=10240), cval->res is probably wrong.
+Dez 30 19:31:23 x1 kernel: usb 3-3.3.3.4.1: [9] FU [PCM Playback Volume] ch = 1, val = -7168/3072/1
+Dez 30 19:31:23 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=3072), cval->res is probably wrong.
+Dez 30 19:31:23 x1 kernel: usb 3-3.3.3.4.1: [10] FU [Mic Capture Volume] ch = 1, val = -1536/1536/1
+Dez 30 19:31:23 x1 kernel: usbcore: registered new interface driver snd-usb-audio
+Dez 30 19:33:04 x1 kernel: usb 3-3: USB disconnect, device number 2
+Dez 30 19:33:04 x1 kernel: usb 3-3.3: USB disconnect, device number 5
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3: USB disconnect, device number 8
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3.1: USB disconnect, device number 9
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3.2: USB disconnect, device number 10
+Dez 30 19:33:04 x1 kernel: usb 2-3: USB disconnect, device number 2
+Dez 30 19:33:04 x1 kernel: r8152-cfgselector 2-3.1: USB disconnect, device number 3
+Dez 30 19:33:04 x1 kernel: cdc_ether 2-3.1:2.0 enp0s13f0u3u1c2: unregister 'cdc_ether' usb-0000:00:0d.0-3.1, CDC Ethernet Device
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3.3: USB disconnect, device number 11
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3.4: USB disconnect, device number 12
+Dez 30 19:33:04 x1 kernel: usb 3-3.3.3.4.1: USB disconnect, device number 13
+Dez 30 19:33:04 x1 kernel: usb 2-3.3: USB disconnect, device number 4
+Dez 30 19:33:04 x1 kernel: usb 2-3.3.1: USB disconnect, device number 5
+Dez 30 19:33:04 x1 kernel: usb 2-3.3.4: USB disconnect, device number 6
+Dez 30 19:33:10 x1 kernel: usb usb1: root hub lost power or was reset
+Dez 30 19:33:10 x1 kernel: usb usb2: root hub lost power or was reset
+Dez 30 19:33:10 x1 kernel: usb 3-3: new high-speed USB device number 14 using xhci_hcd
+Dez 30 19:33:10 x1 kernel: usb 3-3: New USB device found, idVendor=17ef, idProduct=a392, bcdDevice= d.24
+Dez 30 19:33:10 x1 kernel: usb 3-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:33:10 x1 kernel: usb 3-3: Product: USB2.0 Hub
+Dez 30 19:33:10 x1 kernel: usb 3-3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:33:10 x1 kernel: hub 3-3:1.0: USB hub found
+Dez 30 19:33:10 x1 kernel: hub 3-3:1.0: 4 ports detected
+Dez 30 19:33:11 x1 kernel: usb 3-3.3: new high-speed USB device number 15 using xhci_hcd
+Dez 30 19:33:11 x1 kernel: usb 3-3.3: New USB device found, idVendor=17ef, idProduct=a394, bcdDevice= d.23
+Dez 30 19:33:11 x1 kernel: usb 3-3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:33:11 x1 kernel: usb 3-3.3: Product: USB2.0 Hub
+Dez 30 19:33:11 x1 kernel: usb 3-3.3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:33:11 x1 kernel: hub 3-3.3:1.0: USB hub found
+Dez 30 19:33:11 x1 kernel: hub 3-3.3:1.0: 4 ports detected
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3: new high-speed USB device number 16 using xhci_hcd
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3: New USB device found, idVendor=17ef, idProduct=a395, bcdDevice=60.70
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3: New USB device strings: Mfr=10, Product=11, SerialNumber=0
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3: Product: USB2.0 Hub
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3: Manufacturer: Lenovo
+Dez 30 19:33:12 x1 kernel: hub 3-3.3.3:1.0: USB hub found
+Dez 30 19:33:12 x1 kernel: hub 3-3.3.3:1.0: 4 ports detected
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: new full-speed USB device number 17 using xhci_hcd
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: New USB device found, idVendor=17ef, idProduct=a38f, bcdDevice= 0.00
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: Product: 40AS
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: Manufacturer: Cypress Semiconductor
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.1: SerialNumber: 1S40ASZKW1DAJ4
+Dez 30 19:33:12 x1 kernel: hid-generic 0003:17EF:A38F.0009: hiddev97,hidraw2: USB HID v1.11 Device [Cypress Semiconductor 40AS] on usb-0000:00:14.0-3.3.3.1/input1
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: new full-speed USB device number 18 using xhci_hcd
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: New USB device found, idVendor=17ef, idProduct=a396, bcdDevice= 0.14
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: Product: ThinkPad USB-C Dock Gen2 USB Audio
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: Manufacturer: Lenovo
+Dez 30 19:33:12 x1 kernel: usb 3-3.3.3.2: SerialNumber: 000000000000
+Dez 30 19:33:13 x1 kernel: input: Lenovo ThinkPad USB-C Dock Gen2 USB Audio as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.2/3-3.3.3.2:1.3/0003:17EF:A396.000A/input/input33
+Dez 30 19:33:13 x1 kernel: hid-generic 0003:17EF:A396.000A: input,hidraw3: USB HID v1.11 Device [Lenovo ThinkPad USB-C Dock Gen2 USB Audio] on usb-0000:00:14.0-3.3.3.2/input3
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.3: new high-speed USB device number 19 using xhci_hcd
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.3: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.3: Product: 4-Port USB 2.1 Hub
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.3: Manufacturer: Generic
+Dez 30 19:33:13 x1 kernel: hub 3-3.3.3.3:1.0: USB hub found
+Dez 30 19:33:13 x1 kernel: hub 3-3.3.3.3:1.0: 4 ports detected
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4: new high-speed USB device number 20 using xhci_hcd
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4: Product: 4-Port USB 2.1 Hub
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4: Manufacturer: Generic
+Dez 30 19:33:13 x1 kernel: hub 3-3.3.3.4:1.0: USB hub found
+Dez 30 19:33:13 x1 kernel: hub 3-3.3.3.4:1.0: 4 ports detected
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: new full-speed USB device number 21 using xhci_hcd
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: New USB device found, idVendor=328f, idProduct=2001, bcdDevice= 4.09
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: Product: eMeet Luna
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: Manufacturer: eMeet
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: SerialNumber: 20080411
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=10240), cval->res is probably wrong.
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: [9] FU [PCM Playback Volume] ch = 1, val = -7168/3072/1
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=3072), cval->res is probably wrong.
+Dez 30 19:33:13 x1 kernel: usb 3-3.3.3.4.1: [10] FU [Mic Capture Volume] ch = 1, val = -1536/1536/1
+Dez 30 19:33:13 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.000B/input/input34
+Dez 30 19:33:13 x1 kernel: input: eMeet eMeet Luna Consumer Control as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.000B/input/input35
+Dez 30 19:33:13 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.000B/input/input36
+Dez 30 19:33:13 x1 kernel: hid-generic 0003:328F:2001.000B: input,hiddev98,hidraw4: USB HID v1.01 Device [eMeet eMeet Luna] on usb-0000:00:14.0-3.3.3.4.1/input3

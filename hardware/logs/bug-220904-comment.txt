@@ -1,0 +1,44 @@
+Hi Heikki,
+
+Here are the logs from two test scenarios. Both tests confirm the issue persists regardless of UCSI driver status.
+
+## System Info
+- ThinkPad X1 Carbon Gen 11 (21HMCTO1WW)
+- BIOS: N3XET63W (1.38)
+- Kernel: 6.18.2-zen2-1-zen (custom build, also tested on stock 6.12)
+- Dock: ThinkPad USB-C Dock Gen2 (40AS)
+
+## Test 1: UCSI Enabled (Normal Configuration)
+
+**Boot with dock connected:** USB 3.0 works
+- Ethernet (17ef:a387) on Bus 002 @ 5000M
+- USB3.1 Hub (17ef:a391) on Bus 002 @ 10000M
+
+**After disconnect + reconnect:** USB 3.0 FAILS
+- Only USB 2.0 devices enumerate (480M on Bus 003)
+- Bus 002 (20Gbps SuperSpeed) is completely empty
+- Ethernet and USB 3.0 hub missing
+
+Key log pattern:
+```
+usb usb1: root hub lost power or was reset
+usb usb2: root hub lost power or was reset
+usb 3-3: new high-speed USB device number 14 using xhci_hcd  ← USB 2.0 only
+```
+
+## Test 2: UCSI Disabled (blacklist ucsi_acpi)
+
+**Boot with dock connected:** USB 3.0 works (same as Test 1)
+
+**After disconnect + reconnect:** USB 3.0 STILL FAILS
+- Identical failure pattern to Test 1
+- Same "root hub lost power or was reset" messages
+- Only high-speed (USB 2.0) enumeration
+
+## Conclusion
+
+Disabling UCSI does NOT resolve the issue. The problem appears to be in the USB-C/Thunderbolt physical layer negotiation, not the UCSI driver. The repeated "root hub lost power or was reset" messages on usb1/usb2 (Thunderbolt/USB4 buses) during hot-plug suggest the xHCI controller is being reset but failing to re-enumerate SuperSpeed devices.
+
+Full logs attached:
+- bug-220904-test1-ucsi-enabled.txt (Test 1 with UCSI)
+- bug-220904-test2-ucsi-disabled.txt (Test 2 without UCSI)

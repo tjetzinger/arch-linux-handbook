@@ -332,6 +332,26 @@ appear - the driver fails silently.
 - Arch Linux Forum: https://bbs.archlinux.org/viewtopic.php?id=308325
 - Kernel Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=220904
 
+**UCSI Driver Testing (2025-12-30):**
+
+Tested whether UCSI driver is the root cause per kernel maintainer request.
+
+| Test | UCSI Status | Boot with Dock | Hot-Plug | Result |
+|------|-------------|----------------|----------|--------|
+| Test 1 | Enabled (normal) | USB 3.0 works | FAILS | Only USB 2.0 enumerates |
+| Test 2 | Disabled (blacklisted) | USB 3.0 works | FAILS | Same failure pattern |
+
+**Conclusion:** Disabling UCSI does NOT resolve the issue. The problem is in the USB-C/Thunderbolt physical layer negotiation, not the UCSI driver.
+
+Key log pattern on hot-plug (both tests):
+```
+usb usb1: root hub lost power or was reset
+usb usb2: root hub lost power or was reset
+usb 3-3: new high-speed USB device number 14 using xhci_hcd  ← USB 2.0 only
+```
+
+Test logs: `hardware/logs/bug-220904-test*.txt`
+
 **Tested Workarounds That DON'T Work:**
 - xHCI controller unbind/rebind (`echo 0000:00:0d.0 > unbind/bind`)
 - UCSI driver reload (`modprobe -r ucsi_acpi && modprobe ucsi_acpi`)

@@ -1,0 +1,197 @@
+=== Kernel Bug #220904 - USB 3.0 Hot-Plug Failure ===
+ThinkPad X1 Carbon Gen 11 + ThinkPad USB-C Dock Gen2 (40AS)
+
+=== System Info ===
+Linux x1 6.18.2-zen2-1-zen-x1c #12 ZEN SMP PREEMPT_DYNAMIC Mon, 29 Dec 2025 11:14:55 +0000 x86_64 GNU/Linux
+
+=== Reproduction ===
+1. Boot with dock connected - USB 3.0 works (ethernet on Bus 002)
+2. Disconnect dock
+3. Reconnect dock - USB 3.0 fails (only USB 2.0 devices on Bus 003)
+
+=== Current State (after hot-plug, USB 3.0 MISSING) ===
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 003 Device 003: ID 06cb:00fc Synaptics, Inc. Prometheus Fingerprint Reader
+Bus 003 Device 004: ID 1050:0407 Yubico.com Yubikey 4/5 OTP+U2F+CCID
+Bus 003 Device 006: ID 04f2:b751 Chicony Electronics Co., Ltd Integrated Camera
+Bus 003 Device 007: ID 8087:0033 Intel Corp. AX211 Bluetooth
+Bus 003 Device 014: ID 17ef:a392 Lenovo USB2.0 Hub
+Bus 003 Device 016: ID 17ef:a394 Lenovo USB2.0 Hub
+Bus 003 Device 017: ID 17ef:a395 Lenovo USB2.0 Hub
+Bus 003 Device 018: ID 17ef:a38f Lenovo 40AS
+Bus 003 Device 019: ID 17ef:a396 Lenovo ThinkPad USB-C Dock Gen2 USB Audio
+Bus 003 Device 020: ID 0bda:5411 Realtek Semiconductor Corp. RTS5411 Hub
+Bus 003 Device 021: ID 0bda:5411 Realtek Semiconductor Corp. RTS5411 Hub
+Bus 003 Device 022: ID 328f:2001 eMeet eMeet Luna
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+=== USB Tree (Bus 002 SuperSpeed is EMPTY) ===
+/:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/1p, 480M
+/:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/4p, 20000M/x2
+/:  Bus 003.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/12p, 480M
+    |__ Port 003: Dev 014, If 0, Class=Hub, Driver=hub/4p, 480M
+        |__ Port 003: Dev 016, If 0, Class=Hub, Driver=hub/4p, 480M
+            |__ Port 003: Dev 017, If 0, Class=Hub, Driver=hub/4p, 480M
+                |__ Port 001: Dev 018, If 0, Class=Billboard, Driver=[none], 12M
+                |__ Port 001: Dev 018, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+                |__ Port 002: Dev 019, If 0, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 019, If 1, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 019, If 2, Class=Audio, Driver=snd-usb-audio, 12M
+                |__ Port 002: Dev 019, If 3, Class=Human Interface Device, Driver=usbhid, 12M
+                |__ Port 003: Dev 020, If 0, Class=Hub, Driver=hub/4p, 480M
+                |__ Port 004: Dev 021, If 0, Class=Hub, Driver=hub/4p, 480M
+                    |__ Port 001: Dev 022, If 0, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 022, If 1, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 022, If 2, Class=Audio, Driver=snd-usb-audio, 12M
+                    |__ Port 001: Dev 022, If 3, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 006: Dev 003, If 0, Class=Vendor Specific Class, Driver=[none], 12M
+    |__ Port 007: Dev 004, If 0, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 007: Dev 004, If 1, Class=Human Interface Device, Driver=usbhid, 12M
+    |__ Port 007: Dev 004, If 2, Class=Chip/SmartCard, Driver=[none], 12M
+    |__ Port 008: Dev 006, If 0, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 1, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 2, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 3, Class=Video, Driver=uvcvideo, 480M
+    |__ Port 008: Dev 006, If 4, Class=Application Specific Interface, Driver=[none], 480M
+    |__ Port 010: Dev 007, If 0, Class=Wireless, Driver=btusb, 12M
+    |__ Port 010: Dev 007, If 1, Class=Wireless, Driver=btusb, 12M
+/:  Bus 004.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/4p, 10000M
+
+=== Type-C Ports ===
+drwxr-xr-x - root 30 Dez 18:10  .
+drwxr-xr-x - root 29 Dez 12:39  ..
+lrwxrwxrwx - root 30 Dez 19:21  port0 -> ../../devices/platform/USBC000:00/typec/port0
+lrwxrwxrwx - root 30 Dez 19:21  port1 -> ../../devices/platform/USBC000:00/typec/port1
+lrwxrwxrwx - root 30 Dez 19:21  port1-partner -> ../../devices/platform/USBC000:00/typec/port1/port1-partner
+--- /sys/class/typec/port0 ---
+DEVTYPE=typec_port
+TYPEC_PORT=port0
+--- /sys/class/typec/port1 ---
+DEVTYPE=typec_port
+TYPEC_PORT=port1
+--- /sys/class/typec/port1-partner ---
+DEVTYPE=typec_partner
+
+=== Kernel Logs (disconnect + reconnect sequence) ===
+Dez 30 19:17:19 x1 kernel: input: MX Keys Mini Keyboard as /devices/virtual/misc/uhid/0005:046D:B369.0015/input/input58
+Dez 30 19:17:19 x1 kernel: hid-generic 0005:046D:B369.0015: input,hidraw7: BLUETOOTH HID v0.07 Keyboard [MX Keys Mini] on f0:20:ff:a9:8a:e8
+Dez 30 19:18:38 x1 kernel: wlan0: authenticate with 72:e8:29:5f:9c:f4 (local address=f0:20:ff:a9:8a:e4)
+Dez 30 19:18:38 x1 kernel: wlan0: send auth to 72:e8:29:5f:9c:f4 (try 1/3)
+Dez 30 19:18:38 x1 kernel: wlan0: authenticated
+Dez 30 19:18:38 x1 kernel: wlan0: associate with 72:e8:29:5f:9c:f4 (try 1/3)
+Dez 30 19:18:38 x1 kernel: wlan0: RX AssocResp from 72:e8:29:5f:9c:f4 (capab=0x1431 status=0 aid=1)
+Dez 30 19:18:38 x1 kernel: wlan0: associated
+Dez 30 19:18:38 x1 kernel: wlan0: Limiting TX power to 23 (23 - 0) dBm as advertised by 72:e8:29:5f:9c:f4
+Dez 30 19:18:41 x1 kernel: wlan0: deauthenticating from 72:e8:29:5f:9c:f4 by local choice (Reason: 3=DEAUTH_LEAVING)
+Dez 30 19:18:41 x1 kernel: wlan0: authenticate with 72:e8:29:5f:9c:f4 (local address=f0:20:ff:a9:8a:e4)
+Dez 30 19:18:41 x1 kernel: wlan0: send auth to 72:e8:29:5f:9c:f4 (try 1/3)
+Dez 30 19:18:41 x1 kernel: wlan0: authenticated
+Dez 30 19:18:41 x1 kernel: wlan0: associate with 72:e8:29:5f:9c:f4 (try 1/3)
+Dez 30 19:18:41 x1 kernel: wlan0: RX AssocResp from 72:e8:29:5f:9c:f4 (capab=0x1431 status=0 aid=2)
+Dez 30 19:18:41 x1 kernel: wlan0: associated
+Dez 30 19:18:41 x1 kernel: wlan0: Limiting TX power to 23 (23 - 0) dBm as advertised by 72:e8:29:5f:9c:f4
+Dez 30 19:19:57 x1 kernel: usb 3-3: USB disconnect, device number 2
+Dez 30 19:19:57 x1 kernel: usb 3-3.3: USB disconnect, device number 5
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3: USB disconnect, device number 8
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3.1: USB disconnect, device number 9
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3.2: USB disconnect, device number 10
+Dez 30 19:19:57 x1 kernel: usb 2-3: USB disconnect, device number 2
+Dez 30 19:19:57 x1 kernel: r8152-cfgselector 2-3.1: USB disconnect, device number 6
+Dez 30 19:19:57 x1 kernel: thinkpad_acpi: undocked from hotplug port replicator
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3.3: USB disconnect, device number 11
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3.4: USB disconnect, device number 12
+Dez 30 19:19:57 x1 kernel: usb 3-3.3.3.4.1: USB disconnect, device number 13
+Dez 30 19:19:57 x1 kernel: usb 2-3.3: USB disconnect, device number 3
+Dez 30 19:19:57 x1 kernel: usb 2-3.3.1: USB disconnect, device number 4
+Dez 30 19:19:57 x1 kernel: usb 2-3.3.4: USB disconnect, device number 5
+Dez 30 19:19:57 x1 kernel: device offline error, dev sda, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 2
+Dez 30 19:19:57 x1 kernel: EXT4-fs (sda1): shut down requested (2)
+Dez 30 19:19:57 x1 kernel: Aborting journal on device sda1-8.
+Dez 30 19:19:57 x1 kernel: device offline error, dev sda, sector 973342720 op 0x1:(WRITE) flags 0x29800 phys_seg 1 prio class 2
+Dez 30 19:19:57 x1 kernel: Buffer I/O error on dev sda1, logical block 121667584, lost sync page write
+Dez 30 19:19:57 x1 kernel: JBD2: I/O error when updating journal superblock for sda1-8.
+Dez 30 19:19:57 x1 kernel: sd 1:0:0:0: [sda] Synchronizing SCSI cache
+Dez 30 19:19:57 x1 kernel: EXT4-fs (sda1): unmounting filesystem e767669c-10e1-47b8-81d0-10d0cb231dd9.
+Dez 30 19:19:58 x1 kernel: sd 1:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+Dez 30 19:19:58 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:10 x1 kernel: usb usb1: root hub lost power or was reset
+Dez 30 19:20:10 x1 kernel: usb usb2: root hub lost power or was reset
+Dez 30 19:20:11 x1 kernel: usb 3-3: new high-speed USB device number 14 using xhci_hcd
+Dez 30 19:20:11 x1 kernel: usb 3-3: New USB device found, idVendor=17ef, idProduct=a392, bcdDevice= d.24
+Dez 30 19:20:11 x1 kernel: usb 3-3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:20:11 x1 kernel: usb 3-3: Product: USB2.0 Hub
+Dez 30 19:20:11 x1 kernel: usb 3-3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:20:11 x1 kernel: hub 3-3:1.0: USB hub found
+Dez 30 19:20:11 x1 kernel: hub 3-3:1.0: 4 ports detected
+Dez 30 19:20:11 x1 kernel: thinkpad_acpi: undocked from hotplug port replicator
+Dez 30 19:20:12 x1 kernel: usb 3-3.3: new high-speed USB device number 16 using xhci_hcd
+Dez 30 19:20:12 x1 kernel: usb 3-3.3: New USB device found, idVendor=17ef, idProduct=a394, bcdDevice= d.23
+Dez 30 19:20:12 x1 kernel: usb 3-3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:20:12 x1 kernel: usb 3-3.3: Product: USB2.0 Hub
+Dez 30 19:20:12 x1 kernel: usb 3-3.3: Manufacturer: VIA Labs, Inc.
+Dez 30 19:20:12 x1 kernel: hub 3-3.3:1.0: USB hub found
+Dez 30 19:20:12 x1 kernel: hub 3-3.3:1.0: 4 ports detected
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3: new high-speed USB device number 17 using xhci_hcd
+Dez 30 19:20:13 x1 kernel: usb usb1: root hub lost power or was reset
+Dez 30 19:20:13 x1 kernel: usb usb2: root hub lost power or was reset
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3: New USB device found, idVendor=17ef, idProduct=a395, bcdDevice=60.70
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3: New USB device strings: Mfr=10, Product=11, SerialNumber=0
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3: Product: USB2.0 Hub
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3: Manufacturer: Lenovo
+Dez 30 19:20:13 x1 kernel: hub 3-3.3.3:1.0: USB hub found
+Dez 30 19:20:13 x1 kernel: hub 3-3.3.3:1.0: 4 ports detected
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: new full-speed USB device number 18 using xhci_hcd
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: New USB device found, idVendor=17ef, idProduct=a38f, bcdDevice= 0.00
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: Product: 40AS
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: Manufacturer: Cypress Semiconductor
+Dez 30 19:20:13 x1 kernel: usb 3-3.3.3.1: SerialNumber: 1S40ASZKW1DAJ4
+Dez 30 19:20:13 x1 kernel: hid-generic 0003:17EF:A38F.0016: hiddev97,hidraw2: USB HID v1.11 Device [Cypress Semiconductor 40AS] on usb-0000:00:14.0-3.3.3.1/input1
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: new full-speed USB device number 19 using xhci_hcd
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: New USB device found, idVendor=17ef, idProduct=a396, bcdDevice= 0.14
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: Product: ThinkPad USB-C Dock Gen2 USB Audio
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: Manufacturer: Lenovo
+Dez 30 19:20:14 x1 kernel: usb 3-3.3.3.2: SerialNumber: 000000000000
+Dez 30 19:20:14 x1 kernel: input: Lenovo ThinkPad USB-C Dock Gen2 USB Audio as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.2/3-3.3.3.2:1.3/0003:17EF:A396.0017/input/input60
+Dez 30 19:20:14 x1 kernel: hid-generic 0003:17EF:A396.0017: input,hidraw3: USB HID v1.11 Device [Lenovo ThinkPad USB-C Dock Gen2 USB Audio] on usb-0000:00:14.0-3.3.3.2/input3
+Dez 30 19:20:16 x1 kernel: usb usb1: root hub lost power or was reset
+Dez 30 19:20:16 x1 kernel: usb usb2: root hub lost power or was reset
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.3: new high-speed USB device number 20 using xhci_hcd
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.3: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.3: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.3: Product: 4-Port USB 2.1 Hub
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.3: Manufacturer: Generic
+Dez 30 19:20:17 x1 kernel: hub 3-3.3.3.3:1.0: USB hub found
+Dez 30 19:20:17 x1 kernel: hub 3-3.3.3.3:1.0: 4 ports detected
+Dez 30 19:20:17 x1 kernel: usb 3-3.3.3.4: new high-speed USB device number 21 using xhci_hcd
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4: New USB device found, idVendor=0bda, idProduct=5411, bcdDevice= 1.15
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4: Product: 4-Port USB 2.1 Hub
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4: Manufacturer: Generic
+Dez 30 19:20:18 x1 kernel: hub 3-3.3.3.4:1.0: USB hub found
+Dez 30 19:20:18 x1 kernel: hub 3-3.3.3.4:1.0: 4 ports detected
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: new full-speed USB device number 22 using xhci_hcd
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: New USB device found, idVendor=328f, idProduct=2001, bcdDevice= 4.09
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: Product: eMeet Luna
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: Manufacturer: eMeet
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: SerialNumber: 20080411
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=10240), cval->res is probably wrong.
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: [9] FU [PCM Playback Volume] ch = 1, val = -7168/3072/1
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: Warning! Unlikely big volume range (=3072), cval->res is probably wrong.
+Dez 30 19:20:18 x1 kernel: usb 3-3.3.3.4.1: [10] FU [Mic Capture Volume] ch = 1, val = -1536/1536/1
+Dez 30 19:20:18 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0018/input/input61
+Dez 30 19:20:18 x1 kernel: input: eMeet eMeet Luna Consumer Control as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0018/input/input62
+Dez 30 19:20:18 x1 kernel: input: eMeet eMeet Luna as /devices/pci0000:00/0000:00:14.0/usb3/3-3/3-3.3/3-3.3.3/3-3.3.3.4/3-3.3.3.4.1/3-3.3.3.4.1:1.3/0003:328F:2001.0018/input/input63
+Dez 30 19:20:18 x1 kernel: hid-generic 0003:328F:2001.0018: input,hiddev98,hidraw5: USB HID v1.01 Device [eMeet eMeet Luna] on usb-0000:00:14.0-3.3.3.4.1/input3
+Dez 30 19:20:18 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:18 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:18 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:18 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:18 x1 kernel: BTRFS warning: excessive commit interval 600, use with care
+Dez 30 19:20:19 x1 kernel: usb usb1: root hub lost power or was reset
+Dez 30 19:20:19 x1 kernel: usb usb2: root hub lost power or was reset
+Dez 30 19:20:19 x1 kernel: NMI watchdog: Enabled. Permanently consumes one hw-PMU counter.
