@@ -66,6 +66,8 @@ Tailscale VPN, DNS configuration, and network integration guides.
 | [04-SUBNET-ROUTING](./04-SUBNET-ROUTING.md) | Advertising routes, remote LAN access |
 | [05-NETWORK-INTEGRATION](./05-NETWORK-INTEGRATION.md) | Docker, libvirt, NetworkManager |
 | [06-TROUBLESHOOTING](./06-TROUBLESHOOTING.md) | Common issues and debugging |
+| [07-FIREWALL-UFW](./07-FIREWALL-UFW.md) | UFW rules for Docker, Waydroid, hotspot |
+| [08-WIFI-HOTSPOT](./08-WIFI-HOTSPOT.md) | Share ethernet via WiFi hotspot |
 
 ## Quick Reference
 

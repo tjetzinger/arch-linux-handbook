@@ -15,7 +15,10 @@ sudo ufw status numbered
 | 22/tcp | ALLOW | Anywhere | SSH access |
 | 53 on waydroid0 | ALLOW | Anywhere | Waydroid DNS |
 | 67 on waydroid0 | ALLOW | Anywhere | Waydroid DHCP |
+| 53 on wlan0 | ALLOW | Anywhere | WiFi hotspot DNS |
+| 67,68/udp on wlan0 | ALLOW | Anywhere | WiFi hotspot DHCP |
 | FWD wlan0 ↔ waydroid0 | ALLOW | - | Waydroid internet access |
+| FWD wlan0 → enp+ | ALLOW | - | WiFi hotspot to ethernet |
 | Anywhere | ALLOW | 172.16.0.0/12 | Docker bridge networks |
 
 ## Rule Details
@@ -28,6 +31,14 @@ Required for Android container networking:
 - **Port 53**: DNS resolution for Android apps
 - **Port 67**: DHCP for container IP assignment
 - **Forwarding**: Allows waydroid0 interface to reach internet via wlan0
+
+### WiFi Hotspot Rules
+Required for sharing ethernet internet via WiFi:
+- **Port 53**: DNS resolution for connected devices
+- **Port 67,68**: DHCP for IP assignment to clients
+- **Forwarding**: Allows wlan0 (hotspot) to reach internet via ethernet (enp+)
+
+See [08-WIFI-HOTSPOT.md](08-WIFI-HOTSPOT.md) for full setup.
 
 ### Docker Networks
 ```
