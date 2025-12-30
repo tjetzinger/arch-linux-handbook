@@ -283,17 +283,9 @@ readlink /sys/class/net/enp0s13f0u3u1/device/driver | xargs basename
 # Output: r8152
 ```
 
-**Fix 1: USB Autosuspend (TLP Denylist)**
+**Known Issue: USB 3.0 Hot-Plug Does Not Work (Kernel Bug)**
 
-Prevents ethernet disconnect during runtime power management:
-
-**File:** `/etc/tlp.d/10-thinkpad.conf`
-```ini
-# Exclude ThinkPad USB-C Dock Gen2 from autosuspend
-USB_DENYLIST="17ef:a391 17ef:a387"
-```
-
-**Known Issue: USB 3.0 Hot-Plug Does Not Work**
+**Kernel Bug:** https://bugzilla.kernel.org/show_bug.cgi?id=220904
 
 The dock's USB 3.0 devices (ethernet, USB 3.0 ports) do not enumerate when hot-plugging the dock. Only USB 2.0 devices (audio, hub, controller) enumerate.
 
