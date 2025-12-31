@@ -281,120 +281,54 @@ readlink /sys/class/net/enp0s13f0u3u1/device/driver | xargs basename
 # Output: r8152
 ```
 
-**Known Issue: USB 3.0 Hot-Plug Does Not Work (Kernel Bug)**
+**RESOLVED: USB 3.0 Hot-Plug Issue**
 
 **Kernel Bug:** https://bugzilla.kernel.org/show_bug.cgi?id=220904
 
-The dock's USB 3.0 devices (ethernet, USB 3.0 ports) do not enumerate when hot-plugging the dock. Only USB 2.0 devices (audio, hub, controller) enumerate.
+**Symptom:** Dock's USB 3.0 devices (ethernet, USB 3.0 ports) did not enumerate on hot-plug. Only USB 2.0 devices worked.
 
-**Root Cause:** Type-C physical layer negotiation issue. The laptop and dock do not properly re-negotiate SuperSpeed (USB 3.0) lanes on hot-plug. This is a limitation at the hardware/firmware level, not a driver issue.
+**Root Cause (2025-12-31):** xHCI runtime power management was set to `auto`, causing the controller to not properly handle hot-plug events.
 
-**Symptoms on hot-plug:**
+**Fix:** Remove `xhci_hcd` from TLP's `RUNTIME_PM_DRIVER_DENYLIST` so TLP sets xHCI to `on` on AC power.
+
+```bash
+# Add to /etc/tlp.conf:
+RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"  # removed xhci_hcd
+```
+
+**Note:** TLP ships with `xhci_hcd` in the default denylist (`defaults.conf`), which leaves xHCI at kernel default (`auto`). This prevents TLP from managing the xHCI controller.
+
+**Verify fix is applied:**
+```bash
+# Check xHCI runtime PM (should be "on" on AC)
+cat /sys/bus/pci/devices/0000:00:0d.0/power/control
+
+# Check TLP effective settings
+sudo tlp-stat -e | grep "0d.0"
+```
+
+<details>
+<summary><strong>Investigation History (2025-12-24 to 2025-12-31)</strong></summary>
+
+**Initial symptoms on hot-plug:**
 - `lsusb` shows only USB 2.0 dock devices (17ef:a392, 17ef:a396, 17ef:a38f)
 - USB 3.0 devices missing (17ef:a391, 17ef:a387)
 - Ethernet interface does not appear
-- `dmesg` shows "new high-speed USB device" but no "SuperSpeed" messages
 
-**Investigation (2025-12-24):**
-- BIOS updated from 1.22 → 1.38 (fixed cold boot detection)
+**Investigation steps:**
+- BIOS updated from 1.22 → 1.38
 - Dock firmware at 5.05.00 (latest)
-- USB autosuspend disabled - no effect
-- xHCI reset - no effect
-- UCSI driver shows "possible UCSI driver bug 4" in dmesg
-- BIOS Thunderbolt settings not available on X1 Carbon Gen 11 (no user-configurable options)
-- "Thunderbolt BIOS Assist Mode" removed in newer models (native kernel support)
-- Hot-plug works on Windows but not Linux = Linux driver issue, not hardware
+- UCSI driver testing - disabling did NOT fix issue
+- Thunderbolt debug logging (`thunderbolt.dyndbg=+p`) - showed ethernet never re-registered
+- xHCI runtime PM testing - **this was the root cause**
 
-**Root Cause:** Linux Type-C/UCSI driver timing issue. At boot, full USB-C negotiation
-happens during hardware init. On hot-plug, the typec driver doesn't properly
-re-negotiate SuperSpeed lanes. This is a known kernel issue affecting multiple
-USB-C docks on Linux.
-
-**Hot-Plug Analysis (2025-12-24):**
-| State | typec port | USB 3.0 bus | Dock location | Ethernet |
-|-------|------------|-------------|---------------|----------|
-| Boot | port0-partner | Bus 2 (2-1, 20Gbps) | 2-1 (SuperSpeed) | Present |
-| Hot-Plug | port1-partner | EMPTY | 3-3 (High-Speed) | Missing |
-
-dmesg on reconnect shows:
-```
-usb usb1: root hub lost power or was reset
-usb usb2: root hub lost power or was reset
-```
-The Thunderbolt USB buses reset but the dock falls back to the internal xHCI
-controller (bus 3) at USB 2.0 speeds only. No typec/ucsi negotiation messages
-appear - the driver fails silently.
+**Key discovery:** TLP's default denylist includes `xhci_hcd`, preventing TLP from setting xHCI to `on`. The kernel default is `auto`, which causes hot-plug failures.
 
 **References:**
-- Red Hat Bugzilla #2248484: UCSI driver bug
-- Arch Linux Forum: https://bbs.archlinux.org/viewtopic.php?id=308325
 - Kernel Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=220904
+- Arch Linux Forum: https://bbs.archlinux.org/viewtopic.php?id=308325
 
-**UCSI Driver Testing (2025-12-30):**
-
-Tested whether UCSI driver is the root cause per kernel maintainer request.
-
-| Test | UCSI Status | Boot with Dock | Hot-Plug | Result |
-|------|-------------|----------------|----------|--------|
-| Test 1 | Enabled (normal) | USB 3.0 works | FAILS | Only USB 2.0 enumerates |
-| Test 2 | Disabled (blacklisted) | USB 3.0 works | FAILS | Same failure pattern |
-
-**Conclusion:** Disabling UCSI does NOT resolve the issue. The problem is in the USB-C/Thunderbolt physical layer negotiation, not the UCSI driver.
-
-Key log pattern on hot-plug (both tests):
-```
-usb usb1: root hub lost power or was reset
-usb usb2: root hub lost power or was reset
-usb 3-3: new high-speed USB device number 14 using xhci_hcd  ← USB 2.0 only
-```
-
-Test logs: `hardware/logs/bug-220904-test*.txt`
-
-**Thunderbolt Debug Logging (2025-12-31):**
-
-Per kernel maintainer (Mika Westerberg) request, tested with `thunderbolt.dyndbg=+p`:
-
-```bash
-# Add to kernel cmdline for one boot
-sudo bootctl set-oneshot arch-tb-debug.conf
-```
-
-Key findings from debug log:
-- Boot: `cdc_ether` registered at `usb-0000:00:0d.0-3.1` (SuperSpeed)
-- Unplug: `r8152-cfgselector` disconnect, `cdc_ether` unregister
-- Replug: Thunderbolt controller resumed, USB hubs + HID + audio re-enumerated
-- **Ethernet (bus 2-3.1) never re-registered**
-
-Note: `r8152-cfgselector: Unknown version 0x0000` at boot indicates driver falls back to `cdc_ether`.
-
-Debug log submitted to kernel bugzilla.
-
-**Tested Workarounds That DON'T Work:**
-- xHCI controller unbind/rebind (`echo 0000:00:0d.0 > unbind/bind`)
-- UCSI driver reload (`modprobe -r ucsi_acpi && modprobe ucsi_acpi`)
-- These don't work because the USB-C physical lane state is already established
-
-**Working Workaround:** Boot with dock connected - ethernet works reliably.
-
-**Alternative Workarounds:**
-1. Plug dock in AFTER login screen appears (reported to work reliably)
-2. Suspend/resume sometimes triggers re-enumeration
-3. Disconnect and reconnect the USB-C cable multiple times
-4. Use USB 2.0 ethernet adapter as fallback
-
-```bash
-# Quick diagnostic: Check if USB 3.0 is working
-lsusb -t | grep "20000M"  # Should show devices under Bus 002
-
-# Check typec port bindings (port0 should have usb3-port1 at boot)
-ls -la /sys/class/typec/port*/usb*-port* 2>/dev/null
-
-# Check which port dock is on
-ls /sys/class/typec/ | grep partner  # port0-partner = good, port1-partner = USB 2.0 only
-
-# Check if SuperSpeed lanes were negotiated
-dmesg | grep -i "superspeed"
-```
+</details>
 
 **Known Issue: Ethernet After Suspend/Resume**
 
