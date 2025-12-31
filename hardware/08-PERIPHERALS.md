@@ -352,6 +352,25 @@ usb 3-3: new high-speed USB device number 14 using xhci_hcd  ← USB 2.0 only
 
 Test logs: `hardware/logs/bug-220904-test*.txt`
 
+**Thunderbolt Debug Logging (2025-12-31):**
+
+Per kernel maintainer (Mika Westerberg) request, tested with `thunderbolt.dyndbg=+p`:
+
+```bash
+# Add to kernel cmdline for one boot
+sudo bootctl set-oneshot arch-tb-debug.conf
+```
+
+Key findings from debug log:
+- Boot: `cdc_ether` registered at `usb-0000:00:0d.0-3.1` (SuperSpeed)
+- Unplug: `r8152-cfgselector` disconnect, `cdc_ether` unregister
+- Replug: Thunderbolt controller resumed, USB hubs + HID + audio re-enumerated
+- **Ethernet (bus 2-3.1) never re-registered**
+
+Note: `r8152-cfgselector: Unknown version 0x0000` at boot indicates driver falls back to `cdc_ether`.
+
+Debug log submitted to kernel bugzilla.
+
 **Tested Workarounds That DON'T Work:**
 - xHCI controller unbind/rebind (`echo 0000:00:0d.0 > unbind/bind`)
 - UCSI driver reload (`modprobe -r ucsi_acpi && modprobe ucsi_acpi`)
