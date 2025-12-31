@@ -51,11 +51,6 @@ Logitech devices connect via Bluetooth after boot. Two issues can prevent logid 
 # Wait for Bluetooth to be ready before starting logid
 After=bluetooth.target
 Wants=bluetooth.target
-
-[Service]
-# Restart on failure to handle timing issues
-Restart=on-failure
-RestartSec=5
 ```
 
 **Fix 2: udev rule** - Restart logid when Logitech device connects
@@ -66,9 +61,12 @@ This handles the bluez 5.77+ timing issue where devices timeout during initial c
 ```udev
 # Restart logid when Logitech Bluetooth HID devices connect
 # Fixes bluez 5.77+ timing issue where logid fails to configure device
-ACTION=="add", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", \
-  RUN+="/bin/bash -c 'sleep 2 && systemctl restart logid &'"
+# Bluetooth devices use uhid with format 0005:VENDOR:PRODUCT
+ACTION=="add", SUBSYSTEM=="hidraw", KERNELS=="0005:046D:*", \
+  RUN+="/bin/bash -c 'sleep 2 && systemctl restart logid.service &'"
 ```
+
+**Note:** Bluetooth HID devices don't have `ATTRS{idVendor}` - the vendor ID is embedded in `KERNELS` as `0005:046D:*` (0005 = Bluetooth bus type).
 
 **Apply:**
 ```bash
