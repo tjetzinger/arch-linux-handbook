@@ -330,36 +330,41 @@ sudo tlp-stat -e | grep "0d.0"
 
 </details>
 
-**Known Issue: Ethernet After Suspend/Resume**
+**Known Issue: USB 3.0 Devices Lost After Suspend/Resume**
 
-The r8152 USB ethernet may fail to work after system suspend/resume. This is a known issue with S0 idle suspend on Intel platforms with USB docks.
+The dock's USB 3.0 devices (including ethernet) fail to reconnect after s2idle suspend/resume. This is a known Intel Thunderbolt/USB-C issue with Modern Standby (s2idle).
 
 **Symptoms after resume:**
-- USB device detected (`lsusb` shows 17ef:a387)
-- Driver loaded (`lsmod | grep r8152`)
-- But driver doesn't attach to device
-- No network interface appears or interface has no connectivity
+- USB 2.0 dock devices work (audio, USB 2.0 hub)
+- USB 3.0 devices missing (`lsusb` doesn't show 17ef:a387 or 17ef:a391)
+- No ethernet interface appears
+- dmesg shows: `r8152-cfgselector 2-3.1: USB disconnect`
 
-**Attempted fixes that don't work:**
-- Sleep hooks to reload driver (runs before USB re-enumerates)
-- Systemd services after suspend.target (same timing issue)
-- Manual `modprobe -r r8152 && modprobe r8152` (device not ready)
+**Root cause:** The USB-C SuperSpeed link fails to re-negotiate after s2idle resume. The Thunderbolt controller doesn't properly restore the USB 3.0 connection.
 
-**Workaround:** Reboot the system.
+**Attempted fixes that don't work (tested 2025-12-31):**
+- xHCI controller unbind/rebind
+- UCSI connector reset
+- Thunderbolt NHI reset
+- PCI rescan
+- USB bus rescan
+- Thunderbolt module reload (can't unload - in use by typec)
+
+**S3 deep sleep not available:** This system only supports s2idle (Modern Standby). S3 suspend-to-RAM is not an option.
+
+**Workaround:** Unplug and replug the USB-C cable after resume.
 
 ```bash
-# Check if ethernet is working
-ip link show enp0s13f0u3u1
-nmcli device status
+# Check if USB 3.0 devices are present
+lsusb | grep "17ef:a387"  # Ethernet
+lsusb | grep "17ef:a391"  # USB 3.0 hub
 
-# If not working after resume, reboot
-systemctl reboot
+# If missing after resume, physically replug the USB-C cable
 ```
 
-**Verify USB autosuspend is disabled:**
-```bash
-cat /sys/bus/usb/devices/2-3.1/power/control  # Should show "on"
-```
+**References:**
+- [Framework Community: TB4 dock issues with s2idle](https://community.frame.work/t/tb4-dock-issues-with-wake-from-sleep-workaround-s2idle-vs-deep-and-firmware-question-11-gen/26619)
+- [Arch Forums: Thunderbolt dock not awake on resume](https://bbs.archlinux.org/viewtopic.php?id=286662)
 
 ### Thunderbolt Docks
 
