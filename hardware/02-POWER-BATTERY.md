@@ -109,18 +109,33 @@ SATA_LINKPWR_ON_BAT=min_power
 # USB autosuspend (enabled)
 USB_AUTOSUSPEND=1
 
-# Exclude USB-C Dock from autosuspend (prevents ethernet disconnect on resume)
-# 17ef:a391 = USB3.1 Hub (parent of ethernet)
-# 17ef:a387 = USB-C Dock Ethernet
-USB_DENYLIST="17ef:a391 17ef:a387"
-
 # Battery charge thresholds (preserve longevity)
 START_CHARGE_THRESH_BAT0=75
 STOP_CHARGE_THRESH_BAT0=80
 
 # Don't restore radio device state
 RESTORE_DEVICE_STATE_ON_STARTUP=0
+
+# Disable CPU turbo boost on battery (saves 2-3W under load)
+CPU_BOOST_ON_BAT=0
+
+# Intel GPU frequency limits on battery (100-800 MHz)
+# 100 MHz is hardware minimum (RPn), 800 MHz caps max for power savings
+INTEL_GPU_MIN_FREQ_ON_BAT=100
+INTEL_GPU_MAX_FREQ_ON_BAT=800
+INTEL_GPU_BOOST_FREQ_ON_BAT=800
 ```
+
+### Key Settings Explained
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| PCIE_ASPM_ON_BAT | powersupersave | Enables L1.2 substates, critical for deep C-states (C8+) |
+| CPU_BOOST_ON_BAT | 0 | Disables turbo boost, saves 2-3W under load |
+| INTEL_GPU_MAX_FREQ_ON_BAT | 800 | Caps GPU at 800 MHz (vs 1500 MHz default) |
+| CPU_ENERGY_PERF_POLICY_ON_BAT | power | Most aggressive CPU power saving |
+
+**Note:** `PCIE_ASPM_ON_BAT=powersupersave` requires a **reboot** to take effect. Using `powersave` instead can prevent reaching deep package C-states.
 
 ### Platform Profile Explanation
 
