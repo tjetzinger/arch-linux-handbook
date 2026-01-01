@@ -330,9 +330,9 @@ sudo tlp-stat -e | grep "0d.0"
 
 </details>
 
-**Known Issue: USB 3.0 Devices Lost After Suspend/Resume**
+**Known Issue: USB 3.0 Devices Lost After Suspend/Resume (Kernel 6.16+ Regression)**
 
-The dock's USB 3.0 devices (including ethernet) fail to reconnect after s2idle suspend/resume. This is a known Intel Thunderbolt/USB-C issue with Modern Standby (s2idle).
+The dock's USB 3.0 devices (including ethernet) fail to reconnect after s2idle suspend/resume. This is a **kernel regression introduced in 6.16** affecting xHCI suspend/resume on Intel systems.
 
 **Symptoms after resume:**
 - USB 2.0 dock devices work (audio, USB 2.0 hub)
@@ -340,17 +340,32 @@ The dock's USB 3.0 devices (including ethernet) fail to reconnect after s2idle s
 - No ethernet interface appears
 - dmesg shows: `r8152-cfgselector 2-3.1: USB disconnect`
 
-**Root cause:** The USB-C SuperSpeed link fails to re-negotiate after s2idle resume. The Thunderbolt controller doesn't properly restore the USB 3.0 connection.
+**Root cause:** Kernel 6.16+ introduced a regression in xHCI resume handling. The USB 3.0 SuperSpeed link fails to re-enumerate after s2idle resume.
+
+| Issue | Status |
+|-------|--------|
+| Bug #219824 (xHCI "HC died") | **FIXED** in 6.13.7 |
+| Bug #220904 (hot-plug) | **FIXED** via TLP denylist |
+| 6.16+ xHCI resume regression | **UNFIXED** - tracking in Fedora #2393013 |
+
+**Related kernel 6.16+ issues** (all connected to the same regression):
+
+| Symptom | Affected Systems |
+|---------|------------------|
+| USB input dead after wake | USB-C docks (this case) |
+| Kernel panic on wake | Intel systems with `intel_oc_wdt` |
+| System reboots during suspend | Dell XPS, laptops with Intel WiFi |
+| NVMe lost after resume | Some NVMe + s2idle combinations |
+
+**S3 deep sleep not available:** This system only supports s2idle (Modern Standby). S3 suspend-to-RAM is not an option.
 
 **Attempted fixes that don't work (tested 2025-12-31):**
 - xHCI controller unbind/rebind
 - UCSI connector reset
 - Thunderbolt NHI reset
-- PCI rescan
-- USB bus rescan
-- Thunderbolt module reload (can't unload - in use by typec)
-
-**S3 deep sleep not available:** This system only supports s2idle (Modern Standby). S3 suspend-to-RAM is not an option.
+- PCI rescan / USB bus rescan
+- Thunderbolt module reload
+- `xhci_hcd.quirks=0x80` (RESET_ON_RESUME) - already enabled
 
 **Workaround:** Unplug and replug the USB-C cable after resume.
 
@@ -362,9 +377,14 @@ lsusb | grep "17ef:a391"  # USB 3.0 hub
 # If missing after resume, physically replug the USB-C cable
 ```
 
-**References:**
-- [Framework Community: TB4 dock issues with s2idle](https://community.frame.work/t/tb4-dock-issues-with-wake-from-sleep-workaround-s2idle-vs-deep-and-firmware-question-11-gen/26619)
-- [Arch Forums: Thunderbolt dock not awake on resume](https://bbs.archlinux.org/viewtopic.php?id=286662)
+**Tracking:**
+- Kernel Bugzilla #220904: https://bugzilla.kernel.org/show_bug.cgi?id=220904
+- Fedora Bug #2393013 (6.16 regression): https://bugzilla.redhat.com/show_bug.cgi?id=2393013
+- Arch Forums: https://bbs.archlinux.org/viewtopic.php?id=307641
+
+**Potential workarounds to test when fixes land:**
+- Kernel 6.19+ may include fix (monitor changelogs)
+- Downgrade to 6.15-zen if available (not practical for custom kernel)
 
 ### Thunderbolt Docks
 
