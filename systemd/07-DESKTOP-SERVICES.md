@@ -230,13 +230,91 @@ ssh-add -l
 ssh-add -D
 ```
 
-## Flatpak Session Helper
+## Flatpak Services
+
+### Session Helper
 
 ```bash
 systemctl --user status flatpak-session-helper
 ```
 
 **Purpose:** Manages Flatpak application sessions and permissions.
+
+### Auto-Update Timer (System)
+
+Flatpak apps are updated automatically via systemd timer.
+
+```bash
+systemctl status flatpak-update.timer
+systemctl list-timers flatpak-update.timer
+```
+
+**Schedule:** Runs 2 minutes after boot, then every 24 hours.
+
+**Service files:**
+
+`/etc/systemd/system/flatpak-update.service`
+```ini
+[Unit]
+Description=Update Flatpak
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flatpak update --noninteractive --assumeyes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`/etc/systemd/system/flatpak-update.timer`
+```ini
+[Unit]
+Description=Update Flatpak
+
+[Timer]
+OnBootSec=2m
+OnActiveSec=2m
+OnUnitInactiveSec=24h
+OnUnitActiveSec=24h
+AccuracySec=1h
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target
+```
+
+**Enable:**
+```bash
+sudo systemctl enable --now flatpak-update.timer
+```
+
+**Manual update:**
+```bash
+flatpak update
+```
+
+**Warning:** Unattended updates can grant apps new permissions. Use [Flatseal](https://flathub.org/apps/com.github.tchx84.Flatseal) to review permissions.
+
+### Installed Applications
+
+```bash
+flatpak list --app
+```
+
+### Permission Management
+
+```bash
+# View app permissions
+flatpak info --show-permissions <app-id>
+
+# Override permissions
+flatpak override --user --socket=wayland <app-id>
+
+# GUI tool
+flatpak run com.github.tchx84.Flatseal
+```
 
 ## GVFS Services
 
