@@ -64,11 +64,77 @@ exec-once = hypridle
 
 ```bash
 # Check if running
-pgrep hypridle
+pgrep -a hypridle
 
 # Restart
 killall hypridle && hypridle &
 ```
+
+### Migration-Safe Customization
+
+The default `~/.config/hypr/hypridle.conf` is hardlinked to ML4W dotfiles and may be overwritten during updates. For persistent changes:
+
+**1. Create custom config:**
+
+```bash
+cp ~/.config/hypr/hypridle.conf ~/.config/hypr/hypridle-custom.conf
+```
+
+**2. Edit custom config:**
+
+```bash
+# Example: Disable auto-lock and auto-suspend
+# Comment out the 600s (lock) and 1800s (suspend) listeners
+vim ~/.config/hypr/hypridle-custom.conf
+```
+
+**3. Update autostart-custom.conf:**
+
+```bash
+# ~/.config/hypr/conf/autostart-custom.conf
+# Add:
+exec-once = hypridle -c ~/.config/hypr/hypridle-custom.conf
+```
+
+**4. Disable default hypridle in autostart.conf:**
+
+```bash
+# ~/.config/hypr/conf/autostart.conf
+# Comment out:
+# exec-once = hypridle  # Disabled - using custom config
+```
+
+**5. Restart hypridle:**
+
+```bash
+killall hypridle
+hypridle -c ~/.config/hypr/hypridle-custom.conf &
+```
+
+### Disabling Specific Listeners
+
+Comment out unwanted listeners in your custom config:
+
+```bash
+# Disable auto-lock (10min)
+# listener {
+#     timeout = 600
+#     on-timeout = loginctl lock-session
+# }
+
+# Disable auto-suspend (30min)
+# listener {
+#     timeout = 1800
+#     on-timeout = systemctl suspend
+# }
+```
+
+**Keep active (recommended):**
+
+| Listener | Purpose |
+|----------|---------|
+| 480s dim | Saves power, protects OLED |
+| 660s DPMS off | Saves power |
 
 ## hyprlock
 

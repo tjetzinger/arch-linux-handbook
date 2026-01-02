@@ -11,19 +11,23 @@ Adding custom configurations to Hyprland/ML4W.
 Keep customizations in separate files that ML4W won't overwrite during updates:
 
 ```
-~/.config/hypr/conf/
-├── custom.conf                  # Main custom file (SAFE)
-├── ttkeyboard.conf              # Custom keyboard/input (SAFE)
-├── autostart-custom.conf        # Custom autostart (SAFE)
-├── windowrules/
-│   ├── default.conf             # ML4W default (OVERWRITTEN)
-│   └── custom.conf              # Custom rules (SAFE)
-├── keybindings/
-│   ├── default.conf             # ML4W default (OVERWRITTEN)
-│   └── custom.conf              # Custom bindings (SAFE)
-├── autostart.conf               # ML4W default (OVERWRITTEN)
-├── keybinding.conf              # ML4W default (OVERWRITTEN)
-└── windowrule.conf              # ML4W default (OVERWRITTEN)
+~/.config/hypr/
+├── hypridle-custom.conf         # Custom idle config (SAFE)
+├── conf/
+│   ├── custom.conf              # Main custom file (SAFE)
+│   ├── ttkeyboard.conf          # Custom keyboard/input (SAFE)
+│   ├── autostart-custom.conf    # Custom autostart (SAFE)
+│   ├── windowrules/
+│   │   ├── default.conf         # ML4W default (OVERWRITTEN)
+│   │   └── custom.conf          # Custom rules (SAFE)
+│   ├── keybindings/
+│   │   ├── default.conf         # ML4W default (OVERWRITTEN)
+│   │   └── custom.conf          # Custom bindings (SAFE)
+│   ├── autostart.conf           # ML4W default (OVERWRITTEN)
+│   ├── keybinding.conf          # ML4W default (OVERWRITTEN)
+│   └── windowrule.conf          # ML4W default (OVERWRITTEN)
+├── hypridle.conf                # ML4W default (OVERWRITTEN - hardlinked)
+└── hyprlock.conf                # ML4W default (OVERWRITTEN - hardlinked)
 ```
 
 ### Files ML4W May Overwrite
@@ -32,10 +36,13 @@ Keep customizations in separate files that ML4W won't overwrite during updates:
 - `windowrule.conf`
 - `keybindings/default.conf`
 - `windowrules/default.conf`
+- `hypridle.conf` (hardlinked to ML4W dotfiles)
+- `hyprlock.conf` (hardlinked to ML4W dotfiles)
 - Most files in `decorations/`, `layouts/`, `animations/`
 
 ### Files ML4W Won't Touch
 - `custom.conf`
+- `hypridle-custom.conf`
 - Any file you create (e.g., `ttkeyboard.conf`, `autostart-custom.conf`)
 - `keybindings/custom.conf`
 - `windowrules/custom.conf`
