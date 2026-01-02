@@ -134,7 +134,7 @@ exec-once = ~/.config/ml4w/scripts/ml4w-autostart.sh
 exec-once = ~/.config/hypr/scripts/cleanup.sh
 exec = ~/.config/com.ml4w.hyprlandsettings/hyprctl.sh
 exec-once = ~/.config/nwg-dock-hyprland/launch.sh
-exec-once = hyprdynamicmonitors run --enable-lid-events
+# hyprdynamicmonitors managed via systemd (not exec-once)
 exec-once = hyprpm reload -n
 ```
 

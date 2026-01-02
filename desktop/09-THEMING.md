@@ -4,9 +4,9 @@ Colors, wallpapers, and visual customization.
 
 ## Color System
 
-ML4W uses pywal for dynamic color generation.
+ML4W 2.9.9+ uses **matugen** for Material You dynamic color generation (replaced pywal).
 
-### Pywal Colors
+### Matugen Colors
 
 **Generated file:** `~/.config/hypr/colors.conf`
 
@@ -16,6 +16,7 @@ Colors are extracted from the current wallpaper and applied to:
 - Rofi
 - SwayNC
 - hyprlock
+- Kitty terminal (`~/.config/kitty/colors-matugen.conf`)
 
 ### Color Variables
 
@@ -30,11 +31,17 @@ $secondary
 ### Regenerate Colors
 
 ```bash
-# From current wallpaper
-wal -i ~/.current_wallpaper
+# Apply matugen to current wallpaper
+matugen image /path/to/wallpaper.jpg
 
-# Apply to configs
-~/.config/hypr/scripts/wallpaper-restore.sh
+# Or use waypaper (applies matugen automatically)
+waypaper
+
+# Reload Hyprland to apply
+hyprctl reload
+
+# Reload kitty colors (send SIGUSR1)
+pkill -USR1 kitty
 ```
 
 ## Wallpapers
@@ -68,16 +75,22 @@ cat ~/.config/ml4w/settings/wallpaper-folder.sh
 # Usually ~/Pictures/wallpapers or ~/wallpaper
 ```
 
-### hyprpaper
+### swww
 
-Backend for displaying wallpapers.
-
-**Config:** `~/.config/hypr/hyprpaper.conf`
+Backend for displaying wallpapers (ML4W 2.9.9.5+ default).
 
 ```bash
-preload = /path/to/wallpaper.jpg
-wallpaper = eDP-1,/path/to/wallpaper.jpg
+# Set wallpaper directly
+swww img /path/to/wallpaper.jpg
+
+# With transition effect
+swww img /path/to/wallpaper.jpg --transition-type grow
+
+# Check daemon status
+pgrep swww-daemon
 ```
+
+**Note:** hyprpaper is still installed (ML4W dependency) but not used.
 
 ### Restore Wallpaper
 
@@ -228,7 +241,7 @@ source = ~/.config/hypr/conf/decorations/decoration-rounding.conf
 
 ### Border Colors
 
-From pywal in `colors.conf`:
+From matugen in `colors.conf`:
 
 ```bash
 general {
@@ -344,7 +357,7 @@ waypaper --random                     # Random
 ~/.config/hypr/scripts/wallpaper-restore.sh  # Restore
 
 # Colors
-wal -i /path/to/image                 # Generate colors
+matugen image /path/to/image          # Generate colors
 
 # Themes
 ~/.config/waybar/themeswitcher.sh     # Waybar theme

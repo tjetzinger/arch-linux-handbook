@@ -31,7 +31,7 @@ Documentation for the Hyprland compositor with ML4W dotfiles.
 | **Notifications** | SwayNC |
 | **Lock Screen** | hyprlock |
 | **Idle Daemon** | hypridle |
-| **Wallpaper** | waypaper + hyprpaper |
+| **Wallpaper** | waypaper + swww |
 | **Terminal** | Warp (primary), Kitty (backup) |
 | **Dock** | nwg-dock-hyprland |
 | **File Manager** | Nautilus |
