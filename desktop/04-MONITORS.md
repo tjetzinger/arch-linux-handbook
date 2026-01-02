@@ -16,16 +16,31 @@ hyprctl monitors
 
 ### Config Location
 
-**Symlink:** `~/.config/hypr/monitors.conf`
+**Generated file:** `~/.config/hypr/monitors.conf`
 
-Points to the active profile in `~/.config/hyprdynamicmonitors/hyprconfigs/`.
+hyprdynamicmonitors writes monitor configuration here based on the active profile.
+
+### Integration with Hyprland (Migration-Safe)
+
+The default `conf/monitor.conf` is hardlinked to ML4W dotfiles and may be overwritten. To ensure hyprdynamicmonitors config is always used, source it from `custom.conf`:
+
+**File:** `~/.config/hypr/conf/custom.conf`
+
+```bash
+# hyprdynamicmonitors generated config (overrides default monitor settings)
+source = ~/.config/hypr/monitors.conf
+```
+
+This works because `custom.conf` is sourced after `monitor.conf` in `hyprland.conf`, so hyprdynamicmonitors settings take precedence.
 
 ### Manual Configuration
+
+For manual setup without hyprdynamicmonitors:
 
 **File:** `~/.config/hypr/conf/monitor.conf`
 
 ```bash
-source = ~/.config/hypr/monitors.conf
+source = ~/.config/hypr/conf/monitors/default.conf
 ```
 
 ### Syntax
@@ -45,7 +60,7 @@ Automatic monitor profile switching based on connected displays.
 
 ### Systemd Services
 
-Managed via systemd (not exec-once in autostart.conf):
+Managed via systemd with autostart trigger (not direct exec-once):
 
 ```bash
 # Check services
@@ -64,6 +79,17 @@ systemctl --user status hyprdynamicmonitors-prepare.service
 systemctl --user enable hyprdynamicmonitors.service
 systemctl --user enable hyprdynamicmonitors-prepare.service
 ```
+
+### Starting the Service (Migration-Safe)
+
+The service requires `WAYLAND_DISPLAY` environment variable. Add to `autostart-custom.conf`:
+
+```bash
+# Import env so systemd services can access Hyprland socket
+exec-once = systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprdynamicmonitors.service
+```
+
+This imports the Wayland environment into systemd and starts the service after Hyprland is ready.
 
 ### Service Override
 
@@ -139,6 +165,28 @@ monitor=,preferred,auto,1
 With `--enable-lid-events`, the display automatically reconfigures when:
 - Laptop lid is closed/opened
 - External monitors are connected/disconnected
+
+### Lid State Templates
+
+Templates can conditionally disable the laptop screen when lid is closed:
+
+**File:** `~/.config/hyprdynamicmonitors/hyprconfigs/DualMonitorDock.go.tmpl`
+
+```go
+monitor=desc:BNQ BenQ BL2581T ET1CL03348SL0,1920x1200@59.95,0x0,1
+monitor=desc:BNQ BenQ BL2581T ET1CL03342SL0,1920x1200@59.95,1920x0,1
+{{ if eq .LidState "Closed" }}
+# Lid is closed - disable laptop screen
+monitor=desc:AU Optronics 0xD291,disable
+{{ else }}
+# Lid is open - enable laptop screen
+monitor=desc:AU Optronics 0xD291,1920x1200@60,3840x0,1
+{{ end }}
+```
+
+Available template variables:
+- `.LidState` - "Open" or "Closed"
+- `.PowerState` - "AC" or "Battery"
 
 ## Multi-Monitor Layouts
 
