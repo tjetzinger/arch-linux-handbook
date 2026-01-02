@@ -250,7 +250,77 @@ EOF
 
 ---
 
-## Step 7: Create Recovery Entry (arch-live)
+## Step 7: Plymouth Boot Splash (Optional)
+
+Plymouth provides a graphical boot splash that hides kernel messages and displays an animated LUKS password prompt.
+
+### Install Plymouth
+
+```bash
+yay -S plymouth plymouth-theme-arch-charge
+```
+
+### Update mkinitcpio.conf
+
+Add `plymouth` hook after `systemd`:
+
+```bash
+HOOKS=(base systemd plymouth keyboard autodetect microcode modconf kms sd-vconsole block sd-encrypt filesystems fsck)
+```
+
+### Set Theme
+
+```bash
+# List available themes
+plymouth-set-default-theme -l
+
+# Set arch-charge theme and rebuild initramfs
+sudo plymouth-set-default-theme -R arch-charge
+```
+
+### Add Kernel Parameters
+
+Add `quiet splash` to your boot entries:
+
+```bash
+# Edit each entry in /boot/loader/entries/
+# Add to end of options line:
+options ... rw quiet splash
+```
+
+### Rebuild Initramfs
+
+```bash
+sudo mkinitcpio -P
+```
+
+### Theme Files
+
+The `arch-charge` theme includes:
+
+| File | Purpose |
+|------|---------|
+| `lock.png` | Lock icon for LUKS prompt |
+| `entry.png` | Password input field |
+| `bullet.png` | Password masking (•••) |
+| `progress-*.png` | Boot progress animation |
+
+### Preview Without Reboot
+
+```bash
+sudo plymouthd --mode=boot && sudo plymouth show-splash && sleep 5 && sudo plymouth quit
+```
+
+### Boot Experience
+
+1. Arch logo with charging animation appears
+2. Lock icon + password field when LUKS prompts
+3. Progress bar after successful unlock
+4. Smooth transition to SDDM/login
+
+---
+
+## Step 8: Create Recovery Entry (arch-live)
 
 For booting into recovery environment (will be installed later):
 
