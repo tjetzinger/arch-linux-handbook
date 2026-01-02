@@ -387,13 +387,45 @@ sudo btrfs inspect-internal map-swapfile -r /swap/swapfile
 
 ### Lid Switch Behavior
 
-**File:** `/etc/systemd/logind.conf`
+Controlled by systemd-logind, independent of hypridle.
 
-```ini
-[Login]
-HandleLidSwitch=suspend
-HandleLidSwitchExternalPower=ignore
+**Current settings** (query via D-Bus):
+
+```bash
+busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitch
+busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitchDocked
+busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager HandleLidSwitchExternalPower
 ```
+
+| Setting | Default | Current | When |
+|---------|---------|---------|------|
+| `HandleLidSwitch` | suspend | suspend | On battery, no external monitor |
+| `HandleLidSwitchDocked` | ignore | ignore | External monitor connected |
+| `HandleLidSwitchExternalPower` | (inherit) | suspend | On AC power |
+
+**To disable lid suspend on AC power:**
+
+```bash
+sudo mkdir -p /etc/systemd/logind.conf.d
+cat << 'EOF' | sudo tee /etc/systemd/logind.conf.d/lid.conf
+[Login]
+HandleLidSwitchExternalPower=ignore
+EOF
+sudo systemctl restart systemd-logind
+```
+
+**All available actions:** `ignore`, `poweroff`, `reboot`, `halt`, `suspend`, `hibernate`, `lock`
+
+### Idle Suspend (hypridle)
+
+**Note:** hypridle's idle suspend is separate from lid behavior. See [desktop/08-LOCKSCREEN](../desktop/08-LOCKSCREEN.md) for hypridle configuration.
+
+| Trigger | Source | Default |
+|---------|--------|---------|
+| Lid close | logind | suspend |
+| 30 min idle | hypridle | suspend (can be disabled) |
+
+To disable idle suspend, use `hypridle-custom.conf` and comment out the 1800s listener.
 
 ## Service Interaction
 
