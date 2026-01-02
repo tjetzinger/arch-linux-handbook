@@ -6,6 +6,40 @@ Adding custom configurations to Hyprland/ML4W.
 
 **Never edit ML4W default files directly.** Use the designated custom files instead.
 
+## Migration-Safe File Structure
+
+Keep customizations in separate files that ML4W won't overwrite during updates:
+
+```
+~/.config/hypr/conf/
+├── custom.conf                  # Main custom file (SAFE)
+├── ttkeyboard.conf              # Custom keyboard/input (SAFE)
+├── autostart-custom.conf        # Custom autostart (SAFE)
+├── windowrules/
+│   ├── default.conf             # ML4W default (OVERWRITTEN)
+│   └── custom.conf              # Custom rules (SAFE)
+├── keybindings/
+│   ├── default.conf             # ML4W default (OVERWRITTEN)
+│   └── custom.conf              # Custom bindings (SAFE)
+├── autostart.conf               # ML4W default (OVERWRITTEN)
+├── keybinding.conf              # ML4W default (OVERWRITTEN)
+└── windowrule.conf              # ML4W default (OVERWRITTEN)
+```
+
+### Files ML4W May Overwrite
+- `autostart.conf`
+- `keybinding.conf`
+- `windowrule.conf`
+- `keybindings/default.conf`
+- `windowrules/default.conf`
+- Most files in `decorations/`, `layouts/`, `animations/`
+
+### Files ML4W Won't Touch
+- `custom.conf`
+- Any file you create (e.g., `ttkeyboard.conf`, `autostart-custom.conf`)
+- `keybindings/custom.conf`
+- `windowrules/custom.conf`
+
 ## custom.conf
 
 The main file for your customizations.
@@ -52,6 +86,70 @@ windowrule = size 400 600,class:(calculator)
 
 # Source additional custom files
 source = ~/.config/hypr/conf/ttkeyboard.conf
+source = ~/.config/hypr/conf/windowrules/custom.conf
+source = ~/.config/hypr/conf/autostart-custom.conf
+```
+
+## Custom Window Rules
+
+Create `~/.config/hypr/conf/windowrules/custom.conf`:
+
+```bash
+# -----------------------------------------------------
+# Custom Window Rules (persists across ML4W updates)
+# -----------------------------------------------------
+
+# System utilities - float
+windowrulev2 = float, title:(pavucontrol)
+windowrulev2 = float, title:(blueman-manager)
+windowrulev2 = float, title:(nm-connection-editor)
+windowrulev2 = float, title:(qalculate-gtk)
+
+# Browser Picture in Picture
+windowrulev2 = float, title:(Picture-in-Picture)
+windowrulev2 = pin, title:(Picture-in-Picture)
+windowrulev2 = move 69.5% 4%, title:(Picture-in-Picture)
+
+# Idle inhibit for fullscreen apps
+windowrulev2 = idleinhibit fullscreen, class:(.*)
+
+# XWayland fixes (DaVinci Resolve)
+windowrulev2 = noblur, class:(resolve), xwayland:1
+
+# Waydroid (Android apps)
+windowrulev2 = float, class:(Waydroid)
+windowrulev2 = size 480 800, class:(Waydroid)
+windowrulev2 = center, class:(Waydroid)
+windowrulev2 = idleinhibit focus, class:(Waydroid)
+```
+
+Then source it from `custom.conf`:
+```bash
+source = ~/.config/hypr/conf/windowrules/custom.conf
+```
+
+## Custom Autostart
+
+Create `~/.config/hypr/conf/autostart-custom.conf`:
+
+```bash
+# -----------------------------------------------------
+# Custom Autostart (persists across ML4W updates)
+# -----------------------------------------------------
+
+# XDG portal for screen sharing
+exec-once = ~/.config/hypr/scripts/xdg.sh
+
+# Dock
+exec-once = ~/.config/nwg-dock-hyprland/launch.sh
+
+# Load hyprpm plugins
+exec-once = hyprpm reload -n
+```
+
+Then source it from `custom.conf`:
+```bash
+source = ~/.config/hypr/conf/autostart-custom.conf
 ```
 
 ## Adding Keybindings
@@ -183,11 +281,55 @@ env = XDG_SESSION_TYPE,wayland
 env = XDG_SESSION_DESKTOP,Hyprland
 ```
 
+## Custom Keybindings
+
+For extensive keybinding changes, create `~/.config/hypr/conf/keybindings/custom.conf`:
+
+```bash
+# Volume - 1% increments (default is 5%)
+bind = , XF86AudioRaiseVolume, exec, pactl set-sink-mute @DEFAULT_SINK@ 0 && pactl set-sink-volume @DEFAULT_SINK@ +1%
+bind = , XF86AudioLowerVolume, exec, pactl set-sink-mute @DEFAULT_SINK@ 0 && pactl set-sink-volume @DEFAULT_SINK@ -1%
+
+# split-monitor-workspaces plugin bindings
+bind = $mainMod, 1, split-workspace, 1
+bind = $mainMod, 2, split-workspace, 2
+# ... etc
+```
+
+Then update `keybinding.conf` to source your custom file:
+```bash
+source = ~/.config/hypr/conf/keybindings/custom.conf
+```
+
+**Note:** If `keybinding.conf` gets reset by ML4W, you'll need to change it back.
+
+## Wallpaper Engine
+
+ML4W 2.9.9.5+ uses **swww** by default (hyprpaper 0.8.0 broke waypaper compatibility).
+
+### Check Current Engine
+```bash
+cat ~/.config/ml4w/settings/wallpaper-engine.sh
+```
+
+### Switch to swww
+```bash
+echo "swww" > ~/.config/ml4w/settings/wallpaper-engine.sh
+pkill hyprpaper
+swww-daemon &
+```
+
+### Update waypaper Backend
+Edit `~/.config/waypaper/config.ini`:
+```ini
+backend = swww
+```
+
 ## Autostart
 
 ### Adding Autostart Apps
 
-Edit `~/.config/hypr/conf/autostart.conf` or add to custom.conf:
+**Recommended:** Use `autostart-custom.conf` (see above) instead of editing `autostart.conf`.
 
 ```bash
 # Run once at startup
