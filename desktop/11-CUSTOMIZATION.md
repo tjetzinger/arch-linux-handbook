@@ -13,6 +13,7 @@ Keep customizations in separate files that ML4W won't overwrite during updates:
 ```
 ~/.config/hypr/
 ├── hypridle-custom.conf         # Custom idle config (SAFE)
+├── monitors.conf                # hyprdynamicmonitors output (SAFE)
 ├── conf/
 │   ├── custom.conf              # Main custom file (SAFE)
 │   ├── ttkeyboard.conf          # Custom keyboard/input (SAFE)
@@ -28,6 +29,17 @@ Keep customizations in separate files that ML4W won't overwrite during updates:
 │   └── windowrule.conf          # ML4W default (OVERWRITTEN)
 ├── hypridle.conf                # ML4W default (OVERWRITTEN - hardlinked)
 └── hyprlock.conf                # ML4W default (OVERWRITTEN - hardlinked)
+
+~/.config/waybar/
+├── modules-custom.json          # Custom module overrides (SAFE)
+├── modules.json                 # ML4W default (OVERWRITTEN - hardlinked)
+└── themes/
+    ├── ml4w-minimal/            # ML4W theme (OVERWRITTEN - hardlinked)
+    │   ├── config
+    │   └── style.css
+    └── custom-minimal/          # Custom theme copy (SAFE)
+        ├── config
+        └── style.css
 ```
 
 ### Files ML4W May Overwrite
@@ -39,13 +51,18 @@ Keep customizations in separate files that ML4W won't overwrite during updates:
 - `hypridle.conf` (hardlinked to ML4W dotfiles)
 - `hyprlock.conf` (hardlinked to ML4W dotfiles)
 - Most files in `decorations/`, `layouts/`, `animations/`
+- `~/.config/waybar/modules.json` (hardlinked)
+- `~/.config/waybar/themes/ml4w-*` (hardlinked)
 
 ### Files ML4W Won't Touch
 - `custom.conf`
 - `hypridle-custom.conf`
+- `monitors.conf`
 - Any file you create (e.g., `ttkeyboard.conf`, `autostart-custom.conf`)
 - `keybindings/custom.conf`
 - `windowrules/custom.conf`
+- `~/.config/waybar/modules-custom.json`
+- `~/.config/waybar/themes/custom-*`
 
 ## custom.conf
 
@@ -309,6 +326,61 @@ source = ~/.config/hypr/conf/keybindings/custom.conf
 ```
 
 **Note:** If `keybinding.conf` gets reset by ML4W, you'll need to change it back.
+
+## Waybar Customization
+
+### Migration-Safe Module Overrides
+
+Waybar modules are defined in `~/.config/waybar/modules.json` (hardlinked to ML4W). To override settings migration-safely:
+
+1. Create `~/.config/waybar/modules-custom.json` with your overrides
+2. Add it FIRST in the theme config's include array
+
+**File:** `~/.config/waybar/modules-custom.json`
+
+```json
+{
+    "hyprland/workspaces": {
+        "all-outputs": false,
+        "persistent-workspaces": {
+            "*": 3
+        }
+    }
+}
+```
+
+**Theme config:** `~/.config/waybar/themes/<theme>/config`
+
+```json
+"include": [
+    "~/.config/waybar/modules-custom.json",
+    "~/.config/ml4w/settings/waybar-quicklinks.json",
+    "~/.config/waybar/modules.json"
+],
+```
+
+**Caveat:** Theme configs are hardlinked to ML4W. After updates, re-add the custom include.
+
+### Fully Migration-Safe: Custom Theme
+
+For a fully migration-safe setup, create a copy of your preferred theme:
+
+```bash
+# Copy theme
+cp -r ~/.config/waybar/themes/ml4w-minimal ~/.config/waybar/themes/custom-minimal
+
+# Edit the custom theme's config
+$EDITOR ~/.config/waybar/themes/custom-minimal/config
+
+# Switch to custom theme
+~/.config/waybar/themeswitcher.sh
+```
+
+Custom themes in `~/.config/waybar/themes/` are not overwritten by ML4W updates.
+
+### Per-Monitor Workspaces
+
+See [05-WAYBAR.md](./05-WAYBAR.md#per-monitor-workspaces-split-monitor-workspaces) for configuring waybar to show only each monitor's workspaces when using split-monitor-workspaces plugin.
 
 ## Wallpaper Engine
 

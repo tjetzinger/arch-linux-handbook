@@ -227,6 +227,60 @@ ml4w-hyprland-settings
 }
 ```
 
+### Per-Monitor Workspaces (split-monitor-workspaces)
+
+When using the **split-monitor-workspaces** Hyprland plugin, each monitor gets its own set of workspaces. By default, Waybar shows ALL workspaces on EACH monitor because of `all-outputs: true` in `modules.json`.
+
+To show only each monitor's workspaces:
+
+**Issue:** `~/.config/waybar/modules.json` has `"all-outputs": true` which shows all workspaces on every monitor.
+
+**Solution:** Create a custom module override file and include it in the theme config.
+
+1. Create `~/.config/waybar/modules-custom.json`:
+
+```json
+{
+    "hyprland/workspaces": {
+        "on-scroll-up": "hyprctl dispatch workspace r-1",
+        "on-scroll-down": "hyprctl dispatch workspace r+1",
+        "on-click": "activate",
+        "active-only": false,
+        "all-outputs": false,
+        "format": "{}",
+        "format-icons": {
+            "urgent": "",
+            "active": "",
+            "default": ""
+        },
+        "persistent-workspaces": {
+            "*": 3
+        }
+    }
+}
+```
+
+2. Add to theme config includes (must be FIRST to override `modules.json`):
+
+**File:** `~/.config/waybar/themes/<theme>/config`
+
+```json
+"include": [
+    "~/.config/waybar/modules-custom.json",
+    "~/.config/ml4w/settings/waybar-quicklinks.json",
+    "~/.config/waybar/modules.json"
+],
+```
+
+3. Restart waybar:
+```bash
+~/.config/waybar/launch.sh
+```
+
+**Result:** Each monitor shows only its assigned workspaces (e.g., DP-6: 4,5,6 / DP-7: 7,8,9).
+
+**Migration Note:** The theme config file is hardlinked to ML4W and may be overwritten on updates. After ML4W updates, re-add `modules-custom.json` to the includes, or create a custom theme copy (see [11-CUSTOMIZATION](./11-CUSTOMIZATION.md)).
+
 ### Window Title
 
 ```json
