@@ -147,6 +147,30 @@ INTEL_GPU_BOOST_FREQ_ON_BAT=800
 
 The `balanced` profile on AC provides good performance with quieter fans compared to `performance` mode.
 
+### Runtime PM Driver Denylist
+
+**File:** `/etc/tlp.conf`
+
+```ini
+RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon xhci_hcd"
+```
+
+Drivers in the denylist are excluded from runtime power management to prevent issues:
+
+| Driver | Purpose | Why Excluded |
+|--------|---------|--------------|
+| `mei_me` | Intel Management Engine | Can cause system instability with PM |
+| `nouveau` | Open-source NVIDIA driver | GPU PM can cause hangs |
+| `radeon` | AMD GPU driver | GPU PM can cause hangs |
+| `xhci_hcd` | USB host controller | Prevents USB device wake issues |
+
+**Check current status:**
+```bash
+sudo tlp-stat -e | grep "Driver denylist"
+```
+
+**Note:** Removing `xhci_hcd` from the denylist saves power but may cause USB devices to not wake properly. Keep the default for reliability.
+
 ### TLP Commands
 
 ```bash
@@ -161,6 +185,9 @@ sudo tlp-stat -p
 
 # USB devices
 sudo tlp-stat -u
+
+# PCI devices and runtime PM
+sudo tlp-stat -e
 
 # Force performance mode (temporary, for heavy workloads)
 sudo tlp performance
