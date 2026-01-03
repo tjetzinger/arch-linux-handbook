@@ -63,6 +63,122 @@ Keep customizations in separate files that ML4W won't overwrite during updates:
 - `windowrules/custom.conf`
 - `~/.config/waybar/modules-custom.json`
 - `~/.config/waybar/themes/custom-*`
+- `~/.local/bin/*` (custom scripts)
+
+## Post-Migration Restoration Checklist
+
+After an ML4W update, verify these customizations are intact:
+
+### ✅ Migration-Safe (no action needed)
+
+These files are yours and won't be touched by ML4W:
+
+| File | Purpose |
+|------|---------|
+| `~/.config/hypr/hypridle-custom.conf` | Custom idle timeouts (no auto-lock, no suspend) |
+| `~/.config/hypr/conf/autostart-custom.conf` | Starts hypridle with custom config |
+| `~/.local/bin/hypridle-toggle` | Waybar toggle using custom config |
+| `~/.local/bin/restart-hypridle` | Manual restart with custom config |
+| `~/.config/waybar/modules-custom.json` | Waybar module overrides |
+
+### ⚠️ May Need Restoration
+
+**1. Waybar theme include order**
+
+File: `~/.config/waybar/themes/ml4w-minimal/config`
+
+Verify `modules-custom.json` is **first** in include array (first takes precedence):
+
+```json
+"include": [
+    "~/.config/waybar/modules-custom.json",
+    "~/.config/ml4w/settings/waybar-quicklinks.json",
+    "~/.config/waybar/modules.json"
+]
+```
+
+**2. Default hypridle autostart**
+
+File: `~/.config/hypr/conf/autostart.conf`
+
+Verify the default hypridle line is commented out (your `autostart-custom.conf` handles it):
+
+```bash
+# exec-once = hypridle
+```
+
+### Quick Verification Commands
+
+```bash
+# Check hypridle is using custom config
+ps aux | grep hypridle
+# Should show: hypridle -c /home/tt/.config/hypr/hypridle-custom.conf
+
+# Check waybar include order
+head -15 ~/.config/waybar/themes/ml4w-minimal/config
+
+# Check autostart
+grep hypridle ~/.config/hypr/conf/autostart.conf
+```
+
+### Hypridle Custom Scripts
+
+**`~/.local/bin/hypridle-toggle`** - Used by waybar for toggle button:
+
+```bash
+#!/bin/bash
+SERVICE="hypridle"
+CUSTOM_CONFIG="$HOME/.config/hypr/hypridle-custom.conf"
+
+print_status() {
+    if pgrep -x "$SERVICE" >/dev/null ; then
+        echo '{"text": "RUNNING", "class": "active", "tooltip": "Screen locking active\nLeft: Deactivate\nRight: Lock Screen"}'
+    else
+        echo '{"text": "NOT RUNNING", "class": "notactive", "tooltip": "Screen locking deactivated\nLeft: Activate\nRight: Lock Screen"}'
+    fi
+}
+
+case "$1" in
+    status) sleep 0.2; print_status ;;
+    toggle)
+        if pgrep -x "$SERVICE" >/dev/null ; then
+            killall "$SERVICE"
+        else
+            [[ -f "$CUSTOM_CONFIG" ]] && "$SERVICE" -c "$CUSTOM_CONFIG" & || "$SERVICE" &
+        fi
+        sleep 0.2; print_status ;;
+    *) echo "Usage: $0 {status|toggle}"; exit 1 ;;
+esac
+```
+
+**`~/.local/bin/restart-hypridle`** - Manual restart:
+
+```bash
+#!/usr/bin/env bash
+killall hypridle
+sleep 1
+hypridle -c ~/.config/hypr/hypridle-custom.conf &
+notify-send "hypridle restarted (custom config)"
+```
+
+### Waybar Module Override
+
+**`~/.config/waybar/modules-custom.json`** should include:
+
+```json
+{
+    "custom/hypridle": {
+        "format": "",
+        "return-type": "json",
+        "escape": true,
+        "exec-on-event": true,
+        "interval": 60,
+        "exec": "~/.local/bin/hypridle-toggle status",
+        "on-click": "~/.local/bin/hypridle-toggle toggle",
+        "on-click-right": "hyprlock"
+    }
+}
+```
 
 ## custom.conf
 
