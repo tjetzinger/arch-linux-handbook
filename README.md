@@ -152,6 +152,9 @@ See [Applications](./applications/README.md) for installed apps and configuratio
 | 07-BIOMETRICS | Fingerprint reader (Synaptics) |
 | 08-PERIPHERALS | Logitech mice, Yubikey |
 | 09-FIRMWARE | BIOS updates via fwupd |
+| 10-EGPU | External GPU (Razer Core X + RTX 3060) |
+| 11-CUSTOM-KERNEL | Custom optimized kernel (linux-zen-x1c) |
+| 12-CACHYOS | CachyOS repository and kernel with sched-ext |
 
 ### Desktop (./desktop/)
 | Document | Description |

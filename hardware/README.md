@@ -17,6 +17,7 @@ Hardware-specific configuration for the ThinkPad X1 Carbon Gen 11.
 | [09-FIRMWARE](./09-FIRMWARE.md) | BIOS and firmware updates |
 | [10-EGPU](./10-EGPU.md) | External GPU (Razer Core X + RTX 3060) |
 | [11-CUSTOM-KERNEL](./11-CUSTOM-KERNEL.md) | Custom optimized kernel (linux-zen-x1c) |
+| [12-CACHYOS](./12-CACHYOS.md) | CachyOS repository and kernel with sched-ext |
 
 ## System Summary
 
