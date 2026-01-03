@@ -180,6 +180,19 @@ notify-send "hypridle restarted (custom config)"
 }
 ```
 
+**Important:** The `"format": ""` field contains a Font Awesome lock icon (U+F023 ) that appears invisible in most editors. This icon MUST be preserved - an empty string will make the module invisible in waybar.
+
+To copy the icon from the original config:
+```bash
+python3 -c "
+import json, re
+with open('$HOME/.config/waybar/modules.json') as f:
+    match = re.search(r'\"custom/hypridle\"[^}]*\"format\": \"([^\"]+)\"', f.read())
+    if match: print(f'Icon: {repr(match.group(1))}')
+"
+# Output: Icon: '\uf023'
+```
+
 ## custom.conf
 
 The main file for your customizations.
