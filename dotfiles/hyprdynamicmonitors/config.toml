@@ -1,0 +1,29 @@
+[general]
+# Restore wallpaper after monitor profile changes
+post_apply_exec = "sleep 1 && waypaper --restore"
+
+[profiles.DualMonitorDock]
+config_file = "hyprconfigs/DualMonitorDock.go.tmpl"
+config_file_type = "template"
+
+[[profiles.DualMonitorDock.conditions.required_monitors]]
+description = "BNQ BenQ BL2581T ET1CL03348SL0"  # External monitor 1
+monitor_tag = "monitor1"
+
+[[profiles.DualMonitorDock.conditions.required_monitors]]
+description = "BNQ BenQ BL2581T ET1CL03342SL0"  # External monitor 2
+monitor_tag = "monitor2"
+
+
+[profiles.LaptopMode]
+config_file = "hyprconfigs/LaptopMode.conf"
+config_file_is_template = false
+
+[[profiles.LaptopMode.conditions.required_monitors]]
+description = "AU Optronics 0xD291"  # Only the laptop display
+monitor_tag = "laptop"
+
+# Fallback profile when no other profile matches
+[fallback_profile]
+config_file = "hyprconfigs/fallback.conf"
+config_file_type = "static"

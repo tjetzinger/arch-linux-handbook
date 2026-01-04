@@ -169,6 +169,37 @@ PipeWire supports:
 - aptX / aptX HD
 - LDAC
 
+### Bluetooth Hardware Volume Issue
+
+Some Bluetooth devices (like eMeet Luna) have hardware volume sync issues where volume keys don't change the audio level, or changes happen on the wrong device.
+
+**Symptoms:**
+- Volume keys don't affect Bluetooth audio
+- Volume slider moves but audio level doesn't change
+- Keyboard/mouse volume controls affect wrong device
+
+**Solution: Disable Bluetooth Hardware Volume**
+
+Create WirePlumber config to use software volume only:
+
+**File:** `/etc/wireplumber/wireplumber.conf.d/99-disable-bt-hw-volume.conf`
+
+```
+monitor.bluez.properties = {
+  bluez5.enable-hw-volume = false
+}
+```
+
+**Apply:**
+```bash
+systemctl --user restart wireplumber
+# Reconnect Bluetooth device
+bluetoothctl disconnect <MAC>
+bluetoothctl connect <MAC>
+```
+
+This forces all Bluetooth volume control through PipeWire's software mixer, ensuring volume keys work correctly.
+
 ## Configuration
 
 ### PipeWire Config

@@ -2,6 +2,17 @@
 
 Adding custom configurations to Hyprland/ML4W.
 
+## Dotfiles
+
+All custom configuration files are available in the [dotfiles](../dotfiles/) directory for easy deployment.
+
+```bash
+# Quick deploy (see dotfiles/README.md for full instructions)
+cp -r ../dotfiles/hypr/conf/* ~/.config/hypr/conf/
+cp ../dotfiles/hypr/hypridle-custom.conf ~/.config/hypr/
+cp ../dotfiles/waybar/modules-custom.json ~/.config/waybar/
+```
+
 ## Golden Rule
 
 **Never edit ML4W default files directly.** Use the designated custom files instead.

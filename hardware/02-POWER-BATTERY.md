@@ -124,6 +124,9 @@ CPU_BOOST_ON_BAT=0
 INTEL_GPU_MIN_FREQ_ON_BAT=100
 INTEL_GPU_MAX_FREQ_ON_BAT=800
 INTEL_GPU_BOOST_FREQ_ON_BAT=800
+
+# Exclude eMeet Luna from autosuspend (sends KEY_SLEEP on disconnect)
+USB_DENYLIST="328f:2001"
 ```
 
 ### Key Settings Explained
@@ -134,6 +137,7 @@ INTEL_GPU_BOOST_FREQ_ON_BAT=800
 | CPU_BOOST_ON_BAT | 0 | Disables turbo boost, saves 2-3W under load |
 | INTEL_GPU_MAX_FREQ_ON_BAT | 800 | Caps GPU at 800 MHz (vs 1500 MHz default) |
 | CPU_ENERGY_PERF_POLICY_ON_BAT | power | Most aggressive CPU power saving |
+| USB_DENYLIST | 328f:2001 | Prevents eMeet Luna from autosuspend (KEY_SLEEP issue) |
 
 **Note:** `PCIE_ASPM_ON_BAT=powersupersave` requires a **reboot** to take effect. Using `powersave` instead can prevent reaching deep package C-states.
 
@@ -269,20 +273,53 @@ cat /sys/kernel/debug/suspend_stats
 
 ## Lid Switch Behavior
 
-**File:** `/etc/systemd/logind.conf`
+Custom logind configuration to prevent unwanted suspends when using external monitors with lid closed.
+
+**File:** `/etc/systemd/logind.conf.d/10-lid-switch.conf`
 
 ```ini
 [Login]
-HandleLidSwitch=suspend
+# When on external power (AC), don't suspend on lid close
+# This prevents unwanted suspends when docked but monitors go to DPMS off
+# (USB-C/Thunderbolt docks don't reliably trigger "Docked" status)
 HandleLidSwitchExternalPower=ignore
+
+# When properly detected as docked (multiple displays), also ignore
 HandleLidSwitchDocked=ignore
 ```
 
 | Setting | Value | Description |
 |---------|-------|-------------|
-| HandleLidSwitch | suspend | Suspend on lid close (battery) |
-| HandleLidSwitchExternalPower | ignore | Don't suspend on AC |
+| HandleLidSwitch | suspend (default) | Suspend on lid close (battery) |
+| HandleLidSwitchExternalPower | ignore | Don't suspend on AC power |
 | HandleLidSwitchDocked | ignore | Don't suspend when docked |
+
+### Why Use a Drop-in File?
+
+Using `/etc/systemd/logind.conf.d/10-lid-switch.conf` instead of editing `/etc/systemd/logind.conf`:
+- Survives package updates
+- Clear separation of custom settings
+- Easy to disable (just remove the file)
+
+### Docked Detection
+
+logind considers the system "docked" when:
+- Connected to a traditional dock, OR
+- More than one display is connected
+
+```bash
+# Check current docked status
+busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager Docked
+# b true = docked, b false = not docked
+```
+
+### Apply Changes
+
+```bash
+sudo systemctl restart systemd-logind
+# Note: This will terminate your current session!
+# Alternative: reboot
+```
 
 ## Fan Control
 
@@ -375,13 +412,41 @@ sudo tlp-stat -u
 Some devices shouldn't autosuspend:
 
 ```bash
-# In /etc/tlp.conf
+# In /etc/tlp.d/10-thinkpad.conf
 USB_EXCLUDE_BTUSB=1          # Bluetooth
 USB_EXCLUDE_PHONE=1          # Phones
 USB_EXCLUDE_WWAN=1           # WWAN modems
 
-# Exclude by ID
-USB_DENYLIST="1234:5678"
+# Exclude by ID (find with lsusb)
+USB_DENYLIST="328f:2001"     # eMeet Luna speakerphone
+```
+
+### USB Denylist: eMeet Luna Issue
+
+The eMeet Luna speakerphone (ID `328f:2001`) has a HID Consumer Control interface that sends `KEY_SLEEP` when the USB connection drops. If TLP autosuspends the device, this triggers system suspend.
+
+**Symptoms:**
+- System suspends unexpectedly while idle
+- USB disconnect logged immediately before suspend
+- `journalctl -b` shows `usb 3-3.3.3.4.1: USB disconnect` then `systemd-logind: Suspending...`
+
+**Solution:**
+```bash
+# Add to /etc/tlp.d/10-thinkpad.conf
+USB_DENYLIST="328f:2001"
+
+# Apply
+sudo tlp start
+
+# Verify device is excluded
+sudo tlp-stat -u | grep eMeet
+# Should show: control = on (not auto)
+```
+
+**Find device ID:**
+```bash
+lsusb | grep -i emeet
+# Bus 003 Device 014: ID 328f:2001 eMeet eMeet Luna
 ```
 
 ## Quick Reference

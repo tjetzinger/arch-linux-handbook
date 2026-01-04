@@ -16,6 +16,7 @@ Technical documentation for Arch Linux installation, recovery, and maintenance.
 | [desktop/](./desktop/) | Hyprland/ML4W desktop environment configuration |
 | [applications/](./applications/) | Installed applications and configurations |
 | [scripts/](./scripts/) | Hyprland and ML4W automation scripts |
+| [dotfiles/](./dotfiles/) | Custom configuration files for Hyprland/ML4W |
 
 ## System Overview
 
