@@ -322,6 +322,16 @@ OnUnitActiveSec=5min
 Persistent=true
 ```
 
+**Disable timer for manual control:**
+
+If the automatic timer conflicts with manual toggling (shader turns back on after you toggle it off), disable the timer:
+
+```bash
+systemctl --user disable --now hyprshade.timer
+```
+
+With timer disabled, use `Super + Shift + H` to manually toggle shaders.
+
 ### Game Mode
 
 Disables effects for gaming:

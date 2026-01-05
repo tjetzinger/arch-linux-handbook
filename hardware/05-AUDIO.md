@@ -371,6 +371,53 @@ aplay -l | grep HDMI
 pactl set-card-profile alsa_card.pci-0000_00_1f.3 output:hdmi-stereo
 ```
 
+## Per-Application Volume
+
+PipeWire stores volume levels per-application. This can cause volume inconsistencies between apps.
+
+### Check Application Volumes
+
+```bash
+pactl list sink-inputs | grep -E "(Sink Input|application.name|Volume:)"
+```
+
+### Set Application Volume
+
+```bash
+# List sink inputs to find the ID
+pactl list sink-inputs short
+
+# Set specific app volume (ID from above)
+pactl set-sink-input-volume <ID> 100%
+```
+
+### VLC Volume Boost
+
+VLC may sound quieter than other apps (like Chrome/YouTube). Fix with audio normalization and gain:
+
+**Edit:** `~/.config/vlc/vlcrc`
+
+```bash
+# Enable volume normalizer and gain filter
+audio-filter=normvol:gain
+
+# Normalization max level (2.5 = 250% boost ceiling)
+norm-max-level=2.500000
+
+# Gain multiplier (4.0 = 400% boost)
+gain-value=4.000000
+```
+
+**Or via CLI:**
+
+```bash
+sed -i 's/^#audio-filter=$/audio-filter=normvol:gain/' ~/.config/vlc/vlcrc
+sed -i 's/^#norm-max-level=.*$/norm-max-level=2.500000/' ~/.config/vlc/vlcrc
+sed -i 's/^#gain-value=.*$/gain-value=4.000000/' ~/.config/vlc/vlcrc
+```
+
+Restart VLC after changes.
+
 ## GUI Tools
 
 ### pavucontrol

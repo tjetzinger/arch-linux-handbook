@@ -2,6 +2,35 @@
 
 Adding custom configurations to Hyprland/ML4W.
 
+## ML4W Migration Guide
+
+### Version History
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| 2.9.9.5 | 2026-01 | swww replaces hyprpaper, Hyprland 0.53.x windowrule syntax, transparent Global Theme |
+| 2.9.9.4 | 2025-12 | Previous stable |
+
+### Migration Process
+
+1. **Backup** - Use Dotfiles Installer's built-in backup (Settings → Backup)
+2. **Update** - Run Dotfiles Installer and select Update
+3. **Verify** - Check customizations are intact (see checklist below)
+4. **Restore** - Restore any overwritten files from backup
+
+### Backup Location
+
+```
+~/.var/app/com.ml4w.dotfilesinstaller/data/backup/com.ml4w.dotfiles.stable/<timestamp>/
+```
+
+### What Gets Backed Up
+
+- `~/.config/hypr/`
+- `~/.config/waybar/`
+- `~/.config/ml4w/`
+- Other desktop config directories
+
 ## Dotfiles
 
 All custom configuration files are available in the [dotfiles](../dotfiles/) directory for easy deployment.
@@ -132,35 +161,112 @@ head -15 ~/.config/waybar/themes/ml4w-minimal/config
 grep hypridle ~/.config/hypr/conf/autostart.conf
 ```
 
-### Hypridle Custom Scripts
+### Hypridle Custom Configs
 
-**`~/.local/bin/hypridle-toggle`** - Used by waybar for toggle button:
+Two configs for different idle behaviors:
+
+| Config | Lock Screen | Screen Off | Suspend |
+|--------|-------------|------------|---------|
+| `hypridle-custom.conf` | 10min | 11min | No |
+| `hypridle-inhibit.conf` | No | 11min | No |
+
+**`~/.config/hypr/hypridle-custom.conf`** - Normal mode (with lock):
+
+```bash
+general {
+    lock_cmd = pidof hyprlock || hyprlock
+    before_sleep_cmd = loginctl lock-session
+    after_sleep_cmd = hyprctl dispatch dpms on
+}
+
+listener {
+    timeout = 480                                # 8min dim
+    on-timeout = brightnessctl -s set 10
+    on-resume = brightnessctl -r
+}
+
+listener {
+    timeout = 600                                # 10min lock
+    on-timeout = loginctl lock-session
+}
+
+listener {
+    timeout = 660                                # 11min screen off
+    on-timeout = hyprctl dispatch dpms off
+    on-resume = hyprctl dispatch dpms on && brightnessctl -r
+}
+```
+
+**`~/.config/hypr/hypridle-inhibit.conf`** - Inhibit mode (no lock):
+
+```bash
+general {
+    lock_cmd = pidof hyprlock || hyprlock
+    before_sleep_cmd = loginctl lock-session
+    after_sleep_cmd = hyprctl dispatch dpms on
+}
+
+listener {
+    timeout = 480                                # 8min dim
+    on-timeout = brightnessctl -s set 10
+    on-resume = brightnessctl -r
+}
+
+# No lock screen when inhibitor is active
+
+listener {
+    timeout = 660                                # 11min screen off
+    on-timeout = hyprctl dispatch dpms off
+    on-resume = hyprctl dispatch dpms on && brightnessctl -r
+}
+```
+
+### Hypridle Toggle Script
+
+**`~/.local/bin/hypridle-toggle`** - Switches between normal and inhibit configs:
 
 ```bash
 #!/bin/bash
+# Switches between full config (with lock) and inhibit config (no lock)
 SERVICE="hypridle"
-CUSTOM_CONFIG="$HOME/.config/hypr/hypridle-custom.conf"
+FULL_CONFIG="$HOME/.config/hypr/hypridle-custom.conf"
+INHIBIT_CONFIG="$HOME/.config/hypr/hypridle-inhibit.conf"
+STATE_FILE="$HOME/.cache/hypridle-inhibit-state"
+
+is_inhibited() { [[ -f "$STATE_FILE" ]]; }
 
 print_status() {
-    if pgrep -x "$SERVICE" >/dev/null ; then
-        echo '{"text": "RUNNING", "class": "active", "tooltip": "Screen locking active\nLeft: Deactivate\nRight: Lock Screen"}'
+    if is_inhibited; then
+        echo '{"text": "INHIBITED", "class": "notactive", "tooltip": "Lock disabled\nScreen off: 11min\nLeft: Enable lock\nRight: Lock now"}'
     else
-        echo '{"text": "NOT RUNNING", "class": "notactive", "tooltip": "Screen locking deactivated\nLeft: Activate\nRight: Lock Screen"}'
+        echo '{"text": "NORMAL", "class": "active", "tooltip": "Lock enabled\nLock: 10min, Screen off: 11min\nLeft: Disable lock\nRight: Lock now"}'
     fi
+}
+
+restart_hypridle() {
+    killall "$SERVICE" 2>/dev/null; sleep 0.2
+    "$SERVICE" -c "$1" &
 }
 
 case "$1" in
     status) sleep 0.2; print_status ;;
     toggle)
-        if pgrep -x "$SERVICE" >/dev/null ; then
-            killall "$SERVICE"
+        if is_inhibited; then
+            rm -f "$STATE_FILE"
+            restart_hypridle "$FULL_CONFIG"
         else
-            [[ -f "$CUSTOM_CONFIG" ]] && "$SERVICE" -c "$CUSTOM_CONFIG" & || "$SERVICE" &
+            touch "$STATE_FILE"
+            restart_hypridle "$INHIBIT_CONFIG"
         fi
-        sleep 0.2; print_status ;;
+        sleep 0.3; print_status ;;
     *) echo "Usage: $0 {status|toggle}"; exit 1 ;;
 esac
 ```
+
+| Toggle State | Config Used | Behavior |
+|--------------|-------------|----------|
+| NORMAL (off) | hypridle-custom.conf | 8min dim → 10min lock → 11min screen off |
+| INHIBITED (on) | hypridle-inhibit.conf | 8min dim → 11min screen off (no lock) |
 
 **`~/.local/bin/restart-hypridle`** - Manual restart:
 
@@ -252,6 +358,84 @@ windowrule = size 400 600,class:(calculator)
 source = ~/.config/hypr/conf/ttkeyboard.conf
 source = ~/.config/hypr/conf/windowrules/custom.conf
 source = ~/.config/hypr/conf/autostart-custom.conf
+```
+
+## Keyboard & Input Settings
+
+Create `~/.config/hypr/conf/ttkeyboard.conf` for keyboard layout and touchpad settings:
+
+```bash
+# -----------------------------------------------------
+# Keyboard Layout
+# https://wiki.hyprland.org/Configuring/Variables/#input
+# -----------------------------------------------------
+input {
+    kb_layout = de
+    kb_variant = nodeadkeys
+    kb_model = thinkpad
+    kb_options =
+    numlock_by_default = true
+    mouse_refocus = false
+
+    # For United States layout (alternative)
+    # kb_layout = us
+    # kb_variant = intl
+    # kb_model = pc105
+
+    follow_mouse = 1
+    touchpad {
+        natural_scroll = true
+        middle_button_emulation = true
+        clickfinger_behavior = true
+        tap-to-click = true
+        drag_lock = true
+        scroll_factor = 1.0
+    }
+    sensitivity = 0  # -1.0 to 1.0, 0 = no modification
+}
+```
+
+### Keyboard Settings
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `kb_layout` | `de` | German layout |
+| `kb_variant` | `nodeadkeys` | No dead keys (direct character input) |
+| `kb_model` | `thinkpad` | ThinkPad keyboard model |
+| `numlock_by_default` | `true` | Numlock on at startup |
+
+### Touchpad Settings
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `natural_scroll` | `true` | Inverted scroll (like macOS/mobile) |
+| `middle_button_emulation` | `true` | Three-finger tap = middle click |
+| `clickfinger_behavior` | `true` | Click position determines button |
+| `tap-to-click` | `true` | Tap to click enabled |
+| `drag_lock` | `true` | Lift finger during drag without dropping |
+
+### Per-Device Overrides
+
+For device-specific settings (in `custom.conf`):
+
+```bash
+# External mouse - invert scroll
+device {
+    name = m585/m590-mouse
+    natural_scroll = true
+}
+
+# External keyboard - different layout
+device {
+    name = mx-keys-mini-keyboard
+    kb_layout = de
+    kb_variant = nodeadkeys
+}
+```
+
+Find device names with:
+```bash
+hyprctl devices
 ```
 
 ## Custom Window Rules
