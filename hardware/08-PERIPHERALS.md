@@ -157,14 +157,26 @@ journalctl -b -u logid | grep -E "found|WARN|ERROR"
 
 The MX Master 3S thumbwheel sends `XF86AudioRaiseVolume`/`XF86AudioLowerVolume` keys. Volume step is configured in Hyprland keybindings.
 
+**Problem:** ML4W's `default.conf` binds volume keys at 5% step. Adding bindings in `custom.conf` causes both to fire (6% total).
+
+**Solution:** Use `unbind` to remove defaults, then `bindle` for 1% step with hold-to-repeat.
+
 **File:** `~/.config/hypr/conf/keybindings/custom.conf`
 
 ```bash
-bind = , XF86AudioRaiseVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ +1%  # 1% step
-bind = , XF86AudioLowerVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ -1%  # 1% step
+# Volume keys - unbind defaults (5%) and rebind with 1% step
+unbind = , XF86AudioRaiseVolume
+unbind = , XF86AudioLowerVolume
+bindle = , XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+  # 1% step
+bindle = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-       # 1% step
 ```
 
-Change `+1%`/`-1%` to desired step (e.g., `+5%` for larger increments).
+| Binding | Behavior |
+|---------|----------|
+| `bind` | Single keypress only |
+| `bindle` | Fires on hold/repeat (smooth scrolling) |
+
+This approach survives ML4W migrations since `custom.conf` is preserved.
 
 ### Apply Configuration
 
