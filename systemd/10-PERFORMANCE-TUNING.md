@@ -426,6 +426,93 @@ ls -la /var/lib/preload/
 
 ---
 
+## Shutdown Optimization
+
+Reduce shutdown time by lowering the default service stop timeout.
+
+### The Problem
+
+Default systemd timeout is **90 seconds** per service. Systems with many services (Docker, libvirt, user services) may wait unnecessarily long during shutdown if a service doesn't stop cleanly.
+
+### Services That Can Delay Shutdown
+
+| Service | Default Timeout | Impact |
+|---------|-----------------|--------|
+| docker.service | 90s | Container cleanup |
+| containerd.service | 90s | Runtime cleanup |
+| libvirtd.service | 90s | VM cleanup |
+| NetworkManager.service | 90s | Connection teardown |
+| User session (user@1000) | 90s | User service cleanup |
+
+### Solution: Reduce Default Timeout
+
+**File:** `/etc/systemd/system.conf.d/10-timeout.conf`
+
+```ini
+[Manager]
+DefaultTimeoutStopSec=15s
+```
+
+### Apply
+
+```bash
+# Create override
+sudo mkdir -p /etc/systemd/system.conf.d/
+sudo tee /etc/systemd/system.conf.d/10-timeout.conf << 'EOF'
+[Manager]
+DefaultTimeoutStopSec=15s
+EOF
+
+# Reload systemd
+sudo systemctl daemon-reexec
+
+# Verify
+systemctl show --property=DefaultTimeoutStopUSec
+# Output: DefaultTimeoutStopUSec=15s
+```
+
+### Analysis Commands
+
+```bash
+# Check last shutdown sequence
+journalctl -b -1 -o short-monotonic | grep -iE "stopping|stopped" | tail -40
+
+# Find slow-stopping services
+journalctl -b -1 | grep -iE "timeout|killing|sigterm|sigkill"
+
+# Check service timeout
+systemctl show docker.service | grep TimeoutStopUSec
+
+# View shutdown dependencies
+systemctl list-dependencies shutdown.target --reverse
+```
+
+### Per-Service Override
+
+For specific services that need more time:
+
+```bash
+# Create override for docker
+sudo systemctl edit docker.service
+```
+
+```ini
+[Service]
+TimeoutStopSec=30s
+```
+
+### Fresh Arch Comparison
+
+| Factor | Desktop System | Fresh Arch |
+|--------|----------------|------------|
+| Running services | 30+ system, 17+ user | ~15 total |
+| Docker/containers | Yes | No |
+| libvirt/VMs | Yes | No |
+| Plymouth | Yes | No |
+| Desktop services | Hyprland, PipeWire, etc. | TTY only |
+
+---
+
 ## Related
 
 - [04-POWER-MANAGEMENT](./04-POWER-MANAGEMENT.md) - TLP and power settings
