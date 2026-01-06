@@ -125,6 +125,56 @@ gestures {
 }
 ```
 
+## Per-Device Acceleration & Speed
+
+Configure acceleration and speed independently for each input device.
+
+**File:** `~/.config/hypr/conf/custom.conf`
+
+```bash
+# Touchpad - enable acceleration, increase speed
+device {
+    name = elan067c:00-04f3:31f9-touchpad
+    accel_profile = adaptive
+    sensitivity = 0.4
+}
+
+# TrackPoint - disable acceleration, increase speed
+device {
+    name = tpps/2-elan-trackpoint
+    natural_scroll = true
+    accel_profile = flat
+    sensitivity = 0.5
+}
+```
+
+### Acceleration Profiles
+
+| Profile | Behavior | Use Case |
+|---------|----------|----------|
+| `adaptive` | Acceleration enabled (default) | Touchpad, mice - fast movements go further |
+| `flat` | No acceleration (1:1) | TrackPoint, gaming - precise control |
+| `custom` | Custom curve with points | Advanced users |
+
+### Sensitivity Range
+
+| Value | Effect |
+|-------|--------|
+| `-1.0` | Slowest |
+| `0.0` | Default (no modification) |
+| `0.4` | Moderate speed increase |
+| `0.5` | Noticeable speed increase |
+| `1.0` | Fastest |
+
+### Why Per-Device?
+
+Different input devices need different settings:
+- **Touchpad**: acceleration feels natural with finger gestures
+- **TrackPoint**: no acceleration for precise control
+- **Mice**: keep default adaptive acceleration
+
+**Note:** `force_no_accel` is global-only in Hyprland. Use `accel_profile = flat` for per-device control.
+
 ## Physical Buttons
 
 The TrackPoint buttons (above touchpad):
