@@ -218,8 +218,13 @@ upower -i /org/freedesktop/UPower/devices/battery_BAT0
 |---------------|-------|
 | Model | 5B10W13973 |
 | Design Capacity | 57 Wh |
-| Current Capacity | ~49 Wh |
-| Cells | 4-cell Li-ion |
+| Current Capacity | ~49 Wh (86% health) |
+| Cycle Count | 110 |
+| Cells | 4-cell Li-poly |
+
+**Health Status**: Battery at 86% health with 110 cycles shows higher degradation than typical. Monitor monthly and consider replacement when health drops below 80%.
+
+**See**: [02-POWER-BATTERY.md](./02-POWER-BATTERY.md) for battery health monitoring, replacement procedure, and vendor recommendations.
 
 ## Thermal
 

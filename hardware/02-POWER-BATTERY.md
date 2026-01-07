@@ -80,6 +80,260 @@ sudo tlp fullcharge BAT0
 echo 100 | sudo tee /sys/class/power_supply/BAT0/charge_control_end_threshold
 ```
 
+## Battery Replacement
+
+### When to Replace
+
+Consider battery replacement when:
+- Battery health drops below **80%** (current: 86%)
+- Charge cycles exceed **300-400** (current: 110)
+- Runtime becomes insufficient for your usage pattern
+- Battery no longer holds charge effectively
+
+**Current Status**: Battery at 86% health with 110 cycles shows **higher degradation than typical**. Monitor monthly and replace when health drops below 80%.
+
+### Check Battery Health
+
+```bash
+# Full battery status
+upower -i /org/freedesktop/UPower/devices/battery_BAT0
+
+# Quick health check
+upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "capacity|cycle|energy-full"
+
+# TLP battery report
+sudo tlp-stat -b
+
+# Calculate health percentage
+echo "scale=2; $(cat /sys/class/power_supply/BAT0/energy_full) / $(cat /sys/class/power_supply/BAT0/energy_full_design) * 100" | bc
+```
+
+### Compatible Batteries
+
+All compatible with ThinkPad X1 Carbon Gen 9, 10, and 11:
+
+| Part Number | Type | Notes |
+|-------------|------|-------|
+| **5B10W13973** | OEM | Current battery model |
+| **5B10W13975** | OEM | Same specs, widely available |
+| **5B11M90057** | OEM | Newer revision |
+| **5B11M90058** | OEM | Newer revision |
+| **L20C4P71** | Chemistry | Battery chemistry designation |
+| **L20M4P71** | Chemistry | Battery chemistry designation |
+
+**Specifications**:
+- Capacity: 57 Wh (3690 mAh)
+- Voltage: 15.44V
+- Cells: 4-cell Li-poly
+- Chemistry: Lithium Polymer
+
+### Recommended Vendors
+
+#### Genuine OEM (Recommended)
+
+| Vendor | Price | Part Number | Notes |
+|--------|-------|-------------|-------|
+| **CDW** | **$91.99** | L20C4P71-TMC | Best price, meets OEM specs |
+| **iFixit** | $114.99 | 5B10W13975 | Includes tools, US shipping only |
+| **LaptopBatteryExpress** | $115-125 | Multiple | 1 year warranty |
+
+**Links**:
+- CDW: https://www.cdw.com/product/total-micro-battery-lenovo-thinkpad-x1-carbon-11th-gen-4-cell-57whr/7459024
+- iFixit: https://www.ifixit.com/products/5b10w13975-lenovo-thinkpad-x1-carbon-9th-gen-battery
+
+#### Third-Party (Not Recommended)
+
+| Vendor | Price | Notes |
+|--------|-------|-------|
+| Amazon (JIAZIJIA) | $50-80 | Quality concerns, shorter lifespan |
+| eBay | $60-100 | Verify seller reputation |
+
+**Recommendation**: Use genuine OEM batteries for best longevity and compatibility.
+
+### Tools Required
+
+- **Phillips-head screwdriver** (small, #0 or #00)
+- **Plastic spudger** or prying tool
+- **Anti-static wrist strap** (recommended)
+
+### Replacement Procedure
+
+**Estimated Time**: 15-30 minutes
+
+#### Preparation
+
+```bash
+# 1. Check current battery status
+upower -i /org/freedesktop/UPower/devices/battery_BAT0
+
+# 2. Ensure battery is not charging
+# Unplug AC adapter
+
+# 3. Power down completely
+sudo systemctl poweroff
+```
+
+**Important**:
+- Work on clean, flat, static-free surface
+- Disconnect all external devices (USB, displays, etc.)
+- Remove AC adapter before opening
+
+#### Step-by-Step
+
+**1. Remove Bottom Cover**
+
+- Place laptop upside down on soft surface
+- Loosen **7 captive screws** (Phillips #0)
+  - Screws stay attached to cover, they don't come out
+- Use plastic spudger to gently pry cover at rear edge
+- Work around edges to release clips
+- Slide cover back and lift off
+
+**2. Disconnect Battery**
+
+- Locate battery connector (ribbon cable near center)
+- Use plastic spudger to carefully lift connector tab
+- Gently pull connector away from socket
+- **CRITICAL**: Only use plastic tools near battery
+
+**3. Remove Old Battery**
+
+- Remove 5 small Phillips screws securing battery
+- Carefully lift battery out of chassis
+- Avoid bending or puncturing battery
+
+**4. Install New Battery**
+
+- Place new battery in position
+- Align screw holes
+- Secure with 5 Phillips screws (do not overtighten)
+- Connect battery ribbon cable
+  - Align connector carefully
+  - Press firmly until seated
+
+**5. Reassemble**
+
+- Verify battery connector is secure
+- Replace bottom cover
+  - Slide front edge under lip first
+  - Press down around edges to engage clips
+- Tighten 7 captive screws evenly
+
+**6. Verify**
+
+```bash
+# Power on and check battery is recognized
+upower -i /org/freedesktop/UPower/devices/battery_BAT0
+
+# Verify capacity
+cat /sys/class/power_supply/BAT0/energy_full_design
+# Should show ~57050000 (57 Wh)
+
+# Check cycle count (should be 0 or low)
+cat /sys/class/power_supply/BAT0/cycle_count
+```
+
+### Post-Replacement
+
+**First charge**:
+1. Fully drain new battery to ~5%
+2. Charge to 100% uninterrupted
+3. Repeat 2-3 times to calibrate
+
+**Update docs**:
+```bash
+# Update hardware/01-OVERVIEW.md with:
+# - New battery install date
+# - Initial cycle count
+# - Design capacity verification
+```
+
+**Re-enable charge thresholds**:
+```bash
+# Verify TLP thresholds active
+sudo tlp-stat -b | grep -A2 "charge thresholds"
+```
+
+### Battery Health Monitoring
+
+**Manual check** (monthly):
+```bash
+sudo tlp-stat -b | grep -E "capacity|cycle"
+```
+
+**Automated monitoring** (optional):
+
+Create `~/.local/bin/battery-health-check`:
+```bash
+#!/bin/bash
+# Battery health monitoring script
+
+THRESHOLD=80
+HEALTH=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | \
+    grep capacity | awk '{print $2}' | sed 's/%//')
+
+if (( $(echo "$HEALTH < $THRESHOLD" | bc -l) )); then
+    notify-send -u critical "Battery Health Warning" \
+        "Battery at ${HEALTH}% health - consider replacement"
+    echo "$(date): Battery health at ${HEALTH}%" >> ~/.local/log/battery-health.log
+fi
+```
+
+Make executable:
+```bash
+chmod +x ~/.local/bin/battery-health-check
+```
+
+**Run weekly via systemd timer** (optional):
+
+Create `~/.config/systemd/user/battery-health.service`:
+```ini
+[Unit]
+Description=Battery health check
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/battery-health-check
+```
+
+Create `~/.config/systemd/user/battery-health.timer`:
+```ini
+[Unit]
+Description=Weekly battery health check
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable:
+```bash
+systemctl --user enable --now battery-health.timer
+```
+
+### Troubleshooting
+
+**Battery not recognized**:
+```bash
+# Check connection
+cat /sys/class/power_supply/BAT0/present
+# Should return: 1
+
+# Verify driver loaded
+dmesg | grep -i battery
+```
+
+**Incorrect capacity**:
+- Run 2-3 full charge/discharge cycles
+- Battery may need calibration
+
+**Won't charge past threshold**:
+- Verify TLP thresholds: `sudo tlp-stat -b`
+- Temporarily disable: `sudo tlp fullcharge BAT0`
+
 ## TLP Configuration
 
 TLP provides automatic power management. Custom settings are in a drop-in file to survive package updates.
