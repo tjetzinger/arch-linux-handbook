@@ -19,7 +19,7 @@ Complete guide for installing Arch Linux with modern security and recovery featu
 - **Automatic unlock** via keyfile with password fallback
 - **Btrfs subvolumes** for flexible snapshot management
 - **Snapper integration** from initial setup
-- **Multiple kernels** (linux + linux-lts) for fallback
+- **Multiple kernels** (linux, linux-lts, linux-cachyos) for fallback
 - **Recovery environment** (arch-live) on same disk
 - **Organized EFI structure** (`/EFI/arch/`)
 
@@ -39,6 +39,7 @@ Complete guide for installing Arch Linux with modern security and recovery featu
 | 06 | [SNAPPER-SETUP.md](./06-SNAPPER-SETUP.md) | Snapper configuration, snap-pac, automation |
 | 07 | [DESKTOP-HYPRLAND.md](./07-DESKTOP-HYPRLAND.md) | Hyprland via ml4w, Wayland essentials |
 | 08 | [POST-INSTALL.md](./08-POST-INSTALL.md) | Essential packages, AUR, dotfiles, hardening |
+| 09 | [CACHYOS-KERNEL.md](./09-CACHYOS-KERNEL.md) | CachyOS kernel setup with custom EFI paths |
 
 ### Scripts
 
