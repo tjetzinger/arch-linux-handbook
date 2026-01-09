@@ -1,6 +1,6 @@
-# Hyprland Desktop
+# Wayland Desktop
 
-Documentation for the Hyprland compositor with ML4W dotfiles.
+Documentation for Wayland compositors: Hyprland (primary) and Niri (alternative).
 
 ## Contents
 
@@ -19,6 +19,7 @@ Documentation for the Hyprland compositor with ML4W dotfiles.
 | [11-CUSTOMIZATION](./11-CUSTOMIZATION.md) | Adding custom configs |
 | [12-KEYRING](./12-KEYRING.md) | GNOME Keyring credential storage |
 | [13-REMOTE-ACCESS](./13-REMOTE-ACCESS.md) | VNC remote desktop via SSH tunnel |
+| [14-NIRI](./14-NIRI.md) | Niri scrollable-tiling compositor |
 
 ## Component Stack
 
