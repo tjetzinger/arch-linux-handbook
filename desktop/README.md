@@ -20,6 +20,7 @@ Documentation for Wayland compositors: Hyprland (primary) and Niri (alternative)
 | [12-KEYRING](./12-KEYRING.md) | GNOME Keyring credential storage |
 | [13-REMOTE-ACCESS](./13-REMOTE-ACCESS.md) | VNC remote desktop via SSH tunnel |
 | [14-NIRI](./14-NIRI.md) | Niri scrollable-tiling compositor |
+| [15-SDDM](./15-SDDM.md) | SDDM display manager and Sequoia theme fixes |
 
 ## Component Stack
 
@@ -37,6 +38,7 @@ Documentation for Wayland compositors: Hyprland (primary) and Niri (alternative)
 | **Dock** | nwg-dock-hyprland |
 | **File Manager** | Nautilus |
 | **Keyring** | GNOME Keyring |
+| **Display Manager** | SDDM (Sequoia theme) |
 
 ## Quick Reference
 
