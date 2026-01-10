@@ -396,6 +396,97 @@ systemctl --user daemon-reload
 systemctl --user enable --now myapp
 ```
 
+## Compositor-Conditional Services
+
+When running multiple Wayland compositors (e.g., Hyprland and Niri), some services should only run under specific compositors.
+
+### Problem
+
+Hyprland-specific services have `ConditionEnvironment=WAYLAND_DISPLAY` which triggers on ANY Wayland session, including Niri:
+
+```ini
+# These services would run under Niri (wrong!)
+hyprdynamicmonitors.service
+hypridle.service
+hyprpaper.service
+```
+
+### Solution: Override Files
+
+Create override files that add a compositor-specific condition:
+
+```bash
+# Create override directory
+mkdir -p ~/.config/systemd/user/<service>.d/
+
+# Create override file
+cat > ~/.config/systemd/user/<service>.d/hyprland-only.conf << 'EOF'
+[Unit]
+ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+EOF
+
+# Reload systemd
+systemctl --user daemon-reload
+```
+
+### Hyprland Services Override
+
+Services that should only run under Hyprland:
+
+| Service | Purpose |
+|---------|---------|
+| `hyprdynamicmonitors.service` | Dynamic monitor configuration |
+| `hyprdynamicmonitors-prepare.service` | Boot-time cleanup |
+| `hypridle.service` | Idle daemon (lock/suspend) |
+| `hyprpaper.service` | Wallpaper daemon |
+
+**Create all overrides:**
+
+```bash
+for service in hyprdynamicmonitors hyprdynamicmonitors-prepare hypridle hyprpaper; do
+  mkdir -p ~/.config/systemd/user/${service}.service.d
+  cat > ~/.config/systemd/user/${service}.service.d/hyprland-only.conf << 'EOF'
+[Unit]
+# Only run when Hyprland is the compositor
+ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+EOF
+done
+systemctl --user daemon-reload
+```
+
+### Verify Conditions
+
+```bash
+# Check that both conditions are present
+systemctl --user cat hyprdynamicmonitors.service | grep Condition
+# Output should show:
+# ConditionEnvironment=WAYLAND_DISPLAY
+# ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+```
+
+### Environment Variables by Compositor
+
+| Variable | Set By |
+|----------|--------|
+| `WAYLAND_DISPLAY` | Any Wayland compositor |
+| `HYPRLAND_INSTANCE_SIGNATURE` | Hyprland only |
+| `NIRI_SOCKET` | Niri only |
+| `XDG_CURRENT_DESKTOP` | Session (hyprland, niri, etc.) |
+
+### Override File Locations
+
+```
+~/.config/systemd/user/
+├── hyprdynamicmonitors.service.d/
+│   └── hyprland-only.conf
+├── hyprdynamicmonitors-prepare.service.d/
+│   └── hyprland-only.conf
+├── hypridle.service.d/
+│   └── hyprland-only.conf
+└── hyprpaper.service.d/
+    └── hyprland-only.conf
+```
+
 ## Graphical Target
 
 User services start when reaching `default.target` (graphical session).
