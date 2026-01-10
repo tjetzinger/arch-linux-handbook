@@ -1,6 +1,6 @@
 # Niri Compositor
 
-Niri is a scrollable-tiling Wayland compositor that can be installed alongside Hyprland.
+Niri is a scrollable-tiling Wayland compositor using the acaibowlz/niri-setup dotfiles.
 
 ## Overview
 
@@ -14,194 +14,202 @@ Unlike traditional tiling (Hyprland, Sway), Niri arranges windows in columns on 
 | Floating | Supported since v25.01 |
 | XWayland | Via xwayland-satellite |
 
-## Installation
+## Installation (acaibowlz/niri-setup)
 
-Niri installs alongside Hyprland without conflicts.
-
-```bash
-# Core + essentials
-sudo pacman -S niri swaylock swayidle xwayland-satellite swaybg fuzzel
-```
-
-### Installed Packages
-
-| Package | Purpose |
-|---------|---------|
-| `niri` | Compositor |
-| `swaylock` | Screen locker |
-| `swayidle` | Idle management |
-| `xwayland-satellite` | X11 app support |
-| `swaybg` | Wallpaper |
-| `fuzzel` | App launcher (Wayland-native) |
-
-### Shared with Hyprland
-
-These work in both compositors:
-- `waybar` (needs niri-specific modules)
-- `rofi`
-- `kitty`
-- `swaync`
-- `xdg-desktop-portal-gtk`
-
-## Starting Niri
-
-1. Logout from Hyprland
-2. At SDDM login, select "Niri" session
-3. Login
-
-Session files:
-- `/usr/share/wayland-sessions/niri.desktop`
-- `/usr/share/wayland-sessions/hyprland.desktop`
-
-## Configuration
-
-Config location: `~/.config/niri/config.kdl`
+Using symlinked configuration from acaibowlz/niri-setup repository.
 
 ```bash
-# Copy default config
-mkdir -p ~/.config/niri
-cp /usr/share/doc/niri/default-config.kdl ~/.config/niri/config.kdl
+# Clone to permanent location
+git clone https://github.com/acaibowlz/niri-setup.git ~/.config/niri-setup
+
+# Install packages
+yay -S --needed niri waybar fuzzel dunst swaylock-effects swww wlogout \
+  brightnessctl cliphist pamixer pwvucontrol swaybg swayidle \
+  power-profiles-daemon polkit-gnome xwayland-satellite niriswitcher alacritty
+
+# Create symlinks
+ln -s ~/.config/niri-setup/niri ~/.config/niri
+ln -s ~/.config/niri-setup/waybar ~/.config/waybar
+ln -s ~/.config/niri-setup/dunst ~/.config/dunst
+ln -s ~/.config/niri-setup/fuzzel ~/.config/fuzzel
+ln -s ~/.config/niri-setup/wlogout ~/.config/wlogout
+ln -s ~/.config/niri-setup/alacritty ~/.config/alacritty
+ln -s ~/.config/niri-setup/scripts ~/.config/niri-scripts
+ln -s ~/.config/niri-setup/niriswitcher ~/.config/niriswitcher
 ```
 
-Config uses KDL format (not TOML like Hyprland). Live-reloads on save.
+### Environment Variable
 
-### Key Sections
+The config uses `$NIRICONF` variable. Add to `~/.config/environment.d/niriconf.conf`:
 
-| Section | Purpose |
-|---------|---------|
-| `input {}` | Keyboard, mouse, touchpad |
-| `output "name" {}` | Monitor configuration |
-| `layout {}` | Gaps, borders, widths |
-| `binds {}` | Keybindings |
-| `spawn-at-startup` | Autostart programs |
-| `window-rule {}` | Per-app rules |
+```bash
+NIRICONF=/home/tt/.config/niri-setup
+```
 
-### Example: Change Terminal
+Also add to `~/.config/fish/config.fish`:
+```fish
+set -gx NIRICONF "$HOME/.config/niri-setup"
+```
+
+## Configuration Structure
+
+Config location: `~/.config/niri-setup/niri/`
+
+| File | Purpose |
+|------|---------|
+| `config.kdl` | Main config (includes others) |
+| `input.kdl` | Keyboard, mouse, touchpad |
+| `outputs.kdl` | Monitor configuration |
+| `layout.kdl` | Gaps, borders, widths |
+| `binds.kdl` | Keybindings |
+| `spawn-at-startup.kdl` | Autostart programs |
+| `wallpapers.kdl` | Wallpaper configuration |
+| `rules.kdl` | Per-app window rules |
+| `misc.kdl` | Screenshots, hotkey overlay |
+
+### Input Configuration
 
 ```kdl
-binds {
-    Mod+T { spawn "kitty"; }
+input {
+    keyboard {
+        xkb {
+            layout "de"
+            variant "nodeadkeys"
+            options "caps:escape"
+        }
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+    focus-follows-mouse
 }
 ```
 
-### Example: Autostart
+### Layout Configuration
 
-```kdl
-spawn-at-startup "waybar"
-spawn-at-startup "swaybg" "-i" "/path/to/wallpaper.jpg"
-spawn-at-startup "swaync"
-```
+| Setting | Value |
+|---------|-------|
+| Gaps | 7px |
+| Focus ring | 1px orange (#FF8C00) |
+| Default width | 50% |
+| Presets | 33%, 50%, 67%, 100% |
 
 ## Keybindings
 
-`Mod` = Super key (when running from SDDM)
+`Mod` = Super key
 
-### Essential
+### Applications
 
 | Key | Action |
 |-----|--------|
-| `Mod+Shift+/` | Show hotkey overlay |
-| `Mod+T` | Terminal |
-| `Mod+D` | App launcher (fuzzel) |
+| `Mod+Return` | Alacritty terminal |
+| `Mod+Space` | Fuzzel launcher |
+| `Mod+B` | Google Chrome |
+| `Mod+E` | Nautilus file manager |
+| `Mod+L` | Lock screen (swaylock) |
+| `Mod+C` | Clipboard history |
+| `Mod+I` | Change idle time |
+| `Mod+P` | Change power profile |
+| `Mod+U` | System updater |
+| `Mod+W` | Toggle waybar |
+| `Mod+Ctrl+W` | Wallpaper selector |
+| `Mod+Backspace` | Logout menu (wlogout) |
+
+### Media Keys
+
+| Key | Action |
+|-----|--------|
+| Brightness Up/Down | Adjust brightness ±5% |
+| Volume Up/Down | Adjust volume ±5% |
+| Mute | Toggle speaker mute |
+| Mic Mute (Fn+F4) | Toggle mic mute |
+| Play/Pause/Next/Prev | Media controls |
+
+### Windows
+
+| Key | Action |
+|-----|--------|
 | `Mod+Q` | Close window |
-| `Mod+Shift+E` | Quit Niri |
-| `Super+Alt+L` | Lock screen |
-
-### Navigation (Vim-style)
-
-| Key | Action |
-|-----|--------|
-| `Mod+H/J/K/L` | Focus left/down/up/right |
-| `Mod+Ctrl+H/J/K/L` | Move window |
-| `Mod+Shift+H/J/K/L` | Focus monitor |
+| `Mod+T` | Toggle floating |
+| `Mod+M` | Maximize column |
+| `Mod+F` | Fullscreen |
+| `Mod+Arrow` | Focus direction |
+| `Mod+Ctrl+Arrow` | Move window |
+| `Mod+Shift+Arrow` | Resize ±10% |
+| `Mod+Home/End` | Focus first/last column |
+| `Mod+[ / ]` | Consume/expel window |
+| `Mod+, / .` | Stack/unstack window |
+| `Mod+Ctrl+C` | Center column |
+| `Mod+R` | Cycle preset widths |
 
 ### Workspaces
 
 | Key | Action |
 |-----|--------|
-| `Mod+1-9` | Focus workspace |
-| `Mod+Ctrl+1-9` | Move to workspace |
-| `Mod+U/I` | Focus workspace down/up |
-| `Mod+O` | Toggle Overview |
+| `Mod+1-9` | Focus workspace 1-9 |
+| `Mod+Ctrl+1-9` | Move to workspace 1-9 |
+| `Mod+Page Up/Down` | Switch workspace |
+| `Mod+Ctrl+Page Up/Down` | Move to workspace |
+| `Mod+A` | Overview |
 
-### Window Layout
-
-| Key | Action |
-|-----|--------|
-| `Mod+F` | Maximize column |
-| `Mod+Shift+F` | Fullscreen |
-| `Mod+C` | Center column |
-| `Mod+V` | Toggle floating |
-| `Mod+W` | Toggle tabbed column |
-| `Mod+R` | Cycle column widths |
-| `Mod+-/=` | Adjust width ±10% |
-
-### Column Stacking
+### Screenshots
 
 | Key | Action |
 |-----|--------|
-| `Mod+[` | Consume/expel window left |
-| `Mod+]` | Consume/expel window right |
-| `Mod+,` | Consume into column |
-| `Mod+.` | Expel from column |
+| `Print` | Screenshot screen |
+| `Ctrl+Print` | Screenshot window |
+| `Shift+Print` | Screenshot select area |
 
-## Waybar Configuration
+### Help
 
-Niri requires different modules than Hyprland:
+| Key | Action |
+|-----|--------|
+| `Mod+Shift+ß` | Hotkey overlay |
 
-| Hyprland Module | Niri Module |
-|-----------------|-------------|
-| `hyprland/workspaces` | `niri/workspaces` |
-| `hyprland/window` | `niri/window` |
-| `hyprland/language` | `niri/language` |
+## Waybar
 
-Generic modules work unchanged: `clock`, `battery`, `network`, `pulseaudio`, `tray`, etc.
+Waybar config: `~/.config/niri-setup/waybar/`
 
-## Comparison with Hyprland
+### Click Actions
 
-| Aspect | Hyprland | Niri |
-|--------|----------|------|
-| Layout paradigm | Traditional tiling | Scrollable columns |
-| Config format | TOML-like | KDL |
-| Screen locker | hyprlock | swaylock |
-| Idle daemon | hypridle | swayidle |
-| Wallpaper | hyprpaper/swww | swaybg |
-| Plugins | Yes | No |
-| IPC | hyprctl | niri msg |
+| Module | Click | Right-click | Scroll |
+|--------|-------|-------------|--------|
+| Media | Play/pause | Stop | Previous/Next |
+| Updates | Open updater | - | - |
+| Pulseaudio | pwvucontrol | - | Volume |
+| Network | nmtui | - | - |
+| Swayidle | Change idle time | - | - |
 
-## IPC Commands
+## Wallpaper
+
+Two wallpaper layers:
+- **Backdrop** (swww) - blurred background visible when scrolling
+- **Workspace** (swaybg) - main wallpaper behind windows
+
+### Change Wallpaper
 
 ```bash
-# List outputs
-niri msg outputs
+# Via keybinding
+Mod+Ctrl+W
 
-# Focus workspace
-niri msg action focus-workspace 1
-
-# Take screenshot
-niri msg action screenshot
-
-# Power off monitors
-niri msg action power-off-monitors
+# Manual
+pkill swaybg; swaybg -i /path/to/wallpaper.png -m fill &
 ```
 
-## Switching Between Compositors
+Wallpaper files: `~/.config/niri-setup/wallpapers/`
 
-Both sessions remain available at SDDM. Configs are separate:
-- Hyprland: `~/.config/hypr/`
-- Niri: `~/.config/niri/`
+## Logout Menu (wlogout)
 
-No restart required to switch - just logout and select different session.
+| Option | Action |
+|--------|--------|
+| Shutdown | `systemctl poweroff` |
+| Reboot | `systemctl reboot` |
+| Logout | `niri msg action quit --skip-confirmation` |
+| Suspend | `systemctl suspend` |
+| Lock | swaylock |
 
 ## Troubleshooting
-
-### X11 Apps Not Working
-
-Ensure xwayland-satellite is running:
-```bash
-# Add to config
-spawn-at-startup "xwayland-satellite"
-```
 
 ### Validate Config
 
@@ -209,15 +217,27 @@ spawn-at-startup "xwayland-satellite"
 niri validate
 ```
 
-### Check Logs
+### Reload Config
 
 ```bash
-journalctl --user -u niri -f
+niri msg action load-config-file
 ```
+
+### RAPL Power Monitoring (btop)
+
+If btop doesn't show power consumption:
+
+```bash
+sudo setcap cap_dac_read_search,cap_sys_rawio,cap_perfmon=ep $(which btop)
+```
+
+### X11 Apps Not Working
+
+Ensure xwayland-satellite is in spawn-at-startup.
 
 ## Resources
 
 - [Niri GitHub](https://github.com/YaLTeR/niri)
+- [acaibowlz/niri-setup](https://github.com/acaibowlz/niri-setup)
 - [Official Documentation](https://yalter.github.io/niri/)
 - [ArchWiki](https://wiki.archlinux.org/title/Niri)
-- [Matrix Chat](https://matrix.to/#/#niri:matrix.org)
