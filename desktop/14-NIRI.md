@@ -235,6 +235,10 @@ sudo setcap cap_dac_read_search,cap_sys_rawio,cap_perfmon=ep $(which btop)
 
 Ensure xwayland-satellite is in spawn-at-startup.
 
+### Grey Lock Screen on Idle
+
+If swaylock shows a grey screen when triggered by swayidle (but works with Mod+L), remove `niri msg action do-screen-transition` from `swaylock.sh`. The screen transition command conflicts with swaylock's session lock acquisition when triggered via swayidle.
+
 ## Resources
 
 - [Niri GitHub](https://github.com/YaLTeR/niri)
