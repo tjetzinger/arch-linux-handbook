@@ -237,7 +237,10 @@ Ensure xwayland-satellite is in spawn-at-startup.
 
 ### Grey Lock Screen on Idle
 
-If swaylock shows a grey screen when triggered by swayidle (but works with Mod+L), remove `niri msg action do-screen-transition` from `swaylock.sh`. The screen transition command conflicts with swaylock's session lock acquisition when triggered via swayidle.
+If swaylock shows a grey screen when triggered by swayidle (but works with Mod+L):
+
+1. Remove `niri msg action do-screen-transition` from `swaylock.sh` - conflicts with session lock acquisition
+2. Remove `--daemonize` flag from swaylock - causes screenshot capture before lock is ready
 
 ## Blue Light Filter (wlsunset)
 
