@@ -239,6 +239,39 @@ Ensure xwayland-satellite is in spawn-at-startup.
 
 If swaylock shows a grey screen when triggered by swayidle (but works with Mod+L), remove `niri msg action do-screen-transition` from `swaylock.sh`. The screen transition command conflicts with swaylock's session lock acquisition when triggered via swayidle.
 
+## Blue Light Filter (wlsunset)
+
+Install and configure wlsunset as a systemd user service:
+
+```bash
+yay -S wlsunset
+```
+
+Create `~/.config/systemd/user/wlsunset.service`:
+
+```ini
+[Unit]
+Description=Day/night gamma adjustments
+Documentation=man:wlsunset(1)
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/wlsunset -l 48.1 -L 11.6 -t 4000 -T 6500
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
+```
+
+Enable and start:
+
+```bash
+systemctl --user enable --now wlsunset.service
+```
+
+Toggle modes (day/night/auto): `pkill -USR1 wlsunset`
+
 ## Resources
 
 - [Niri GitHub](https://github.com/YaLTeR/niri)
