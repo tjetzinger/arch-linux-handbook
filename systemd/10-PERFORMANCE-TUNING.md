@@ -1,12 +1,13 @@
 # 10 - Performance Tuning
 
-System performance optimizations for desktop responsiveness on ThinkPad X1 Carbon Gen 11 (62GB RAM).
+System performance optimizations for desktop responsiveness on ThinkPad X1 Carbon Gen 11 (62GB RAM, Intel i7-1370P).
 
 ## Overview
 
 | Component | Purpose | Status |
 |-----------|---------|--------|
-| linux-zen | Optimized desktop kernel | Available (boot menu) |
+| linux-cachyos | CachyOS optimized kernel | Active |
+| scx_lavd | sched-ext scheduler | Running (autopower) |
 | ananicy-cpp | Process priority management | Running |
 | irqbalance | IRQ distribution across CPUs | Running |
 | earlyoom | OOM prevention daemon | Running |
@@ -16,9 +17,123 @@ System performance optimizations for desktop responsiveness on ThinkPad X1 Carbo
 
 ---
 
+## CachyOS Kernel
+
+High-performance kernel with AutoFDO profiling, LTO, and sched-ext support.
+
+### Features
+
+| Feature | Benefit |
+|---------|---------|
+| AutoFDO + Propeller | Profile-guided optimization (5-10% perf gain) |
+| Thin LTO | Link-time optimization |
+| 1000Hz tick rate | Lower latency |
+| EEVDF scheduler | Modern base scheduler |
+| sched-ext support | BPF-based userspace schedulers |
+| x86-64-v3 | Architecture-specific optimizations |
+
+### Current Kernel
+
+```bash
+# Check kernel
+uname -r
+# 6.18.3-2-cachyos
+
+# Kernel info
+pacman -Qi linux-cachyos
+```
+
+### Available Variants
+
+| Kernel | Scheduler | Use Case |
+|--------|-----------|----------|
+| `linux-cachyos` | EEVDF + AutoFDO | **Default** - best overall |
+| `linux-cachyos-bore` | BORE | Interactive/gaming |
+| `linux-cachyos-lts` | BORE | Long-term stability |
+| `linux-cachyos-hardened` | BORE | Security-focused |
+
+---
+
+## sched-ext Schedulers
+
+BPF-based schedulers that run in userspace, allowing dynamic scheduler changes without rebooting.
+
+### Available Schedulers
+
+| Scheduler | Best For | Power Efficiency |
+|-----------|----------|------------------|
+| **scx_lavd** | Laptops, hybrid CPUs | ⭐⭐⭐⭐ Best (core compaction) |
+| scx_bpfland | Desktop, general use | ⭐⭐⭐ Good |
+| scx_flash | Fairness, consistency | ⭐⭐⭐ Good |
+| scx_rusty | Tunable, server | ⭐⭐⭐ Good |
+| scx_cosmos | General-purpose | ⭐⭐⭐ Good |
+
+### Why scx_lavd for Intel Hybrid (i7-1370P)
+
+- **Core Compaction** - When CPU < 50%, P-cores active, E-cores in deep sleep
+- **Hybrid-Aware** - Understands P-core vs E-core performance differences
+- **Autopower** - Automatically adjusts based on system EPP
+- **Latency-Critical** - Prioritizes interactive tasks on P-cores
+
+### Configuration
+
+**File:** `/etc/scx_loader.toml`
+
+```toml
+default_sched = "scx_lavd"
+default_mode = "Auto"
+
+[scheds.scx_lavd]
+auto_mode = ["--autopower"]
+```
+
+### Management Commands
+
+```bash
+# Check current scheduler
+scxctl get
+
+# Switch scheduler
+scxctl switch --sched lavd --mode powersave
+scxctl switch --sched bpfland --mode gaming
+
+# Switch with custom args
+scxctl switch --sched lavd --args="--autopower"
+
+# Stop sched-ext (use kernel default)
+scxctl stop
+
+# Restart service
+systemctl restart scx_loader.service
+```
+
+### Scheduler Modes
+
+| Mode | Flag | Use Case |
+|------|------|----------|
+| Auto | default | Balanced, auto-adjusts |
+| Gaming | `--performance` | Maximum performance |
+| Powersave | `--powersave` | Battery life |
+| Low Latency | varies | Audio production |
+
+### Service
+
+```bash
+# Status
+systemctl status scx_loader.service
+
+# Logs
+journalctl -u scx_loader.service -f
+
+# Enable at boot
+systemctl enable scx_loader.service
+```
+
+---
+
 ## linux-zen Kernel
 
-Optimized kernel for desktop responsiveness, lower latency, and better interactivity.
+Alternative optimized kernel for desktop responsiveness (fallback option).
 
 ### Features
 
@@ -55,8 +170,8 @@ ls /boot/vmlinuz-*
 
 | Kernel | Use Case |
 |--------|----------|
-| linux (mainline) | Default, eGPU with NVIDIA |
-| linux-zen | Desktop responsiveness, no eGPU |
+| linux-cachyos | **Default** - best performance |
+| linux-zen | Alternative, no sched-ext |
 | linux-lts | Stability, fallback |
 
 ---
