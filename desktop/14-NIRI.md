@@ -134,7 +134,8 @@ input {
 | `Mod+T` | Toggle floating |
 | `Mod+M` | Maximize column |
 | `Mod+F` | Fullscreen |
-| `Mod+Arrow` | Focus direction |
+| `Mod+Arrow` | Focus column/window |
+| `Mod+Alt+Left/Right` | Focus monitor |
 | `Mod+Ctrl+Arrow` | Move window |
 | `Mod+Shift+Arrow` | Resize ±10% |
 | `Mod+Home/End` | Focus first/last column |
