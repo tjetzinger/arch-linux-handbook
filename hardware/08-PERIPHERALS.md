@@ -102,14 +102,16 @@ journalctl -b -u logid | grep -E "found|WARN|ERROR"
       action = {
         type: "Gestures";
         gestures: (
-          { direction: "Up"; mode: "OnRelease";
-            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_LEFTCTRL", "KEY_UP"]; }; },
-          { direction: "Down"; mode: "OnRelease";
-            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_LEFTCTRL", "KEY_DOWN"]; }; },
-          { direction: "Left"; mode: "OnRelease";
-            action = { type: "KeyPress"; keys: ["KEY_LEFTMETA", "KEY_LEFTCTRL", "KEY_LEFT"]; }; },
-          { direction: "Right"; mode: "OnRelease";
-            action = { type: "KeyPress"; keys: ["KEY_LEFTMETA", "KEY_LEFTCTRL", "KEY_RIGHT"]; }; }
+          { direction: "None"; mode: "OnRelease";  // Tap: Overview
+            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_A"]; }; },
+          { direction: "Up"; mode: "OnRelease";    // Swipe up: Workspace down
+            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_PAGEDOWN"]; }; },
+          { direction: "Down"; mode: "OnRelease";  // Swipe down: Workspace up
+            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_PAGEUP"]; }; },
+          { direction: "Left"; mode: "OnRelease";  // Swipe left: Focus column right
+            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_RIGHT"]; }; },
+          { direction: "Right"; mode: "OnRelease"; // Swipe right: Focus column left
+            action = { type: "Keypress"; keys: ["KEY_LEFTMETA", "KEY_LEFT"]; }; }
         );
       };
     }
@@ -152,6 +154,18 @@ journalctl -b -u logid | grep -E "found|WARN|ERROR"
 | HiRes Scroll | Yes | Yes |
 | Gestures | Yes | No |
 | Thumb wheel | Volume | N/A |
+
+### MX Master 3S Gesture Button (Niri)
+
+| Gesture | Action | Keybinding |
+|---------|--------|------------|
+| Tap | Overview | Mod+A |
+| Swipe Left | Focus column right | Mod+Right |
+| Swipe Right | Focus column left | Mod+Left |
+| Swipe Up | Workspace down | Mod+Page_Down |
+| Swipe Down | Workspace up | Mod+Page_Up |
+
+**Note:** Gestures use natural direction (content moves with swipe).
 
 ### Volume Step Configuration
 
