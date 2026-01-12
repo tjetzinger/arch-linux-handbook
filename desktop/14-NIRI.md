@@ -276,6 +276,35 @@ systemctl --user enable --now wlsunset.service
 
 Toggle modes (day/night/auto): `pkill -USR1 wlsunset`
 
+## Logitech MX Master 3S (logiops)
+
+Configure gesture button and thumbwheel via logiops.
+
+```bash
+yay -S logiops
+sudo systemctl enable --now logid
+```
+
+Config: `/etc/logid.cfg`
+
+### Gesture Button
+
+| Gesture | Action |
+|---------|--------|
+| Tap | Overview |
+| Swipe Left | Focus column right |
+| Swipe Right | Focus column left |
+| Swipe Up | Workspace down |
+| Swipe Down | Workspace up |
+
+Gestures use natural direction (content moves with swipe).
+
+### Thumbwheel
+
+Volume control at 1% step per scroll tick.
+
+See [hardware/08-PERIPHERALS](../hardware/08-PERIPHERALS.md) for full configuration.
+
 ## Resources
 
 - [Niri GitHub](https://github.com/YaLTeR/niri)
