@@ -1,0 +1,15 @@
+#!/bin/bash
+# Restart tailscaled when network changes to restore LAN throw rules
+# Workaround for https://github.com/tailscale/tailscale/issues/9413
+
+INTERFACE="$1"
+ACTION="$2"
+
+# Skip tailscale interfaces to prevent restart loops
+[[ "$INTERFACE" == tailscale* ]] && exit 0
+
+# Only act on physical interface up events
+if [[ "$ACTION" == "up" ]]; then
+    sleep 2
+    systemctl restart tailscaled
+fi

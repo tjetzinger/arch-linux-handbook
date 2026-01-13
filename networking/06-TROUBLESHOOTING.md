@@ -194,6 +194,49 @@ tailscale set --exit-node=<different-node>
 tailscale netcheck
 ```
 
+### LAN Access Lost After Network Changes
+
+**Symptoms:** Can't reach local devices (192.168.x.x) after running `tailscale up` or network reconnect, even with `--exit-node-allow-lan-access` enabled.
+
+**Cause:** Known bug ([GitHub #9413](https://github.com/tailscale/tailscale/issues/9413)) - the `throw` routes for local subnets get lost when Tailscale reconfigures.
+
+```bash
+# Check if throw rules are missing
+ip route show table 52 | grep throw
+# Should show: throw 192.168.0.0/24 (your local subnet)
+
+# Quick fix - restart tailscaled
+sudo systemctl restart tailscaled
+
+# Verify routes restored
+ip route show table 52 | grep throw
+```
+
+**Permanent Fix:** NetworkManager dispatcher script to auto-restart tailscaled on network changes.
+
+Create `/etc/NetworkManager/dispatcher.d/99-tailscale-lan`:
+```bash
+#!/bin/bash
+# Restart tailscaled when network changes to restore LAN throw rules
+# Workaround for https://github.com/tailscale/tailscale/issues/9413
+
+INTERFACE="$1"
+ACTION="$2"
+
+# Skip tailscale interfaces to prevent restart loops
+[[ "$INTERFACE" == tailscale* ]] && exit 0
+
+# Only act on physical interface up events
+if [[ "$ACTION" == "up" ]]; then
+    sleep 2
+    systemctl restart tailscaled
+fi
+```
+
+```bash
+sudo chmod +x /etc/NetworkManager/dispatcher.d/99-tailscale-lan
+```
+
 ## Subnet Routing Issues
 
 ### Can't Access Subnet
@@ -330,6 +373,7 @@ tailscale bugreport
 | Not connecting | `sudo systemctl restart tailscaled` |
 | DNS not working | `resolvectl flush-caches` |
 | Exit node issues | `tailscale set --exit-node=` then re-set |
+| LAN access lost with exit node | `sudo systemctl restart tailscaled` |
 | Slow connection | Check `tailscale netcheck` |
 | Subnet not working | Check IP forwarding and route approval |
 | Auth expired | `tailscale logout && tailscale up` |
