@@ -147,6 +147,50 @@ resolvectl flush-caches
 sudo systemctl restart tailscaled
 ```
 
+### Tailscale DNS Not Active After Reboot
+
+**Symptoms:** After reboot, DNS queries don't go through Tailscale/NextDNS. `resolvectl status tailscale0` shows `Current Scopes: none` instead of `DNS`.
+
+**Cause:** Known bug ([GitHub #14259](https://github.com/tailscale/tailscale/issues/14259), [#4934](https://github.com/tailscale/tailscale/issues/4934)) - race condition between `tailscaled` and `systemd-resolved` during boot. DNS configuration doesn't get properly registered.
+
+```bash
+# Check if DNS scope is active
+resolvectl status tailscale0
+# Should show: Current Scopes: DNS
+# If shows: Current Scopes: none - DNS is broken
+
+# Quick fix - restart systemd-resolved
+sudo systemctl restart systemd-resolved
+
+# Verify DNS is now active
+resolvectl status tailscale0
+```
+
+**Permanent Fix:** NetworkManager dispatcher script to restart `systemd-resolved` when network comes up.
+
+Create `/etc/NetworkManager/dispatcher.d/99-tailscale-dns`:
+```bash
+#!/bin/bash
+# Restart systemd-resolved when network comes up to fix Tailscale DNS scope
+# Workaround for https://github.com/tailscale/tailscale/issues/14259
+
+INTERFACE="$1"
+ACTION="$2"
+
+# Skip tailscale interfaces to prevent loops
+[[ "$INTERFACE" == tailscale* ]] && exit 0
+
+# Only act on interface up events
+if [[ "$ACTION" == "up" ]]; then
+    sleep 3
+    systemctl restart systemd-resolved
+fi
+```
+
+```bash
+sudo chmod +x /etc/NetworkManager/dispatcher.d/99-tailscale-dns
+```
+
 ## Exit Node Issues
 
 ### Exit Node Not Working
@@ -210,31 +254,6 @@ sudo systemctl restart tailscaled
 
 # Verify routes restored
 ip route show table 52 | grep throw
-```
-
-**Permanent Fix:** NetworkManager dispatcher script to auto-restart tailscaled on network changes.
-
-Create `/etc/NetworkManager/dispatcher.d/99-tailscale-lan`:
-```bash
-#!/bin/bash
-# Restart tailscaled when network changes to restore LAN throw rules
-# Workaround for https://github.com/tailscale/tailscale/issues/9413
-
-INTERFACE="$1"
-ACTION="$2"
-
-# Skip tailscale interfaces to prevent restart loops
-[[ "$INTERFACE" == tailscale* ]] && exit 0
-
-# Only act on physical interface up events
-if [[ "$ACTION" == "up" ]]; then
-    sleep 2
-    systemctl restart tailscaled
-fi
-```
-
-```bash
-sudo chmod +x /etc/NetworkManager/dispatcher.d/99-tailscale-lan
 ```
 
 ## Subnet Routing Issues
@@ -372,6 +391,7 @@ tailscale bugreport
 |-------|-----------|
 | Not connecting | `sudo systemctl restart tailscaled` |
 | DNS not working | `resolvectl flush-caches` |
+| DNS scope none after reboot | `sudo systemctl restart systemd-resolved` |
 | Exit node issues | `tailscale set --exit-node=` then re-set |
 | LAN access lost with exit node | `sudo systemctl restart tailscaled` |
 | Slow connection | Check `tailscale netcheck` |
