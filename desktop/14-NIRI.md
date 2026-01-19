@@ -238,10 +238,34 @@ Ensure xwayland-satellite is in spawn-at-startup.
 
 ### Grey Lock Screen on Idle
 
-If swaylock shows a grey screen when triggered by swayidle (but works with Mod+L):
+If swaylock shows a grey screen when triggered by swayidle (but Mod+L works fine):
 
-1. Remove `niri msg action do-screen-transition` from `swaylock.sh` - conflicts with session lock acquisition
-2. Remove `--daemonize` flag from swaylock - causes screenshot capture before lock is ready
+**Root Cause:** swayidle reads both command line arguments AND `~/.config/swayidle/config`. If both exist, the config file's `swaylock -f` (bare swaylock = grey) runs first, then the script sees swaylock already running and exits.
+
+**Fix:**
+
+```bash
+# Check for conflicting config
+cat ~/.config/swayidle/config
+
+# If it contains "swaylock -f", remove or backup:
+mv ~/.config/swayidle/config ~/.config/swayidle/config.bak
+
+# Restart swayidle
+pkill swayidle
+~/.config/niri-setup/scripts/swayidle.sh &
+```
+
+**Verify fix:**
+
+```bash
+# Should only show command line swayidle, no config file
+pgrep -af swayidle
+```
+
+**Technical Details:**
+
+The `ext-session-lock-v1` Wayland protocol only allows one client to hold the session lock. When the config file's bare `swaylock -f` acquires the lock first, the script's styled swaylock fails with "is another lockscreen running?" and exits.
 
 ## Blue Light Filter (wlsunset)
 
