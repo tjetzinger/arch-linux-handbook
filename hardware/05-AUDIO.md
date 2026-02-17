@@ -210,23 +210,16 @@ This forces all Bluetooth volume control through PipeWire's software mixer, ensu
 
 ### WirePlumber Config
 
-**Location:** `~/.config/wireplumber/`
+**Location:** `~/.config/wireplumber/wireplumber.conf.d/`
 
-Example device profile:
-```lua
--- ~/.config/wireplumber/main.lua.d/51-alsa-config.lua
-rule = {
-  matches = {
-    {
-      { "node.name", "matches", "alsa_output.*" },
-    },
-  },
-  apply_properties = {
-    ["audio.format"] = "S32LE",
-    ["audio.rate"] = 48000,
-  },
-}
-```
+Current config files:
+
+| File | Purpose |
+|------|---------|
+| `50-disable-sticky-defaults.conf` | Disable history-based default selection |
+| `51-usb-audio-soft-volume.conf` | Software volume for USB devices |
+| `52-audio-device-priorities.conf` | Auto-switching priority chain |
+| `53-internal-speaker-profile.conf` | Headphone jack auto-detection |
 
 ## USB Audio Devices
 
@@ -287,6 +280,98 @@ systemctl --user restart wireplumber
 
 **Note:** With soft-mixer, ~20% is the practical minimum volume due to PipeWire's cubic volume curve.
 
+## Auto-Switching Priority Chain
+
+Automatic audio device selection based on `priority.session` values. When a higher-priority device connects, WirePlumber switches to it automatically. When it disconnects, audio falls back to the next available device.
+
+### Priority Table
+
+| Priority | Device | Match |
+|----------|--------|-------|
+| 2500 | Bluetooth headset (any) | `bluez_output.*` / `bluez_input.*` |
+| 2000 | eMeet Luna (USB) | `alsa_output.usb-eMeet.*` |
+| 1800 | Wired headphones (3.5mm) | `*HiFi__Headphones__sink` |
+| 1500 | Laptop speaker / mics | `*HiFi__Speaker__sink`, `*Mic1__source`, `*Mic2__source` |
+| 1100 | Dock audio jack | `alsa_*.usb-Lenovo_ThinkPad_USB-C_Dock.*` |
+
+### Step 1: Disable Sticky Default History
+
+WirePlumber's default-nodes state file adds +30000/+20000 priority bonuses that override `priority.session`. Disable it:
+
+**File:** `~/.config/wireplumber/wireplumber.conf.d/50-disable-sticky-defaults.conf`
+
+```
+wireplumber.settings = {
+  node.restore-default-targets = false
+}
+```
+
+Then clear the state file:
+
+```bash
+echo "[default-nodes]" > ~/.local/state/wireplumber/default-nodes
+```
+
+### Step 2: Set Device Priorities
+
+**File:** `~/.config/wireplumber/wireplumber.conf.d/52-audio-device-priorities.conf`
+
+Uses `monitor.bluez.rules` for Bluetooth and `monitor.alsa.rules` for ALSA devices. Match patterns use `~` prefix for POSIX extended regex (not glob).
+
+**Key syntax notes:**
+- `~bluez_output.*` = regex match (correct)
+- `~*HiFi__Speaker__sink` = invalid regex (`*` without preceding atom)
+- `~.*HiFi__Speaker__sink` = correct regex
+
+### Step 3: Enable Headphone Jack Auto-Detection
+
+**File:** `~/.config/wireplumber/wireplumber.conf.d/53-internal-speaker-profile.conf`
+
+```
+monitor.alsa.rules = [
+  {
+    matches = [
+      {
+        device.name = "alsa_card.pci-0000_00_1f.3-platform-skl_hda_dsp_generic"
+      }
+    ]
+    actions = {
+      update-props = {
+        api.acp.auto-profile = true
+        api.acp.auto-port = true
+      }
+    }
+  }
+]
+```
+
+ACP auto-switches between Speaker and Headphones profiles on jack insert/remove.
+
+### Verify
+
+```bash
+systemctl --user restart wireplumber
+
+# Check current defaults
+wpctl inspect @DEFAULT_AUDIO_SINK@ | grep node.name
+wpctl inspect @DEFAULT_AUDIO_SOURCE@ | grep node.name
+
+# Full priority audit
+pw-dump | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for obj in data:
+    p = obj.get('info', {}).get('props', {})
+    mc = p.get('media.class', '')
+    if mc in ('Audio/Sink', 'Audio/Source'):
+        print(f'{mc:15s}  prio={str(p.get(\"priority.session\",\"?\")):>5}  {p.get(\"node.name\",\"?\")}')
+"
+```
+
+### Known Limitation
+
+Bluetooth loopback filter nodes (`bluez_output.XX:XX:XX:XX:XX:XX`) cap at priority 2010 regardless of the internal node priority (2500). This is a WirePlumber filter offset. The 2010 value still beats eMeet ALSA at 2000, so BT correctly takes priority.
+
 ## Troubleshooting
 
 ### No Sound
@@ -337,7 +422,15 @@ context.properties = {
 }
 ```
 
-### Wrong Default Device
+### Wrong Default Device After Dock Reconnection
+
+WirePlumber's default-node history adds a +30000 priority bonus to previously-selected devices, overriding `priority.session` settings. This causes the wrong device to be selected after dock reconnection.
+
+**Root cause:** Sticky entries in `~/.local/state/wireplumber/default-nodes`
+
+**Fix:** Disable history-based selection and use priority-based auto-switching instead. See [Auto-Switching](#auto-switching-priority-chain) below.
+
+**Manual override (temporary):**
 
 ```bash
 # List devices with IDs
