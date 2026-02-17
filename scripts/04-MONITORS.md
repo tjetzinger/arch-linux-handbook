@@ -229,7 +229,43 @@ Monitor names can change with:
 - Dock connection order
 - USB-C alt mode
 
-Use `hyprctl monitors` to find current names.
+Use `hyprctl monitors` (Hyprland) or `niri msg outputs` (Niri) to find current names.
+
+### Monitors Swap Order on Dock Reconnect (Hotplug)
+
+When identical monitors are configured by connector name (`DP-6`, `DP-7`), disconnecting and reconnecting the dock can assign different connector numbers, causing monitors to appear swapped.
+
+**Root cause:** The kernel assigns connector names dynamically. Each hotplug event increments the DP number (`DP-6` → `DP-8` → `DP-10`), so hardcoded connector names stop matching.
+
+**Fix:** Use stable identifiers instead of connector names.
+
+**Hyprland** — use `desc:` prefix with serial number:
+
+```bash
+# Find descriptions
+hyprctl monitors -j | jq -r '.[].description'
+
+# In monitors.conf
+monitor=desc:BNQ BenQ BL2581T ET1CL03348SL0,1920x1200@59.95,0x0,1
+monitor=desc:BNQ BenQ BL2581T ET1CL03342SL0,1920x1200@59.95,1920x0,1
+```
+
+**Niri** — use EDID description string as output name:
+
+```bash
+# Find descriptions
+niri msg outputs | grep "^Output"
+
+# In outputs.kdl
+output "PNP(BNQ) BenQ BL2581T ET1CL03348SL0" {
+    position x=0 y=0
+}
+output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" {
+    position x=1920 y=0
+}
+```
+
+The laptop panel (`eDP-1`) is always stable and does not need a description-based identifier.
 
 ### Display Manager Issues
 

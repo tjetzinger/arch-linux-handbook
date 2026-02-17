@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# Arch Linux Installation - Step 3: System Configuration
+# Arch Linux Installation - Step 3: System Configuration (X250)
 # ============================================================
 # Run this inside arch-chroot /mnt
 # ============================================================
@@ -9,7 +9,7 @@ set -e
 source "$(dirname "$0")/00-vars.sh"
 
 echo "=============================================="
-echo "Arch Linux Installation - Configuration"
+echo "Arch Linux Installation - Configuration (X250)"
 echo "=============================================="
 
 # === Timezone ===
@@ -65,31 +65,22 @@ EFI_UUID=$(blkid -s UUID -o value "$EFI_PART")
 echo "LUKS UUID: $LUKS_UUID"
 echo "EFI UUID: $EFI_UUID"
 
-# Organize kernel files
-mkdir -p /boot/EFI/arch
-mv /boot/vmlinuz-linux /boot/EFI/arch/ 2>/dev/null || true
-mv /boot/vmlinuz-linux-lts /boot/EFI/arch/ 2>/dev/null || true
-mv /boot/initramfs-linux.img /boot/EFI/arch/ 2>/dev/null || true
-mv /boot/initramfs-linux-lts.img /boot/EFI/arch/ 2>/dev/null || true
-mv /boot/initramfs-linux-fallback.img /boot/EFI/arch/ 2>/dev/null || true
-mv /boot/initramfs-linux-lts-fallback.img /boot/EFI/arch/ 2>/dev/null || true
-
-# Boot entries
+# Boot entries (kernels stay in /boot/ — no multi-system EFI layout)
 MICROCODE="${CPU_VENDOR}-ucode.img"
 
 cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
-linux   /EFI/arch/vmlinuz-linux
+linux   /vmlinuz-linux
 initrd  /$MICROCODE
-initrd  /EFI/arch/initramfs-linux.img
+initrd  /initramfs-linux.img
 options rd.luks.name=$LUKS_UUID=$CRYPT_NAME root=/dev/mapper/$CRYPT_NAME rootflags=subvol=@arch rw
 EOF
 
 cat > /boot/loader/entries/arch-lts.conf << EOF
 title   Arch Linux LTS
-linux   /EFI/arch/vmlinuz-linux-lts
+linux   /vmlinuz-linux-lts
 initrd  /$MICROCODE
-initrd  /EFI/arch/initramfs-linux-lts.img
+initrd  /initramfs-linux-lts.img
 options rd.luks.name=$LUKS_UUID=$CRYPT_NAME root=/dev/mapper/$CRYPT_NAME rootflags=subvol=@arch rw
 EOF
 
@@ -105,27 +96,18 @@ cryptsetup luksAddKey "$ROOT_PART" /boot/luks-keyfile.bin
 # Update boot entries with keyfile
 cat > /boot/loader/entries/arch.conf << EOF
 title   Arch Linux
-linux   /EFI/arch/vmlinuz-linux
+linux   /vmlinuz-linux
 initrd  /$MICROCODE
-initrd  /EFI/arch/initramfs-linux.img
+initrd  /initramfs-linux.img
 options rd.luks.name=$LUKS_UUID=$CRYPT_NAME root=/dev/mapper/$CRYPT_NAME rd.luks.key=$LUKS_UUID=/luks-keyfile.bin:UUID=$EFI_UUID rd.luks.options=$LUKS_UUID=keyfile-timeout=5s rootflags=subvol=@arch rw
 EOF
 
 cat > /boot/loader/entries/arch-lts.conf << EOF
 title   Arch Linux LTS
-linux   /EFI/arch/vmlinuz-linux-lts
+linux   /vmlinuz-linux-lts
 initrd  /$MICROCODE
-initrd  /EFI/arch/initramfs-linux-lts.img
+initrd  /initramfs-linux-lts.img
 options rd.luks.name=$LUKS_UUID=$CRYPT_NAME root=/dev/mapper/$CRYPT_NAME rd.luks.key=$LUKS_UUID=/luks-keyfile.bin:UUID=$EFI_UUID rd.luks.options=$LUKS_UUID=keyfile-timeout=5s rootflags=subvol=@arch rw
-EOF
-
-# Recovery entry
-cat > /boot/loader/entries/arch-live.conf << EOF
-title   Arch Linux Live (Recovery)
-linux   /EFI/arch-live/vmlinuz-linux
-initrd  /$MICROCODE
-initrd  /EFI/arch-live/initramfs-linux.img
-options rd.luks.name=$LUKS_UUID=$CRYPT_NAME root=/dev/mapper/$CRYPT_NAME rd.luks.key=$LUKS_UUID=/luks-keyfile.bin:UUID=$EFI_UUID rd.luks.options=$LUKS_UUID=keyfile-timeout=5s rootflags=subvol=@arch-live rw
 EOF
 
 # === Root password ===
@@ -142,6 +124,17 @@ passwd "$USERNAME"
 # Enable sudo for wheel (drop-in file, not appending to /etc/sudoers)
 echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/wheel
 chmod 440 /etc/sudoers.d/wheel
+
+# === SSH server ===
+echo "Configuring SSH..."
+systemctl enable sshd
+
+# Install X1 public key for user tt
+mkdir -p /home/"$USERNAME"/.ssh
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAEUKKKwN8Pip2JPICt7HGERL/zdhgqxQPSu9jIHYITf tt@x1" > /home/"$USERNAME"/.ssh/authorized_keys
+chmod 700 /home/"$USERNAME"/.ssh
+chmod 600 /home/"$USERNAME"/.ssh/authorized_keys
+chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh
 
 # === Enable services ===
 echo "Enabling services..."
@@ -171,5 +164,5 @@ echo "  1. exit (leave chroot)"
 echo "  2. umount -R /mnt"
 echo "  3. reboot"
 echo ""
-echo "After reboot, login and run 04-desktop.sh"
+echo "After reboot, login as $USERNAME and run 04-post-boot.sh"
 echo "=============================================="

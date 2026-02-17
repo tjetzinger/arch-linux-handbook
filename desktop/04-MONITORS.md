@@ -360,24 +360,99 @@ monitor = HDMI-A-1, 2560x1440@60, 0x0, 1
 monitor = eDP-1, 1920x1200@60, 0x0, 1, vrr, 0
 ```
 
-## Quick Reference
+## Niri
+
+Niri uses `outputs.kdl` for monitor configuration. Unlike Hyprland, there is no dynamic profile switcher — the config file handles all scenarios statically.
+
+### Config Location
+
+**File:** `~/.config/niri/outputs.kdl`
+
+### Identifying Monitors
+
+```bash
+niri msg outputs | grep "^Output"
+# Output "PNP(BNQ) BenQ BL2581T ET1CL03348SL0" (DP-8)
+# Output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" (DP-9)
+# Output "AU Optronics 0xD291 Unknown" (eDP-1)
+```
+
+### Stable Identifiers (EDID Description)
+
+Connector names (`DP-6`, `DP-8`) change on every dock disconnect/reconnect. Use the full EDID description string from `niri msg outputs` as the output name — it includes the serial number and is stable across hotplug events.
+
+| Identifier type | Example | Stable across hotplug? |
+|----------------|---------|----------------------|
+| Connector name | `DP-8` | No — changes every reconnect |
+| EDID description | `PNP(BNQ) BenQ BL2581T ET1CL03348SL0` | Yes — tied to physical monitor |
+| `eDP-1` | Laptop panel | Yes — always the same |
+
+### Dock Setup (2x BenQ BL2581T + Laptop)
+
+```kdl
+// Left: BenQ BL2581T (serial ..48SL0)
+output "PNP(BNQ) BenQ BL2581T ET1CL03348SL0" {
+    mode "1920x1200@59.950"
+    scale 1.0
+    transform "normal"
+    position x=0 y=0
+}
+
+// Center: BenQ BL2581T (serial ..42SL0)
+output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" {
+    mode "1920x1200@59.950"
+    scale 1.0
+    transform "normal"
+    position x=1920 y=0
+}
+
+// Right: Laptop display
+output "eDP-1" {
+    mode "1920x1200@60.026"
+    scale 1.25
+    transform "normal"
+    position x=3840 y=0
+}
+```
+
+### Runtime Commands
 
 ```bash
 # List monitors
+niri msg outputs
+
+# Reload config
+niri msg action load-config-file
+
+# Verify positions
+niri msg outputs | grep -E "^Output|Logical position"
+```
+
+### hyprdynamicmonitors on Niri
+
+hyprdynamicmonitors is Hyprland-specific and will not run under Niri. The systemd service has `ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE`, so it is automatically skipped when Niri is the compositor.
+
+## Quick Reference
+
+### Hyprland
+
+```bash
 hyprctl monitors
-
-# Reload monitor config
 hyprctl reload
-
-# DPMS off/on
 hyprctl dispatch dpms off
 hyprctl dispatch dpms on
-
-# Check hyprdynamicmonitors
 journalctl --user -u hyprdynamicmonitors
+```
+
+### Niri
+
+```bash
+niri msg outputs
+niri msg action load-config-file
 ```
 
 ## Related
 
+- [14-NIRI.md](./14-NIRI.md) - Niri compositor configuration
 - [../hardware/04-DISPLAY-GRAPHICS.md](../hardware/04-DISPLAY-GRAPHICS.md) - Graphics hardware
 - [02-CONFIGURATION](./02-CONFIGURATION.md) - Config structure
