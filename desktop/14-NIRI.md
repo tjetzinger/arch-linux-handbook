@@ -82,6 +82,9 @@ input {
         tap
         natural-scroll
     }
+    mouse {
+        scroll-factor 0.93
+    }
     focus-follows-mouse
 }
 ```
@@ -121,7 +124,7 @@ input {
 | Key | Action |
 |-----|--------|
 | Brightness Up/Down | Adjust brightness ±5% |
-| Volume Up/Down | Adjust volume ±5% |
+| Volume Up/Down | Adjust volume ±1% |
 | Mute | Toggle speaker mute |
 | Mic Mute (Fn+F4) | Toggle mic mute |
 | Play/Pause/Next/Prev | Media controls |
@@ -210,6 +213,14 @@ Wallpaper files: `~/.config/niri-setup/wallpapers/`
 | Suspend | `systemctl suspend` |
 | Lock | swaylock |
 
+## Alacritty
+
+Config: `~/.config/niri-setup/alacritty/alacritty.toml`
+
+| Keybinding | Action |
+|-----------|--------|
+| `Shift+Return` | Send `Esc + Return` (useful for niri's consume-or-expel in terminal) |
+
 ## Monitor Configuration (outputs.kdl)
 
 Niri matches monitors by output name. Use the full EDID description string (from `niri msg outputs`) instead of connector names (`DP-1`, `DP-2`) — connector names change on every dock disconnect/reconnect.
@@ -293,9 +304,9 @@ Ensure xwayland-satellite is in spawn-at-startup.
 
 If swaylock shows a grey screen when triggered by swayidle (but Mod+L works fine):
 
-**Root Cause:** swayidle reads both command line arguments AND `~/.config/swayidle/config`. If both exist, the config file's `swaylock -f` (bare swaylock = grey) runs first, then the script sees swaylock already running and exits.
+**Cause 1: Conflicting swayidle config file**
 
-**Fix:**
+swayidle reads both command line arguments AND `~/.config/swayidle/config`. If both exist, the config file's `swaylock -f` (bare swaylock = grey) runs first.
 
 ```bash
 # Check for conflicting config
@@ -303,22 +314,43 @@ cat ~/.config/swayidle/config
 
 # If it contains "swaylock -f", remove or backup:
 mv ~/.config/swayidle/config ~/.config/swayidle/config.bak
+```
 
-# Restart swayidle
+**Cause 2: `--daemonize` flag in swaylock.sh**
+
+The `--daemonize` flag causes swaylock to fork into the background immediately. swayidle then thinks the lock command finished and may proceed to the next timeout (power off monitors / suspend) before the lock is fully rendered, resulting in a grey screen.
+
+**Fix:** Remove `--daemonize` from `scripts/swaylock.sh`.
+
+**Cause 3: `niri msg action do-screen-transition`**
+
+The screen transition effect before swaylock can race with the lock surface, causing a grey flash.
+
+**Fix:** Remove the `do-screen-transition` line from `scripts/swaylock.sh`.
+
+**swaylock.sh fixes applied:**
+
+```bash
+#!/bin/bash
+
+# Prevent duplicate locks (ext-session-lock-v1 only allows one client)
+pgrep -x swaylock && exit 0
+
+swaylock \
+  --clock \
+  --screenshots \
+  --ignore-empty-password \
+  ...
+```
+
+The duplicate-lock guard prevents a second swaylock instance from racing with an existing one. The `ext-session-lock-v1` Wayland protocol only allows one client to hold the session lock.
+
+**Restart swayidle after changes:**
+
+```bash
 pkill swayidle
 ~/.config/niri-setup/scripts/swayidle.sh &
 ```
-
-**Verify fix:**
-
-```bash
-# Should only show command line swayidle, no config file
-pgrep -af swayidle
-```
-
-**Technical Details:**
-
-The `ext-session-lock-v1` Wayland protocol only allows one client to hold the session lock. When the config file's bare `swaylock -f` acquires the lock first, the script's styled swaylock fails with "is another lockscreen running?" and exits.
 
 ## Blue Light Filter (wlsunset)
 
