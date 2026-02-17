@@ -139,8 +139,9 @@ useradd -m -G wheel -s /bin/bash "$USERNAME"
 echo "Set password for $USERNAME:"
 passwd "$USERNAME"
 
-# Enable sudo for wheel
-echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
+# Enable sudo for wheel (drop-in file, not appending to /etc/sudoers)
+echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/wheel
+chmod 440 /etc/sudoers.d/wheel
 
 # === Enable services ===
 echo "Enabling services..."
