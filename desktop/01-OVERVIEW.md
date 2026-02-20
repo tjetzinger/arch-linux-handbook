@@ -1,203 +1,98 @@
 # 01 - Overview
 
-Hyprland compositor with ML4W dotfiles configuration.
+Niri scrollable-tiling Wayland compositor with acaibowlz/niri-setup dotfiles.
 
-## Hyprland
+> **Migration note:** Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. See [14-NIRI](./14-NIRI.md) for full configuration.
 
-Dynamic tiling Wayland compositor.
+## Component Stack
 
-### Version
-
-```bash
-hyprctl version
-```
-
-```
-Hyprland 0.52.2
-Tag: v0.52.2
-```
-
-### Features
-
-- Dynamic tiling and floating windows
-- Smooth animations and effects
-- Multi-monitor support
-- Plugin system
-- IPC for scripting
-
-## ML4W Dotfiles
-
-**My Linux 4 Work** - A comprehensive Hyprland configuration.
-
-### Source
-
-- GitHub: [mylinuxforwork/dotfiles](https://github.com/mylinuxforwork/dotfiles)
-- Wiki: [ML4W Wiki](https://github.com/mylinuxforwork/dotfiles/wiki)
-
-### Components Included
-
-| Component | Description |
-|-----------|-------------|
-| Hyprland config | Organized, modular configuration |
-| Waybar | Themed status bar |
-| Rofi | Application launcher |
-| SwayNC | Notification center |
-| hyprlock | Lock screen |
-| hypridle | Idle management |
-| waypaper | Wallpaper manager |
-| ML4W apps | Settings, Welcome, Sidebar |
-
-### ML4W Applications
-
-```bash
-# Welcome app
-ml4w-welcome
-
-# Hyprland settings
-ml4w-hyprland-settings
-
-# Sidebar
-ml4w-sidebar
-```
-
-## Installed Plugin
-
-### split-monitor-workspaces
-
-Provides per-monitor workspaces (like i3/bspwm behavior).
-
-```bash
-hyprpm list
-```
-
-```
-Repository split-monitor-workspaces:
-  Plugin split-monitor-workspaces - enabled: true
-```
-
-### Configuration
-
-In `~/.config/hypr/conf/custom.conf`:
-
-```bash
-plugin {
-    split-monitor-workspaces {
-        count = 3
-        keep_focused = 0
-        enable_notifications = 0
-    }
-}
-```
+| Component | Choice |
+|-----------|--------|
+| Compositor | Niri |
+| Config | acaibowlz/niri-setup (symlinked) |
+| Bar | Waybar |
+| Launcher | Fuzzel |
+| Notifications | Dunst |
+| Lock Screen | swaylock-effects |
+| Idle Daemon | swayidle |
+| Wallpaper | swww + swaybg |
+| Terminal | Alacritty |
+| Dock | None |
+| File Manager | Nautilus |
+| Keyring | GNOME Keyring |
+| Display Manager | SDDM (Sequoia theme) |
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     Hyprland                             │
+│                       Niri                               │
 │  ┌─────────────────────────────────────────────────────┐│
 │  │                    Waybar                           ││
 │  └─────────────────────────────────────────────────────┘│
 │                                                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │
-│  │   Window    │  │   Window    │  │     Window      │ │
+│  │   Column    │  │   Column    │  │     Column      │ │
 │  │   (Warp)    │  │  (Firefox)  │  │    (Nautilus)   │ │
 │  └─────────────┘  └─────────────┘  └─────────────────┘ │
 │                                                         │
-│  ┌─────────────────────────────────────────────────────┐│
-│  │              nwg-dock-hyprland                      ││
-│  └─────────────────────────────────────────────────────┘│
+│              ← infinite horizontal scroll →             │
 └─────────────────────────────────────────────────────────┘
 
 Supporting Services:
-├── hypridle (idle management)
-├── hyprpaper (wallpaper)
-├── swaync (notifications)
+├── swayidle (idle management)
+├── swww + swaybg (wallpaper)
+├── dunst (notifications)
 ├── polkit-gnome (authentication)
+├── xwayland-satellite (X11 compatibility)
 └── wl-paste + cliphist (clipboard)
 ```
 
 ## Session Startup
 
-On login, Hyprland sources autostart configuration:
+On login via SDDM, Niri sources `spawn-at-startup.kdl`:
 
 1. XDG portal setup
 2. Polkit agent
-3. Wallpaper restore
-4. SwayNC notifications
-5. GTK settings
-6. hypridle
-7. cliphist clipboard
-8. ML4W autostart
-9. nwg-dock
-10. hyprdynamicmonitors
-11. hyprpm plugins
-
-## Default Applications
-
-| Type | Application |
-|------|-------------|
-| Terminal | Warp |
-| Browser | Firefox |
-| File Manager | Nautilus |
-| Editor | Code/VSCode |
-| Screenshot | grim + slurp |
-
-### Check/Change Defaults
-
-```bash
-# View current settings
-cat ~/.config/ml4w/settings/terminal.sh
-cat ~/.config/ml4w/settings/browser.sh
-cat ~/.config/ml4w/settings/filemanager.sh
-
-# Or use ML4W Settings app
-ml4w-hyprland-settings
-```
+3. Wallpaper (swww + swaybg)
+4. Dunst notifications
+5. swayidle
+6. cliphist clipboard
+7. xwayland-satellite
+8. Waybar
 
 ## Key Directories
 
 ```
-~/.config/hypr/
-├── hyprland.conf       # Main config (sources others)
-├── hypridle.conf       # Idle/lock timeouts
-├── hyprlock.conf       # Lock screen appearance
-├── hyprpaper.conf      # Wallpaper config
-├── colors.conf         # Pywal colors
-├── monitors.conf       # Monitor config (symlink)
-├── conf/               # Modular configs
-│   ├── autostart.conf
-│   ├── keybinding.conf
-│   ├── custom.conf     # Your customizations
-│   └── ...
-├── scripts/            # Helper scripts
-└── shaders/            # Visual effects
+~/.config/niri-setup/     # Main config repo (symlinked)
+├── niri/                 # Niri config (→ ~/.config/niri)
+├── waybar/               # Waybar config (→ ~/.config/waybar)
+├── dunst/                # Dunst config (→ ~/.config/dunst)
+├── fuzzel/               # Fuzzel config (→ ~/.config/fuzzel)
+├── wlogout/              # Wlogout config (→ ~/.config/wlogout)
+├── alacritty/            # Alacritty config (→ ~/.config/alacritty)
+├── scripts/              # Helper scripts (→ ~/.config/niri-scripts)
+├── niriswitcher/         # Window switcher (→ ~/.config/niriswitcher)
+└── wallpapers/           # Wallpaper files
 ```
 
 ## Quick Reference
 
 ```bash
-# Hyprland version
-hyprctl version
+# Validate config
+niri validate
 
 # Reload config
-hyprctl reload
+niri msg action load-config-file
 
-# List plugins
-hyprpm list
+# List outputs
+niri msg outputs
 
-# ML4W apps
-ml4w-welcome
-ml4w-hyprland-settings
-
-# Check monitors
-hyprctl monitors
-
-# List keybindings
-~/.config/hypr/scripts/keybindings.sh
+# Restart Waybar
+pkill waybar; waybar &
 ```
 
 ## Related
 
-- [02-CONFIGURATION](./02-CONFIGURATION.md) - Config structure
-- [03-KEYBINDINGS](./03-KEYBINDINGS.md) - Keyboard shortcuts
-- [11-CUSTOMIZATION](./11-CUSTOMIZATION.md) - Custom configs
+- [14-NIRI](./14-NIRI.md) - Full Niri configuration and keybindings
+- [15-SDDM](./15-SDDM.md) - Display manager

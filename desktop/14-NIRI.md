@@ -1,10 +1,10 @@
 # Niri Compositor
 
-Niri is a scrollable-tiling Wayland compositor using the acaibowlz/niri-setup dotfiles.
+Niri is the sole Wayland compositor on this system, using the acaibowlz/niri-setup dotfiles. Hyprland and ML4W were removed on 2026-02-20 (archive: `~/backup/ml4w-hyprland-archive-20260220.tar.gz`).
 
 ## Overview
 
-Unlike traditional tiling (Hyprland, Sway), Niri arranges windows in columns on an infinite horizontal strip. Scroll left/right to navigate.
+Unlike traditional tiling (Sway, etc.), Niri arranges windows in columns on an infinite horizontal strip. Scroll left/right to navigate.
 
 | Feature | Description |
 |---------|-------------|
