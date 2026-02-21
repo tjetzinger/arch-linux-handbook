@@ -124,16 +124,11 @@ auth    include       system-auth
 ...
 ```
 
-### Enable for Screen Lock
+### Screen Lock (Not Supported)
 
-Depends on your screen locker. For swaylock:
+swaylock-effects only initiates PAM when Enter is pressed, so fingerprint auth cannot run in the background on the lock screen. A fork (`swaylock-fprintd-git` on AUR) exists with native fprintd support but has not been tested.
 
-**File:** `/etc/pam.d/swaylock`
-
-```
-auth    sufficient    pam_fprintd.so
-auth    include       system-auth
-```
+See [../desktop/08-LOCKSCREEN.md](../desktop/08-LOCKSCREEN.md) for lock screen configuration.
 
 ## Usage
 
@@ -293,7 +288,7 @@ journalctl | grep fprintd
 | /etc/pam.d/sudo | sudo authentication |
 | /etc/pam.d/sddm | Display manager login |
 | /etc/pam.d/polkit-1 | GUI privilege prompts |
-| /etc/pam.d/swaylock | Screen lock |
+| /etc/pam.d/swaylock | Screen lock (password only) |
 | /etc/pam.d/system-local-login | TTY login |
 
 ## Related
