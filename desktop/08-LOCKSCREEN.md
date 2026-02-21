@@ -1,359 +1,175 @@
 # 08 - Lock Screen
 
-hyprlock and hypridle configuration.
+swaylock-effects and swayidle configuration for Niri.
 
 ## Overview
 
 | Component | Purpose |
 |-----------|---------|
-| hyprlock | Lock screen (visual) |
-| hypridle | Idle management (triggers) |
+| swaylock-effects | Lock screen (visual + auth) |
+| swayidle | Idle management (triggers) |
 
-## hypridle
+## swayidle
 
-Daemon that triggers actions based on idle time.
+Daemon that triggers actions based on idle time. Managed by `~/.config/niri-setup/scripts/swayidle.sh`.
 
 ### Configuration
 
-**File:** `~/.config/hypr/hypridle.conf`
+**File:** `~/.config/niri-setup/scripts/swayidle.sh`
+
+The script reads idle timeout from `~/.local/state/idle-time` and launches swayidle with matching timeouts:
+
+| idle-time value | Lock | DPMS off | Suspend |
+|-----------------|------|----------|---------|
+| 5 minutes | 300s | 420s | 1800s |
+| 10 minutes (default) | 600s | 720s | 1800s |
+| 20 minutes | 1200s | 1500s | 2400s |
+| 30 minutes | 1800s | 2100s | 3600s |
+| infinity | disabled | disabled | disabled |
+
+### Changing Idle Timeout
 
 ```bash
-general {
-    lock_cmd = pidof hyprlock || hyprlock
-    before_sleep_cmd = loginctl lock-session
-    after_sleep_cmd = hyprctl dispatch dpms on
-}
+# Set idle time (persists across reboots)
+echo "20 minutes" > ~/.local/state/idle-time
 
-# Lock screen after 10 minutes
-listener {
-    timeout = 600
-    on-timeout = loginctl lock-session
-}
-
-# Turn off display after 11 minutes
-listener {
-    timeout = 660
-    on-timeout = hyprctl dispatch dpms off
-    on-resume = hyprctl dispatch dpms on
-}
-
-# Suspend after 30 minutes
-listener {
-    timeout = 1800
-    on-timeout = systemctl suspend
-}
+# Restart swayidle
+pkill swayidle
+~/.config/niri-setup/scripts/swayidle.sh &
 ```
 
-### Current Timeouts
-
-| Event | Timeout |
-|-------|---------|
-| Lock screen | 10 minutes (600s) |
-| DPMS off | 11 minutes (660s) |
-| Suspend | 30 minutes (1800s) |
-
-### Service
-
-Started automatically via autostart:
-
-```bash
-exec-once = hypridle
-```
+Valid values: `5 minutes`, `10 minutes`, `20 minutes`, `30 minutes`, `infinity`
 
 ### Manual Control
 
 ```bash
 # Check if running
-pgrep -a hypridle
+pgrep -a swayidle
 
 # Restart
-killall hypridle && hypridle &
+pkill swayidle && ~/.config/niri-setup/scripts/swayidle.sh &
 ```
 
-### Migration-Safe Customization
+## swaylock-effects
 
-The default `~/.config/hypr/hypridle.conf` is hardlinked to ML4W dotfiles and may be overwritten during updates. For persistent changes:
-
-**1. Create custom config:**
-
-```bash
-cp ~/.config/hypr/hypridle.conf ~/.config/hypr/hypridle-custom.conf
-```
-
-**2. Edit custom config:**
-
-```bash
-# Example: Disable auto-lock and auto-suspend
-# Comment out the 600s (lock) and 1800s (suspend) listeners
-vim ~/.config/hypr/hypridle-custom.conf
-```
-
-**3. Update autostart-custom.conf:**
-
-```bash
-# ~/.config/hypr/conf/autostart-custom.conf
-# Add:
-exec-once = hypridle -c ~/.config/hypr/hypridle-custom.conf
-```
-
-**4. Disable default hypridle in autostart.conf:**
-
-```bash
-# ~/.config/hypr/conf/autostart.conf
-# Comment out:
-# exec-once = hypridle  # Disabled - using custom config
-```
-
-**5. Restart hypridle:**
-
-```bash
-killall hypridle
-hypridle -c ~/.config/hypr/hypridle-custom.conf &
-```
-
-### Disabling Specific Listeners
-
-Comment out unwanted listeners in your custom config:
-
-```bash
-# Disable auto-lock (10min)
-# listener {
-#     timeout = 600
-#     on-timeout = loginctl lock-session
-# }
-
-# Disable auto-suspend (30min)
-# listener {
-#     timeout = 1800
-#     on-timeout = systemctl suspend
-# }
-```
-
-**Keep active (recommended):**
-
-| Listener | Purpose |
-|----------|---------|
-| 480s dim | Saves power, protects OLED |
-| 660s DPMS off | Saves power |
-
-## hyprlock
-
-Lock screen application.
+Lock screen with blur, clock, and vignette effects.
 
 ### Configuration
 
-**File:** `~/.config/hypr/hyprlock.conf`
+**File:** `~/.config/niri-setup/scripts/swaylock.sh`
+
+The script prevents duplicate locks (ext-session-lock-v1 only allows one client) and launches swaylock with visual settings:
 
 ```bash
-general {
-    disable_loading_bar = false
-    hide_cursor = true
-    grace = 0
-    no_fade_in = false
-}
-
-background {
-    monitor =
-    path = screenshot
-    blur_passes = 3
-    blur_size = 8
-}
-
-input-field {
-    monitor =
-    size = 200, 50
-    outline_thickness = 3
-    dots_size = 0.33
-    dots_spacing = 0.15
-    dots_center = true
-    outer_color = rgb(151515)
-    inner_color = rgb(200, 200, 200)
-    font_color = rgb(10, 10, 10)
-    fade_on_empty = true
-    placeholder_text = <i>Password...</i>
-    hide_input = false
-    position = 0, -20
-    halign = center
-    valign = center
-}
-
-label {
-    monitor =
-    text = $TIME
-    color = rgba(200, 200, 200, 1.0)
-    font_size = 50
-    font_family = JetBrainsMono Nerd Font
-    position = 0, 80
-    halign = center
-    valign = center
-}
+swaylock \
+  --daemonize \
+  --clock \
+  --screenshots \
+  --ignore-empty-password \
+  --font "Ubuntu Bold" \
+  --indicator \
+  --indicator-radius 150 \
+  --effect-scale 0.4 \
+  --effect-vignette 0.2:0.5 \
+  --effect-blur 4x2 \
+  --datestr "%A, %b %d" \
+  --timestr "%k:%M"
 ```
 
 ### Lock Screen Manually
 
 ```bash
-hyprlock
+# Via keybinding (preferred)
+# Mod + L
 
-# Or via keybinding
-# Super + Ctrl + L
-```
+# Via script
+~/.config/niri-setup/scripts/swaylock.sh
 
-### Lock via Session
-
-```bash
+# Via session
 loginctl lock-session
 ```
+
+### Fingerprint Limitation
+
+swaylock-effects only initiates PAM authentication when Enter is pressed (password submission). It does not start fingerprint listening in the background on lock. Fingerprint unlock on the lock screen would require `swaylock-fprintd` (AUR: `swaylock-fprintd-git`), a fork with native fprintd integration.
+
+Fingerprint auth works for sudo, polkit, and login -- see [../hardware/07-BIOMETRICS.md](../hardware/07-BIOMETRICS.md).
 
 ## Keybindings
 
 | Key | Action |
 |-----|--------|
-| `Super + Ctrl + L` | Lock screen |
-| `Super + Ctrl + Q` | Logout menu (includes lock) |
-| `XF86Lock` | Lock screen (keyboard key) |
+| `Mod + L` | Lock screen |
 
-## ML4W Settings
+Defined in `~/.config/niri/binds.kdl`:
 
-Timeouts can be adjusted via ML4W Settings:
-
+```kdl
+Mod+L { spawn-sh "$NIRICONF/scripts/swaylock.sh"; }
 ```
-~/.config/ml4w/settings/
-├── hypridle_dpms_timeout.sh
-├── hypridle_hyprlock_timeout.sh
-└── hypridle_suspend_timeout.sh
-```
-
-Or use:
-
-```bash
-ml4w-hyprland-settings
-```
-
-## Customization
-
-### Background
-
-Options in hyprlock.conf:
-
-```bash
-background {
-    # Screenshot with blur
-    path = screenshot
-    blur_passes = 3
-    blur_size = 8
-
-    # Or static image
-    # path = ~/.config/hypr/wallpaper.png
-
-    # Or solid color
-    # color = rgba(25, 20, 20, 1.0)
-}
-```
-
-### Input Field
-
-```bash
-input-field {
-    size = 200, 50
-    outline_thickness = 3
-    dots_size = 0.33
-    outer_color = rgb(151515)
-    inner_color = rgb(200, 200, 200)
-    font_color = rgb(10, 10, 10)
-    placeholder_text = <i>Password...</i>
-}
-```
-
-### Clock/Labels
-
-```bash
-label {
-    text = $TIME          # Current time
-    # text = cmd[update:1000] date +"%H:%M:%S"  # Custom format
-    font_size = 50
-    font_family = JetBrainsMono Nerd Font
-    position = 0, 80
-    halign = center
-    valign = center
-}
-```
-
-### Available Variables
-
-| Variable | Description |
-|----------|-------------|
-| `$TIME` | Current time |
-| `$USER` | Username |
-| `cmd[update:ms] command` | Dynamic command |
-
-## Fingerprint Authentication
-
-If fprintd is configured, hyprlock can use fingerprint:
-
-```bash
-# Ensure PAM is configured
-cat /etc/pam.d/hyprlock
-
-# Should include:
-# auth sufficient pam_fprintd.so
-```
-
-See [../hardware/07-BIOMETRICS.md](../hardware/07-BIOMETRICS.md).
 
 ## Troubleshooting
 
 ### Lock Screen Not Triggering
 
 ```bash
-# Check hypridle
-pgrep hypridle
+# Check swayidle
+pgrep -a swayidle
 
-# Check idle time
-# (should trigger at configured timeout)
+# Check current idle time setting
+cat ~/.local/state/idle-time
+
+# Restart swayidle
+pkill swayidle && ~/.config/niri-setup/scripts/swayidle.sh &
 ```
 
 ### Can't Unlock
 
 ```bash
-# Try password first
 # Check PAM configuration
-cat /etc/pam.d/hyprlock
+cat /etc/pam.d/swaylock
 
-# Force kill (from TTY)
-# Ctrl+Alt+F2, login, then:
-killall hyprlock
+# Force kill (from another TTY: Ctrl+Alt+F2)
+killall swaylock
 ```
 
-### Display Stays Off
+### Display Stays Off After Wake
 
 ```bash
-# DPMS should turn on after wake
-# If stuck, move mouse or press key
+# Move mouse or press a key
+# Niri should restore monitors automatically
 
-# Force DPMS on
-hyprctl dispatch dpms on
+# Force monitors on
+niri msg action power-on-monitors
 ```
 
 ## Quick Reference
 
 ```bash
 # Lock screen
-hyprlock
+~/.config/niri-setup/scripts/swaylock.sh
 loginctl lock-session
 
-# Check hypridle
-pgrep hypridle
+# Check swayidle
+pgrep -a swayidle
 
-# DPMS control
-hyprctl dispatch dpms off
-hyprctl dispatch dpms on
+# Change idle timeout
+echo "20 minutes" > ~/.local/state/idle-time
+
+# Restart swayidle
+pkill swayidle && ~/.config/niri-setup/scripts/swayidle.sh &
+
+# Monitor control
+niri msg action power-off-monitors
+niri msg action power-on-monitors
 
 # Config files
-~/.config/hypr/hyprlock.conf
-~/.config/hypr/hypridle.conf
+~/.config/niri-setup/scripts/swaylock.sh   # Lock screen appearance
+~/.config/niri-setup/scripts/swayidle.sh   # Idle timeout management
+/etc/pam.d/swaylock                        # Authentication
+~/.config/niri/binds.kdl                   # Keybinding
 ```
 
 ## Related
 
-- [../hardware/07-BIOMETRICS.md](../hardware/07-BIOMETRICS.md) - Fingerprint unlock
-- [09-THEMING](./09-THEMING.md) - Lock screen theming
+- [../hardware/07-BIOMETRICS.md](../hardware/07-BIOMETRICS.md) - Fingerprint setup and enrollment
+- [09-THEMING](./09-THEMING.md) - Desktop theming
