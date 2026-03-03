@@ -58,7 +58,7 @@ Lock screen with blur, clock, and vignette effects.
 
 **File:** `~/.config/niri-setup/scripts/swaylock.sh`
 
-The script prevents duplicate locks (ext-session-lock-v1 only allows one client) and launches swaylock with visual settings:
+The script prevents duplicate locks (ext-session-lock-v1 only allows one client), waits 3 seconds for USB/DRM to settle (prevents phantom keystrokes after dock hotplug or resume), and launches swaylock with visual settings:
 
 ```bash
 swaylock \
@@ -131,6 +131,10 @@ cat /etc/pam.d/swaylock
 # Force kill (from another TTY: Ctrl+Alt+F2)
 killall swaylock
 ```
+
+### Wrong Password After Docking
+
+USB-C dock hotplug causes USB device re-enumeration, which can generate phantom keystrokes. swaylock interprets these as password input and shows "wrong password" without user interaction. The 3-second `sleep` in `swaylock.sh` mitigates this by letting USB settle before swaylock starts listening for input. If the issue persists, increase the sleep value.
 
 ### Display Stays Off After Wake
 
