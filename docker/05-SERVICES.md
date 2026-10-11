@@ -153,7 +153,9 @@ Automatically updates running containers.
 |---------|-------|
 | Interval | 300 seconds (5 minutes) |
 | Cleanup | Enabled |
-| Image | containrrr/watchtower:latest |
+| Image | nickfedor/watchtower:latest |
+
+`containrrr/watchtower` was archived in December 2025 and its last image is from 2023. `nickfedor/watchtower` ([nicholas-fedor/watchtower](https://github.com/nicholas-fedor/watchtower)) is the maintained fork with the same flags and labels.
 
 ### Compose File
 
@@ -162,10 +164,9 @@ Automatically updates running containers.
 ```yaml
 services:
   watchtower:
-    image: containrrr/watchtower:latest
+    image: nickfedor/watchtower:latest
     container_name: watchtower
-    environment:
-      - DOCKER_API_VERSION=1.45  # Required for Docker 29+
+    init: true  # Proper signal handling for graceful shutdown
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
@@ -198,11 +199,7 @@ docker logs watchtower
 
 ### Docker 29 Compatibility
 
-For Docker 29+, set API version:
-```yaml
-environment:
-  - DOCKER_API_VERSION=1.45
-```
+The fork negotiates the Docker API version itself (v1.56 on Docker 29.8), so the old `DOCKER_API_VERSION=1.45` workaround is no longer needed.
 
 ## Firefox - Browser Container
 

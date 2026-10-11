@@ -54,6 +54,7 @@ services:
       - OLLAMA_KV_CACHE_TYPE=q8_0
       - OLLAMA_NUM_PARALLEL=1
       - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_CONTEXT_LENGTH=65536
     networks:
       - proxy
     restart: unless-stopped
@@ -174,6 +175,7 @@ Models are stored in:
 | OLLAMA_KV_CACHE_TYPE | Cache type (f16, q8_0, q4_0) | `q8_0` |
 | OLLAMA_NUM_PARALLEL | Parallel requests | `1` |
 | OLLAMA_KEEP_ALIVE | How long a model stays loaded after the last request | `10m` |
+| OLLAMA_CONTEXT_LENGTH | Default context window for all models (Ollama's own default is 4096) | `65536` |
 | OLLAMA_MAX_LOADED_MODELS | Max models in memory | not set |
 
 ## Open WebUI
