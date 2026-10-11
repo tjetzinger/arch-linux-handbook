@@ -30,7 +30,7 @@ Ollama, Open WebUI, and LiteLLM for local AI inference.
 
 | Service | Purpose | Port |
 |---------|---------|------|
-| ollama | Local LLM inference (llama, mistral, etc.) | 11434 |
+| ollama | Local LLM inference (llama, mistral, etc.) | 11434 (internal only, not published to host) |
 | open-webui | ChatGPT-like web interface | 8080 |
 | litellm | LLM API proxy/gateway | 4000 |
 | postgres | Database for LiteLLM | 5432 |
@@ -44,11 +44,16 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
+    pull_policy: always
+    tty: true
+    shm_size: '1gb'
     volumes:
       - ./ollama:/root/.ollama
     environment:
       - OLLAMA_FLASH_ATTENTION=true
-      - OLLAMA_KV_CACHE_TYPE=f16
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_KEEP_ALIVE=10m
     networks:
       - proxy
     restart: unless-stopped
@@ -137,10 +142,9 @@ networks:
 docker exec -it ollama ollama pull llama3.2
 docker exec -it ollama ollama pull mistral
 docker exec -it ollama ollama pull codellama
-
-# Or via API
-curl http://localhost:11434/api/pull -d '{"name": "llama3.2"}'
 ```
+
+Port 11434 is not published to the host, so `curl http://localhost:11434` does not work. Use `docker exec`, or reach `http://ollama:11434` from another container on the `proxy` network.
 
 ### List Models
 
@@ -164,12 +168,13 @@ Models are stored in:
 
 ### Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| OLLAMA_FLASH_ATTENTION | Enable flash attention (faster) |
-| OLLAMA_KV_CACHE_TYPE | Cache type (f16, q8_0, q4_0) |
-| OLLAMA_NUM_PARALLEL | Parallel requests |
-| OLLAMA_MAX_LOADED_MODELS | Max models in memory |
+| Variable | Purpose | Current |
+|----------|---------|---------|
+| OLLAMA_FLASH_ATTENTION | Enable flash attention (faster) | `true` |
+| OLLAMA_KV_CACHE_TYPE | Cache type (f16, q8_0, q4_0) | `q8_0` |
+| OLLAMA_NUM_PARALLEL | Parallel requests | `1` |
+| OLLAMA_KEEP_ALIVE | How long a model stays loaded after the last request | `10m` |
+| OLLAMA_MAX_LOADED_MODELS | Max models in memory | not set |
 
 ## Open WebUI
 
@@ -297,10 +302,18 @@ docker exec postgres pg_dump -U llmproxy litellm > backup.sql
 
 ### For Ollama with GPU
 
+Ollama runs on CPU by default. For the eGPU (mainline kernel with NVIDIA drivers loaded), start it with the override file:
+
+```bash
+cd ~/Workspace/containers/open-webui-stack
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d ollama
+```
+
+**File:** `docker-compose.gpu.yml`
+
 ```yaml
 services:
   ollama:
-    image: ollama/ollama:latest
     deploy:
       resources:
         reservations:
