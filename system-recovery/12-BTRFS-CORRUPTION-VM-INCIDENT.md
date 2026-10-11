@@ -148,6 +148,43 @@ Add VM images to Borg **with the guest shut down** (a live qcow2 backs up
 inconsistently). See [07-BORG-BACKUP-AUTOMATION](./07-BORG-BACKUP-AUTOMATION.md).
 Add `/mnt/vm` as a backup path (it is currently neither included nor snapshotted).
 
+## Follow-up 2026-10-11: removing the bad block
+
+The one real bad block (offset `22750773248` in `win11.qcow2`) was still there two months later, and nothing else had gone bad (`btrfs scrub`: `csum=1`, same offset).
+
+**Find which guest file owns it** (VM off, all read-only):
+
+```bash
+# 1. Image offset -> guest disk offset
+sudo qemu-img map -U --output=json /mnt/vm/win11.qcow2 > map.json
+#    find the entry where offset <= 22750773248 < offset+length,
+#    guest = start + (22750773248 - offset)   -> 27227471872 (25.36 GiB)
+
+# 2. Guest offset -> partition (GPT read from the image) -> NTFS cluster
+#    C: starts at sector 239616: (27227471872 - 239616*512) / 4096 = 6617380
+
+# 3. Export C: read-only as a file and ask NTFS who owns the cluster
+sudo qemu-storage-daemon \
+  --blockdev driver=file,node-name=f,filename=/mnt/vm/win11.qcow2,read-only=on,locking=off \
+  --blockdev driver=qcow2,node-name=q,file=f,read-only=on \
+  --blockdev driver=raw,node-name=c,file=q,offset=$((239616*512)),size=<partition bytes>,read-only=on \
+  --export type=fuse,id=e,node-name=c,mountpoint=/path/to/c.raw,writable=off --daemonize
+sudo ntfscluster -f -c 6617380 /path/to/c.raw
+#   -> Inode 227634 /Windows/MEMORY.DMP/$DATA
+```
+
+The bad block sat in `C:\Windows\MEMORY.DMP`, an old crash dump. No system or user file was damaged.
+
+**Fix:** delete `MEMORY.DMP` in Windows. With `discard='unmap'` the TRIM punched a hole in the qcow2 file, so the live image no longer referenced the bad extent (`filefrag` showed no extent at that offset, a direct read returned no I/O error). The `vm` snapper snapshots still held the old extent, so scrub reported it until they were deleted:
+
+```bash
+sudo snapper -c vm delete <numbers>
+sudo btrfs subvolume sync /mnt/vm
+sudo btrfs scrub start -B /     # 621.52 GiB, no errors found
+```
+
+No image rebuild was needed. On the same day win11 also stopped booting after host updates; that was a separate problem, see [virtualization/04 - Boot Loop After a Host Update](../virtualization/04-WINDOWS-VM.md#boot-loop-after-a-host-update-vbs--nested-virtualization).
+
 ## Related
 
 - [06-BTRFS-MAINTENANCE](./06-BTRFS-MAINTENANCE.md) - scrub, scheduling, health

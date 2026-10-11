@@ -13,6 +13,7 @@ Windows 11 setup with UEFI, Secure Boot, TPM, and performance optimizations.
 | Disk | 40GB qcow2 on /mnt/vm |
 | Firmware | UEFI with Secure Boot |
 | TPM | 2.0 (emulated via swtpm) |
+| Nested virtualization | off (`vmx` hidden), so Memory Integrity / VBS cannot run. See [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization) |
 | Display | SPICE with QXL |
 | Shared folder | /home/tt via virtiofs |
 
@@ -225,12 +226,15 @@ net use Z: \\?\virtiofs\x1-home
 </cputune>
 <cpu mode='host-passthrough' check='none' migratable='on'>
   <topology sockets='1' dies='1' clusters='1' cores='6' threads='1'/>
+  <feature policy='disable' name='vmx'/>
 </cpu>
 ```
 
 - **vCPUs:** first thread of each of the 6 P-cores (CPUs 0,2,4,6,8,10). The sibling threads (1,3,5,...) stay free for the host.
 - **Emulator threads:** on the E-cores (12-19), away from the vCPUs.
 - **Topology:** 1 socket with 6 cores. Without `<topology>`, QEMU starts `-smp 6,sockets=6,cores=1`, and Windows 11 uses only 2 sockets (Pro) or 1 (Home), so most vCPUs sit idle. Check in the guest: Task Manager > Performance > CPU shows "Sockets: 1, Cores: 6".
+
+- **`vmx` hidden:** the guest cannot start its own hypervisor. Required since 2026-10-11, see [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization).
 
 See [08-PERFORMANCE](./08-PERFORMANCE.md#cpu-pinning) for the P-core/E-core map of this CPU.
 
@@ -266,6 +270,42 @@ lscpu -e
 - Enables optimized code paths
 - Better timer handling
 - Improved performance
+
+## Boot Loop After a Host Update (VBS + Nested Virtualization)
+
+**Incident 2026-10-11:** win11 had booted fine on 2026-08-14. After host updates (kernel 7.1 → 7.2.9, QEMU 11.1.0 → 11.1.2, `edk2-ovmf` 202605 → 202608, `swtpm` 0.10.1 → 0.10.2) every normal boot ended in "Ihr Gerät ist auf ein Problem gestoßen und konnte nicht repariert werden" (Automatic Repair). Safe Mode worked.
+
+**Cause:** Memory Integrity (HVCI) is on in the guest (`HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity` → `Enabled = 1`). HVCI makes Windows start its own hypervisor through nested virtualization (`vmx` passed through by `host-passthrough`). On the updated host that start reset the VM about 6 seconds after Windows Boot Manager, with no blue screen, no dump and no event log entry. Safe Mode does not start the hypervisor, so it worked. Which host update broke nested virtualization is not known yet.
+
+**Why it looked like a repair loop:** after the first failed boots, Windows records them in `C:\Windows\bootstat.dat` and sends every later boot straight to Automatic Repair, even when the cause is gone. Each test must start with a reset boot status, or it proves nothing.
+
+**Fix:**
+
+```xml
+<cpu mode='host-passthrough' check='none' migratable='on'>
+  <feature policy='disable' name='vmx'/>
+</cpu>
+```
+
+Windows then boots without its hypervisor. Trade-off: Memory Integrity, WSL2, Windows Sandbox and Hyper-V do not work in the guest. HVCI was not locked in UEFI (no `Locked` value), so Windows falls back without complaint.
+
+**Reset the boot status** (VM off, from the host). Back up the image or take a `vm` snapshot first:
+
+```bash
+sudo modprobe nbd max_part=8
+sudo qemu-nbd -f qcow2 --connect=/dev/nbd0 /mnt/vm/win11.qcow2
+sudo mkdir -p /mnt/win11c && sudo mount -t ntfs-3g /dev/nbd0p3 /mnt/win11c
+sudo mv /mnt/win11c/Windows/bootstat.dat /mnt/win11c/Windows/bootstat.dat.old
+sudo umount /mnt/win11c && sudo qemu-nbd --disconnect /dev/nbd0
+```
+
+Alternative from Safe Mode, no host write: `bcdedit /set {current} bootstatuspolicy ignoreallfailures`.
+
+**Diagnostics that helped:**
+- `virsh screenshot win11 f.png` once per second shows a reset loop as firmware text → black → 640×480 → firmware text.
+- `virsh domstats win11 --block` with almost no writes means no crash dump was written.
+- Read guest files and registry hives read-only from the host: `qemu-storage-daemon` with a FUSE export, then `ntfscat` / `ntfsls`, and `regipy` for the hives.
+- Tests that did **not** help (all ran before the boot status was reset, so they may need a retest): CPU topology, fresh UEFI variables, sound/QXL/virtio-net swapped, `hyperv` enlightenments removed (hangs earlier).
 
 ## Display Configuration
 
