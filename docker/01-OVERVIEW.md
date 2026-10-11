@@ -173,7 +173,7 @@ watchtower (standalone)
 |------|---------|----------|
 | 80 | Traefik | HTTP (redirects to 443) |
 | 443 | Traefik | HTTPS |
-| 1080 | Traefik | SOCKS5 proxy |
+| 1080 | Traefik | TCP proxy ingress (no router yet) |
 
 ### Internal Ports
 

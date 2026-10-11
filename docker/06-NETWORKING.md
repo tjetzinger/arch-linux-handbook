@@ -313,6 +313,12 @@ docker exec <container> cat /etc/resolv.conf
 
 ## Network Security
 
+### Current Setup
+
+All Traefik-routed containers share the one `proxy` network (`internal=false`): traefik, open-webui, ollama, n8n, portainer and nginx. Any of them can reach any other by name. Only Traefik publishes ports to the host (80, 443, 1080), so this flat layout is open inside Docker only. Watchtower runs on its own `watchtower_default` network.
+
+The pattern below is not in use yet. Apply it when a service with a database (such as LiteLLM with Postgres) runs again.
+
 ### Isolate Networks
 
 ```yaml

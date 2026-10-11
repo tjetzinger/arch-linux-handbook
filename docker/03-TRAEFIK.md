@@ -21,7 +21,7 @@ Internet
 │            Traefik                   │
 │  ┌─────────┐  ┌─────────┐           │
 │  │  :80    │  │  :443   │  :1080    │
-│  │ (HTTP)  │→ │ (HTTPS) │  (SOCKS)  │
+│  │ (HTTP)  │→ │ (HTTPS) │  (TCP)    │
 │  └─────────┘  └─────────┘           │
 │         │                            │
 │    Let's Encrypt                     │
@@ -110,7 +110,7 @@ entryPoints:
       tls:
         certResolver: letsencrypt
 
-  socks5-tcp-proxy:
+  socks5-tcp-proxy:   # TCP proxy ingress
     address: ":1080"
 
 providers:
@@ -215,6 +215,26 @@ networks:
 | `traefik.http.services.<name>.loadbalancer.server.port` | Container port |
 | `traefik.http.routers.<name>.middlewares` | Apply middlewares |
 | `traefik.http.routers.<name>.tls=true` | Enable TLS |
+
+### TCP Services (port 1080)
+
+The `socks5-tcp-proxy` entrypoint on `:1080` is the ingress for raw TCP services. Traefik does not speak SOCKS5 itself: it forwards the TCP stream to a backend, for example a SOCKS5 proxy container. No TCP router uses it yet, so `:1080` answers HTTP requests with `404 page not found`.
+
+```yaml
+services:
+  myproxy:
+    image: myproxy:latest
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.tcp.routers.myproxy.entrypoints=socks5-tcp-proxy
+      - traefik.tcp.routers.myproxy.rule=HostSNI(`*`)
+      - traefik.tcp.services.myproxy.loadbalancer.server.port=1080
+```
+
+``HostSNI(`*`)`` is the only rule that works without TLS, so one plain TCP service can own the entrypoint. More services on one port need TLS, so Traefik can route by SNI (the hostname the client sends in the TLS handshake).
 
 ## Routing Rules
 
