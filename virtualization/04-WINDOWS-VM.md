@@ -9,7 +9,7 @@ Windows 11 setup with UEFI, Secure Boot, TPM, and performance optimizations.
 | Name | win11 |
 | OS | Windows 11 |
 | RAM | 16GB |
-| vCPUs | 6 (pinned to cores 12-17) |
+| vCPUs | 6 (1 socket, 6 cores; pinned to one thread per P-core: CPUs 0,2,4,6,8,10) |
 | Disk | 40GB qcow2 on /mnt/vm |
 | Firmware | UEFI with Secure Boot |
 | TPM | 2.0 (emulated via swtpm) |
@@ -215,22 +215,31 @@ net use Z: \\?\virtiofs\x1-home
 ```xml
 <vcpu placement='static'>6</vcpu>
 <cputune>
-  <vcpupin vcpu='0' cpuset='12'/>
-  <vcpupin vcpu='1' cpuset='13'/>
-  <vcpupin vcpu='2' cpuset='14'/>
-  <vcpupin vcpu='3' cpuset='15'/>
-  <vcpupin vcpu='4' cpuset='16'/>
-  <vcpupin vcpu='5' cpuset='17'/>
-  <emulatorpin cpuset='18-19'/>
+  <vcpupin vcpu='0' cpuset='0'/>
+  <vcpupin vcpu='1' cpuset='2'/>
+  <vcpupin vcpu='2' cpuset='4'/>
+  <vcpupin vcpu='3' cpuset='6'/>
+  <vcpupin vcpu='4' cpuset='8'/>
+  <vcpupin vcpu='5' cpuset='10'/>
+  <emulatorpin cpuset='12-19'/>
 </cputune>
+<cpu mode='host-passthrough' check='none' migratable='on'>
+  <topology sockets='1' dies='1' clusters='1' cores='6' threads='1'/>
+</cpu>
 ```
+
+- **vCPUs:** first thread of each of the 6 P-cores (CPUs 0,2,4,6,8,10). The sibling threads (1,3,5,...) stay free for the host.
+- **Emulator threads:** on the E-cores (12-19), away from the vCPUs.
+- **Topology:** 1 socket with 6 cores. Without `<topology>`, QEMU starts `-smp 6,sockets=6,cores=1`, and Windows 11 uses only 2 sockets (Pro) or 1 (Home), so most vCPUs sit idle. Check in the guest: Task Manager > Performance > CPU shows "Sockets: 1, Cores: 6".
+
+See [08-PERFORMANCE](./08-PERFORMANCE.md#cpu-pinning) for the P-core/E-core map of this CPU.
 
 ### Why Pin CPUs?
 
 - Reduces context switching
 - Better cache locality
 - More consistent performance
-- Reserve host CPUs (0-11) for other tasks
+- Keeps the vCPUs on P-cores, so the host scheduler cannot move them to slower E-cores
 
 ### View CPU Topology
 

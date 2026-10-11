@@ -9,7 +9,7 @@ Optimization and tuning for KVM/QEMU virtual machines.
 | Disk bus | VirtIO | High |
 | Network model | VirtIO | High |
 | CPU mode | host-passthrough | High |
-| Disk cache | none | Medium |
+| Disk cache | writeback (datacow) / none (nodatacow), see [07-STORAGE](./07-STORAGE.md#disk-caching) | High |
 | CPU pinning | Yes (for dedicated VMs) | Medium |
 | Hugepages | Yes (for large RAM) | Medium |
 | Multi-queue | Yes (for high I/O) | Medium |
@@ -33,10 +33,12 @@ Optimization and tuning for KVM/QEMU virtual machines.
 
 ### CPU Topology
 
+Always set `<topology>`. Without it, QEMU gives each vCPU its own socket (`sockets=N, cores=1`). Windows client editions use at most 2 sockets (Pro) or 1 (Home).
+
 ```xml
-<!-- Match physical topology for best cache performance -->
-<cpu mode='host-passthrough'>
-  <topology sockets='1' dies='1' clusters='1' cores='4' threads='2'/>
+<!-- 1 socket, cores = vCPU count; threads='1' when pinned to one thread per core -->
+<cpu mode='host-passthrough' check='none' migratable='on'>
+  <topology sockets='1' dies='1' clusters='1' cores='6' threads='1'/>
 </cpu>
 ```
 
@@ -44,29 +46,41 @@ Optimization and tuning for KVM/QEMU virtual machines.
 
 Pin vCPUs to specific physical CPUs for consistent performance.
 
+**i7-1370P layout** (from `/sys/devices/cpu_core/cpus` and `/sys/devices/cpu_atom/cpus`):
+
+| CPUs | Type | Cores |
+|------|------|-------|
+| 0-11 | P-cores, 2 threads each (siblings 0+1, 2+3, ...) | 6 |
+| 12-19 | E-cores, 1 thread each | 8 |
+
+Pin vCPUs to P-cores and the emulator threads to E-cores:
+
 ```xml
 <vcpu placement='static'>6</vcpu>
 <cputune>
-  <!-- Pin vCPUs to P-cores (12-17 on i7-1370P) -->
-  <vcpupin vcpu='0' cpuset='12'/>
-  <vcpupin vcpu='1' cpuset='13'/>
-  <vcpupin vcpu='2' cpuset='14'/>
-  <vcpupin vcpu='3' cpuset='15'/>
-  <vcpupin vcpu='4' cpuset='16'/>
-  <vcpupin vcpu='5' cpuset='17'/>
-  <!-- Pin emulator threads -->
-  <emulatorpin cpuset='18-19'/>
+  <!-- One thread per P-core -->
+  <vcpupin vcpu='0' cpuset='0'/>
+  <vcpupin vcpu='1' cpuset='2'/>
+  <vcpupin vcpu='2' cpuset='4'/>
+  <vcpupin vcpu='3' cpuset='6'/>
+  <vcpupin vcpu='4' cpuset='8'/>
+  <vcpupin vcpu='5' cpuset='10'/>
+  <!-- Emulator threads on E-cores -->
+  <emulatorpin cpuset='12-19'/>
 </cputune>
 ```
+
+This is the live win11 config, see [04-WINDOWS-VM](./04-WINDOWS-VM.md#cpu-pinning).
 
 ### Find CPU Topology
 
 ```bash
 # View CPU topology
-lscpu -e
+lscpu -e=CPU,CORE,SOCKET
 
-# Output shows CPU, Core, Socket info
-# Pin VMs to appropriate cores
+# P-cores vs E-cores on hybrid Intel CPUs
+cat /sys/devices/cpu_core/cpus   # P-cores
+cat /sys/devices/cpu_atom/cpus   # E-cores
 ```
 
 ### CPU Governor
@@ -375,11 +389,11 @@ virsh qemu-monitor-command win11 --hmp 'info network'
   </cpu>
 
   <cputune>
-    <vcpupin vcpu='0' cpuset='12'/>
-    <vcpupin vcpu='1' cpuset='13'/>
-    <vcpupin vcpu='2' cpuset='14'/>
-    <vcpupin vcpu='3' cpuset='15'/>
-    <emulatorpin cpuset='16-17'/>
+    <vcpupin vcpu='0' cpuset='0'/>
+    <vcpupin vcpu='1' cpuset='2'/>
+    <vcpupin vcpu='2' cpuset='4'/>
+    <vcpupin vcpu='3' cpuset='6'/>
+    <emulatorpin cpuset='12-19'/>
   </cputune>
 
   <memoryBacking>
