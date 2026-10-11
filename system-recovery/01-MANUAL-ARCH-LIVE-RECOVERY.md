@@ -23,7 +23,7 @@ This guide covers manual system recovery using the arch-live boot entry when the
 ## Step 1: Boot into Arch-Live
 
 1. Reboot the system
-2. At systemd-boot menu, select **Arch Linux Live**
+2. At systemd-boot menu, select **Arch Linux (Live)**
 3. Wait for the live environment to load
 
 ---
@@ -41,7 +41,7 @@ mount -o subvolid=5 /dev/mapper/cryptroot /mnt
 ### Verify the mount
 ```bash
 ls /mnt
-# Expected: @arch  @.snapshots  @Documents  @vm  @arch-live
+# Expected: @arch  @.snapshots  @Documents  @vm  @arch-live  @swap
 ```
 
 ---
@@ -122,21 +122,22 @@ umount /mnt/snapshot /mnt/current
 
 ### Method C: Use Snapper from Live Environment
 
-Run snapper commands targeting the mounted system.
+Run snapper commands targeting the mounted system. `--root` only works together with `--no-dbus`; without it snapper stops with `root argument can be used only together with no-dbus.`
 
 ```bash
-# 1. Mount root and snapshots properly
+# 1. Unmount the top-level volume from Step 2, then mount root and snapshots
+umount /mnt
 mount -o subvol=@arch /dev/mapper/cryptroot /mnt
 mount -o subvol=@.snapshots /dev/mapper/cryptroot /mnt/.snapshots
 
 # 2. List snapshots via snapper
-snapper --root /mnt list
+snapper --no-dbus --root /mnt list
 
 # 3. View changes between snapshots
-snapper --root /mnt status SNAPSHOT1..SNAPSHOT2
+snapper --no-dbus --root /mnt status SNAPSHOT1..SNAPSHOT2
 
 # 4. Undo changes between two snapshots
-snapper --root /mnt undochange SNAPSHOT1..SNAPSHOT2
+snapper --no-dbus --root /mnt undochange SNAPSHOT1..SNAPSHOT2
 
 # 5. Cleanup
 umount /mnt/.snapshots

@@ -72,7 +72,7 @@ diff /.snapshots/<number>/snapshot/etc/broken.conf /etc/broken.conf
 ### Recovery Steps
 
 ```bash
-# 1. At systemd-boot menu, select "Arch Linux Live"
+# 1. At systemd-boot menu, select "Arch Linux (Live)"
 
 # 2. Unlock and mount
 cryptsetup open /dev/nvme0n1p2 cryptroot
@@ -83,9 +83,10 @@ mv /mnt/@arch /mnt/@arch-broken
 btrfs subvolume snapshot /mnt/@.snapshots/<good-number>/snapshot /mnt/@arch
 
 # 3. Option B: Use snapper from live
+umount /mnt
 mount -o subvol=@arch /dev/mapper/cryptroot /mnt
 mount -o subvol=@.snapshots /dev/mapper/cryptroot /mnt/.snapshots
-snapper --root /mnt undochange <pre>..<post>
+snapper --no-dbus --root /mnt undochange <pre>..<post>
 umount /mnt/.snapshots
 
 # 4. Unmount and reboot
@@ -94,6 +95,8 @@ reboot
 ```
 
 **Time:** 10-20 minutes
+
+Full procedure with examples: [01-MANUAL-ARCH-LIVE-RECOVERY](./01-MANUAL-ARCH-LIVE-RECOVERY.md).
 
 ---
 
