@@ -31,6 +31,8 @@ tls:
 
 ### Security Headers
 
+**File:** `~/Workspace/containers/traefik/data/configurations/dynamic.yml` (hot-reloaded, no restart needed)
+
 ```yaml
 http:
   middlewares:
@@ -42,9 +44,17 @@ http:
         stsPreload: true
         stsSeconds: 31536000
         contentTypeNosniff: true
-        browserXssFilter: true
         referrerPolicy: "strict-origin-when-cross-origin"
-        frameDeny: true
+```
+
+Not set on purpose:
+- `browserXssFilter` - modern browsers ignore `X-XSS-Protection`
+- `frameDeny` - blocks all embedding; test each service before enabling
+
+**Verify:**
+
+```bash
+curl -sI https://n8n.x1.example.com | grep -i -E "strict-transport|x-content-type|referrer-policy"
 ```
 
 ### Test SSL Configuration
