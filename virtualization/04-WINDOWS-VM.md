@@ -13,7 +13,7 @@ Windows 11 setup with UEFI, Secure Boot, TPM, and performance optimizations.
 | Disk | 40GB qcow2 on /mnt/vm |
 | Firmware | UEFI with Secure Boot |
 | TPM | 2.0 (emulated via swtpm) |
-| Nested virtualization | off (`vmx` hidden), so Memory Integrity / VBS cannot run. See [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization) |
+| Nested virtualization | on, with `cet-ss`, `cet-ibt`, `vmx-apicv-register`, `vmx-apicv-vid` disabled so VBS / Memory Integrity boot. See [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization) |
 | Display | SPICE with QXL |
 | Shared folder | /home/tt via virtiofs |
 
@@ -226,7 +226,10 @@ net use Z: \\?\virtiofs\x1-home
 </cputune>
 <cpu mode='host-passthrough' check='none' migratable='on'>
   <topology sockets='1' dies='1' clusters='1' cores='6' threads='1'/>
-  <feature policy='disable' name='vmx'/>
+  <feature policy='disable' name='cet-ss'/>
+  <feature policy='disable' name='cet-ibt'/>
+  <feature policy='disable' name='vmx-apicv-register'/>
+  <feature policy='disable' name='vmx-apicv-vid'/>
 </cpu>
 ```
 
@@ -234,7 +237,7 @@ net use Z: \\?\virtiofs\x1-home
 - **Emulator threads:** on the E-cores (12-19), away from the vCPUs.
 - **Topology:** 1 socket with 6 cores. Without `<topology>`, QEMU starts `-smp 6,sockets=6,cores=1`, and Windows 11 uses only 2 sockets (Pro) or 1 (Home), so most vCPUs sit idle. Check in the guest: Task Manager > Performance > CPU shows "Sockets: 1, Cores: 6".
 
-- **`vmx` hidden:** the guest cannot start its own hypervisor. Required since 2026-10-11, see [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization).
+- **Four CPU features off:** CET (`cet-ss`, `cet-ibt`) and nested APICv (`vmx-apicv-register`, `vmx-apicv-vid`). Required since kernel 7.2 for Windows with VBS, see [Boot Loop After a Host Update](#boot-loop-after-a-host-update-vbs--nested-virtualization).
 
 See [08-PERFORMANCE](./08-PERFORMANCE.md#cpu-pinning) for the P-core/E-core map of this CPU.
 
@@ -275,19 +278,38 @@ lscpu -e
 
 **Incident 2026-10-11:** win11 had booted fine on 2026-08-14. After host updates (kernel 7.1 → 7.2.9, QEMU 11.1.0 → 11.1.2, `edk2-ovmf` 202605 → 202608, `swtpm` 0.10.1 → 0.10.2) every normal boot ended in "Ihr Gerät ist auf ein Problem gestoßen und konnte nicht repariert werden" (Automatic Repair). Safe Mode worked.
 
-**Cause:** Memory Integrity (HVCI) is on in the guest (`HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity` → `Enabled = 1`). HVCI makes Windows start its own hypervisor through nested virtualization (`vmx` passed through by `host-passthrough`). On the updated host that start reset the VM about 6 seconds after Windows Boot Manager, with no blue screen, no dump and no event log entry. Safe Mode does not start the hypervisor, so it worked. Which host update broke nested virtualization is not known yet.
+**Cause:** Memory Integrity (HVCI) is on in the guest (`HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity` → `Enabled = 1`). HVCI makes Windows start its own hypervisor through nested virtualization (`vmx` passed through by `host-passthrough`). On the updated host that start reset the VM about 6 seconds after Windows Boot Manager, with no blue screen, no dump and no event log entry. Safe Mode does not start the hypervisor, so it worked.
+
+What changed on the host: since kernel 7.2, KVM offers MBEC (mode-based execute control, used by HVCI) to nested guests (`virsh domcapabilities` lists `vmx-mbec`; kernel 7.1.8 in August did not). QEMU passes CET (`cet-ss`, `cet-ibt`) to guests by default since 11.0. MBEC together with CET and nested APICv breaks Windows' VBS hypervisor on Intel:
+- KVM mailing list report, same symptoms ("hangs during early boot" or "ends up in Windows Recovery Mode"), fixed with `-cet-ss,-cet-ibt`: https://lists.openwall.net/linux-kernel/2026/05/11/993
+- Proxmox disables CET for Windows 11 guests by default: https://lore.proxmox.com/all/20260515155810.229819-1-f.ebner@proxmox.com/
+- Proxmox disables nested APICv for Windows 11 guests (freezes at 100% CPU with VBS + MBEC): https://lore.proxmox.com/pve-devel/20260709134211.199744-3-f.ebner@proxmox.com/
+- Kernel fix in progress, "KVM: nVMX: fix nested APICv emulation for windows guests" (2026-10-09): https://lkml.rescloud.iu.edu/2610.1/04485.html
 
 **Why it looked like a repair loop:** after the first failed boots, Windows records them in `C:\Windows\bootstat.dat` and sends every later boot straight to Automatic Repair, even when the cause is gone. Each test must start with a reset boot status, or it proves nothing.
 
-**Fix:**
+**Fix (live since 2026-10-11):** keep `vmx` and `host-passthrough`, switch off four features (same as the Proxmox defaults):
 
 ```xml
 <cpu mode='host-passthrough' check='none' migratable='on'>
-  <feature policy='disable' name='vmx'/>
+  <feature policy='disable' name='cet-ss'/>
+  <feature policy='disable' name='cet-ibt'/>
+  <feature policy='disable' name='vmx-apicv-register'/>
+  <feature policy='disable' name='vmx-apicv-vid'/>
 </cpu>
 ```
 
-Windows then boots without its hypervisor. Trade-off: Memory Integrity, WSL2, Windows Sandbox and Hyper-V do not work in the guest. HVCI was not locked in UEFI (no `Locked` value), so Windows falls back without complaint.
+Check inside Windows that VBS and Memory Integrity run:
+
+```powershell
+Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_DeviceGuard |
+  Select VirtualizationBasedSecurityStatus, SecurityServicesRunning
+# 2 / {2} = VBS running, HVCI running
+```
+
+Fallback if a future host update breaks it again: hide nested virtualization with `<feature policy='disable' name='vmx'/>`. Windows then boots without its hypervisor, but Memory Integrity, WSL2, Windows Sandbox and Hyper-V do not work. HVCI is not locked in UEFI (no `Locked` value), so Windows accepts that without complaint.
+
+When newer kernels carry the nested APICv fix, the two `vmx-apicv-*` lines may become unnecessary. Test that with a `vm` snapshot first.
 
 **Reset the boot status** (VM off, from the host). Back up the image or take a `vm` snapshot first:
 
@@ -305,7 +327,8 @@ Alternative from Safe Mode, no host write: `bcdedit /set {current} bootstatuspol
 - `virsh screenshot win11 f.png` once per second shows a reset loop as firmware text → black → 640×480 → firmware text.
 - `virsh domstats win11 --block` with almost no writes means no crash dump was written.
 - Read guest files and registry hives read-only from the host: `qemu-storage-daemon` with a FUSE export, then `ntfscat` / `ntfsls`, and `regipy` for the hives.
-- Tests that did **not** help (all ran before the boot status was reset, so they may need a retest): CPU topology, fresh UEFI variables, sound/QXL/virtio-net swapped, `hyperv` enlightenments removed (hangs earlier).
+- Tests that did **not** help (they ran before the boot status was reset, so they proved little): CPU topology, fresh UEFI variables, sound/QXL/virtio-net swapped, `hyperv` enlightenments removed (hangs earlier).
+- `virsh domcapabilities | grep vmx-mbec` shows whether the host offers MBEC to nested guests.
 
 ## Display Configuration
 

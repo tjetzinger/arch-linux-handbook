@@ -183,7 +183,7 @@ sudo btrfs subvolume sync /mnt/vm
 sudo btrfs scrub start -B /     # 621.52 GiB, no errors found
 ```
 
-No image rebuild was needed. On the same day win11 also stopped booting after host updates; that was a separate problem, see [virtualization/04 - Boot Loop After a Host Update](../virtualization/04-WINDOWS-VM.md#boot-loop-after-a-host-update-vbs--nested-virtualization).
+No image rebuild was needed. On the same day win11 also stopped booting after host updates (kernel 7.2 offers MBEC to nested guests, which clashes with CET and nested APICv under Windows VBS); that was a separate problem, see [virtualization/04 - Boot Loop After a Host Update](../virtualization/04-WINDOWS-VM.md#boot-loop-after-a-host-update-vbs--nested-virtualization).
 
 ## Related
 
