@@ -326,8 +326,8 @@ Document your resources:
 
 | Resource | Contact/Location |
 |----------|------------------|
-| Borg backup | /mnt/external/borg-backup |
-| Cloud backup | remote:backups/ (rclone) |
+| Borg backup | `/mnt/borg-backup/repo` (external USB drive, automounted) |
+| Cloud backup | Not set up (no rclone remote configured) |
 | LUKS header | USB + cloud |
 | Recovery USB | Physical location |
-| This documentation | ~/docs/system-recovery/ |
+| This documentation | `~/Workspace/arch-linux-guides/system-recovery/`, public copy at https://github.com/youruser/arch-linux-handbook |
