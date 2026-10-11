@@ -2,6 +2,8 @@
 
 Scripts for multi-monitor setups and dock/undock workflows.
 
+> Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. The scripts in this section no longer exist under `~/.config/hypr/scripts/` and are kept for reference only. See [desktop/14-NIRI](../desktop/14-NIRI.md) for the current desktop. The Niri steps under Troubleshooting still apply.
+
 ## Toggle Monitors (toggle-monitors.sh)
 
 **Location:** `~/.config/hypr/scripts/toggle-monitors.sh`

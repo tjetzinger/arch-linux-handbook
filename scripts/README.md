@@ -2,6 +2,8 @@
 
 Custom scripts for Hyprland and ML4W desktop environment.
 
+> Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. The scripts in this section no longer exist under `~/.config/hypr/scripts/` and are kept for reference only. See [desktop/14-NIRI](../desktop/14-NIRI.md) for the current desktop.
+
 ## Contents
 
 | Document | Description |

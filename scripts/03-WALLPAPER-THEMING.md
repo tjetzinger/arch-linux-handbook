@@ -2,6 +2,8 @@
 
 Wallpaper management, color generation, and visual effects.
 
+> Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. The scripts in this section no longer exist under `~/.config/hypr/scripts/` and are kept for reference only. See [desktop/14-NIRI](../desktop/14-NIRI.md) for the current desktop.
+
 ## Main Wallpaper Script (wallpaper.sh)
 
 **Location:** `~/.config/hypr/scripts/wallpaper.sh`
@@ -229,33 +231,7 @@ bind = $mainMod SHIFT, A, exec, ~/.config/hypr/scripts/toggle-animations.sh
 
 ## GTK Theme Sync (gtk.sh)
 
-**Location:** `~/.config/hypr/scripts/gtk.sh`
-
-Synchronize GTK settings from config files to gsettings.
-
-### Usage
-
-```bash
-~/.config/hypr/scripts/gtk.sh
-```
-
-### What It Syncs
-
-From `~/.config/gtk-3.0/settings.ini`:
-- GTK theme
-- Icon theme
-- Cursor theme and size
-- Font name
-- Dark/light preference
-
-### Also Configures
-
-- Hyprland cursor settings
-- Nautilus terminal integration
-
-### Auto-Run
-
-This script runs automatically on Hyprland startup via autostart.conf.
+See [05-UTILITIES](./05-UTILITIES.md#gtk-settings-sync-gtksh).
 
 ## Related
 
