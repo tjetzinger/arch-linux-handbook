@@ -77,18 +77,29 @@ sudo ip rule add from 10.42.0.0/24 lookup main priority 5200
 
 ### Make Persistent
 
-Add to `/etc/networkd-dispatcher/routable.d/hotspot-bypass` or create a systemd service:
+A oneshot systemd service adds the rule at boot, after Tailscale starts.
 
-```bash
-#!/bin/bash
-# /etc/networkd-dispatcher/routable.d/50-hotspot-bypass
-ip rule show | grep -q "from 10.42.0.0/24" || \
-    ip rule add from 10.42.0.0/24 lookup main priority 5200
+**File:** `/etc/systemd/system/hotspot-routing.service`
+
+```ini
+[Unit]
+Description=Hotspot routing bypass for Tailscale
+After=network.target tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'ip rule show | grep -q "from 10.42.0.0/24" || ip rule add from 10.42.0.0/24 lookup main priority 5200'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-Make executable:
+Enable and check:
 ```bash
-sudo chmod +x /etc/networkd-dispatcher/routable.d/50-hotspot-bypass
+sudo systemctl daemon-reload
+sudo systemctl enable --now hotspot-routing.service
+ip rule | grep 10.42.0.0
 ```
 
 ## Network Details

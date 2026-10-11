@@ -17,7 +17,7 @@ sudo ufw status numbered
 | 67 on waydroid0 | ALLOW | Anywhere | Waydroid DHCP |
 | 53 on wlan0 | ALLOW | Anywhere | WiFi hotspot DNS |
 | 67,68/udp on wlan0 | ALLOW | Anywhere | WiFi hotspot DHCP |
-| FWD wlan0 ↔ waydroid0 | ALLOW | - | Waydroid internet access |
+| FWD waydroid0 → wlan0 | ALLOW | - | Waydroid internet access |
 | FWD wlan0 → enp+ | ALLOW | - | WiFi hotspot to ethernet |
 | Anywhere | ALLOW | 172.16.0.0/12 | Docker bridge networks |
 
