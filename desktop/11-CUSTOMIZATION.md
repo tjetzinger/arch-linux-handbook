@@ -2,6 +2,8 @@
 
 Adding custom configurations to Hyprland/ML4W.
 
+> Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. This guide is kept for reference only. See [14-NIRI](./14-NIRI.md) for the current desktop.
+
 ## ML4W Migration Guide
 
 ### Version History

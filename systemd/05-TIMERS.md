@@ -44,6 +44,29 @@ systemctl status snapper-cleanup.timer
 
 **Schedule:** `OnBootSec=10m, OnUnitActiveSec=1h`
 
+> **Known pitfall — silently dead timer:** this timer only has monotonic triggers
+> (`OnBootSec`/`OnUnitActiveSec`, no `OnCalendar`). A drop-in override that redefines
+> `OnUnitActiveSec` (e.g. to slow it to daily) can leave the unit stuck `active
+> (elapsed)` **forever** — it looks healthy in `systemctl status` (enabled, active,
+> no failures) but never fires again. `systemctl list-timers` is the tell: a wedged
+> timer shows `NEXT: -` / `LAST: -` indefinitely, and
+> `systemctl show snapper-cleanup.timer -p NextElapseUSecMonotonic` reads `infinity`.
+> Since snapshots keep getting *created* by `snapper-timeline.timer` (a separate,
+> working `OnCalendar=hourly` timer) but never *cleaned up*, this silently grows the
+> snapshot count for weeks/months, bloating the Btrfs metadata chunk and degrading
+> whole-system responsiveness. See
+> [system-recovery/06-BTRFS-MAINTENANCE.md](../system-recovery/06-BTRFS-MAINTENANCE.md#metadata-chunk-nearly-full--system-feels-laggy)
+> for the full incident and fix. Diagnose and fix:
+> ```bash
+> systemctl list-timers snapper-cleanup.timer         # NEXT/LAST both "-" = wedged
+> systemctl show snapper-cleanup.timer -p NextElapseUSecMonotonic -p LastTriggerUSec
+> # Fix: remove the broken drop-in (or correct it to use OnCalendar=, which is
+> # wall-clock based and doesn't have this failure mode), then:
+> sudo systemctl daemon-reload
+> sudo systemctl restart snapper-cleanup.timer
+> systemctl list-timers snapper-cleanup.timer          # should now show a real NEXT time
+> ```
+
 ### snapper-boot.timer
 
 Creates snapshot at boot.

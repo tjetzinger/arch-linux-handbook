@@ -30,6 +30,7 @@ Recovery, backup, and maintenance documentation for Arch Linux with Btrfs + Snap
 |---|----------|-------------|
 | 03 | [SNAPPER-DAILY-USAGE.md](./03-SNAPPER-DAILY-USAGE.md) | Common snapper commands |
 | 06 | [BTRFS-MAINTENANCE.md](./06-BTRFS-MAINTENANCE.md) | Scrub, balance, defrag, health checks |
+| 12 | [BTRFS-CORRUPTION-VM-INCIDENT.md](./12-BTRFS-CORRUPTION-VM-INCIDENT.md) | Csum corruption: on-disk vs transient, VM image protection |
 
 ### Backup Infrastructure
 

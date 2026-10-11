@@ -316,6 +316,55 @@ sudo dmesg | grep -i btrfs
 # Consider running memtest and disk diagnostics
 ```
 
+### Metadata Chunk Nearly Full / System Feels Laggy
+
+**Symptom:** whole system feels sluggish (high load average, elevated
+`/proc/pressure/io`) even though `top` shows mostly idle CPU. Often accompanied by
+many `kworker/*-btrfs-endio-write` threads and a `snapper list` count in the
+hundreds/thousands.
+
+**Root cause found in the wild (2026-08-18):** `snapper-cleanup.timer` had silently
+stopped firing weeks earlier — it stayed `active` in `systemctl status` with no
+failures, but `systemctl list-timers` showed `NEXT: -` / `LAST: -` and
+`journalctl -u snapper-cleanup.service` had **zero entries ever**, across 6+ boots.
+`snapper-timeline.timer` (a separate, working `OnCalendar` timer) kept creating
+snapshots hourly with nothing ever deleting them — 1060 snapshots had accumulated
+back to February, pushing the Metadata chunk to **95.9% full (220/230 GiB)**. A
+metadata chunk that full makes every write slower (more B-tree searches, more
+forced chunk allocation), which presents as general system lag, not a btrfs error.
+
+```bash
+# 1. Confirm: snapshot count and metadata chunk usage
+sudo snapper -c root list | wc -l                       # hundreds = suspicious
+sudo btrfs filesystem usage / | grep -E 'Data,single|Metadata,DUP'
+
+# 2. Confirm the timer is actually wedged (not just "quiet")
+systemctl list-timers snapper-cleanup.timer              # NEXT/LAST "-" = wedged
+systemctl show snapper-cleanup.timer -p NextElapseUSecMonotonic -p LastTriggerUSec
+sudo journalctl -u snapper-cleanup.service --no-pager    # "No entries" = never ran
+
+# 3. Immediate relief: run cleanup manually (safe, respects retention policy)
+sudo snapper -c root cleanup timeline
+sudo snapper -c root cleanup number
+
+# 4. Fix the timer so this doesn't recur — check for a drop-in override first
+systemctl cat snapper-cleanup.timer
+cat /etc/systemd/system/snapper-cleanup.timer.d/override.conf 2>/dev/null
+# If a drop-in redefines OnUnitActiveSec/OnBootSec, it can wedge the timer
+# permanently (monotonic-only triggers have no floor to fall back to). Remove or
+# fix it, then:
+sudo systemctl daemon-reload
+sudo systemctl restart snapper-cleanup.timer
+systemctl list-timers snapper-cleanup.timer               # should show a real NEXT
+
+# 5. Reclaim the metadata space the stale snapshots were holding
+sudo btrfs balance start -musage=50 -dusage=20 /
+sudo btrfs filesystem usage /                              # confirm % dropped
+```
+
+See [systemd/05-TIMERS.md](../systemd/05-TIMERS.md) for the general pitfall
+writeup on monotonic timers silently wedging.
+
 ### Subvolume Delete Fails
 
 ```bash

@@ -12,8 +12,41 @@ Top-level (subvolid=5)
 ├── @arch-live     → /mnt/arch-live (not snapshotted)
 ├── @Documents     → /home/tt/Documents (not snapshotted by root config)
 ├── @.snapshots    → /.snapshots    (snapper metadata)
+├── @swap          → /swap          (swapfile, nodatacow)
 └── @vm            → /mnt/vm        (not snapshotted)
 ```
+
+Verify the live layout rather than trusting this diagram:
+
+```bash
+sudo btrfs subvolume list -t /
+findmnt -t btrfs -o TARGET,SOURCE
+```
+
+> ### ⚠️ The "Recommended Layout" below is NOT implemented
+>
+> Everything not listed above — `/home`, `/var`, `/var/lib/docker`,
+> `/var/cache/pacman`, `/var/lib/flatpak`, `/var/log`, `/home/tt/.cache`,
+> `/home/tt/Workspace` — is a **plain directory inside `@arch`**, so it is
+> captured by every root snapshot. Btrfs snapshots are whole-subvolume; a
+> subdirectory cannot be excluded. Only carving a path into its own subvolume
+> keeps it out.
+>
+> **This has bitten this system (2026-08-18).** Combined with a wedged
+> `snapper-cleanup.timer`, 1060 accumulated snapshots each pinned their own
+> copy of high-churn data (21 GiB yay build cache, 37 GiB Docker overlay2
+> layers, `node_modules`, pacman cache, browser caches). Metadata ballooned to
+> **456 GiB of raw device space — 25% of the drive** (normal is 1–2%). Because
+> metadata is `DUP` (written twice) and every block passes through LUKS2, this
+> also showed up as `kworker/*-btrfs-endio-meta` and `kcryptd` threads
+> dominating the process list and general system lag.
+>
+> Confirm what a snapshot actually contains before assuming caches are excluded:
+> ```bash
+> sudo btrfs subvolume show /var/lib/docker   # "Not a Btrfs subvolume" = snapshotted
+> sudo btrfs filesystem du -s /.snapshots/<n>/snapshot
+> ```
+> See [06-BTRFS-MAINTENANCE](./06-BTRFS-MAINTENANCE.md#metadata-chunk-nearly-full--system-feels-laggy).
 
 ---
 

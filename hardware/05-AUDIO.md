@@ -147,11 +147,51 @@ wpctl set-default <source-id>
 
 ## Bluetooth Audio
 
+### Pair a New Device (First Time)
+
+Put the speaker into **pairing mode** first (hold its Bluetooth/power button until
+the LED blinks rapidly). Then scan, pair, trust, and connect:
+
+```bash
+# Confirm adapter is powered (bluetooth.service is enabled by default)
+bluetoothctl show | grep -E 'Powered|Pairable'
+
+# Scan ~15s and note the speaker's MAC (look for an audio-card icon / device name)
+bluetoothctl --timeout 15 scan on
+
+# Pair, then trust (auto-reconnect on power-on), then connect
+bluetoothctl pair    <MAC>
+bluetoothctl trust   <MAC>
+bluetoothctl connect <MAC>
+
+# Verify it registered as an A2DP sink (Icon: audio-card, Connected: yes)
+bluetoothctl info <MAC> | grep -E 'Icon|Paired|Trusted|Connected'
+```
+
+Then set it as the default output and adjust volume:
+
+```bash
+# Find the sink ID (shows as [bluez5])
+wpctl status | grep -A15 'Sinks:'
+
+# Make it the default sink and set volume
+wpctl set-default <sink-id>
+wpctl set-volume  <sink-id> 0.6
+```
+
+> **Tip:** `trust` is what makes the speaker auto-reconnect whenever it powers on
+> in range. If a phone grabs it first, forget it there or power-cycle the speaker
+> near the laptop. An already-paired device only needs `connect` (see below), not
+> re-pairing — it still shows up in scans when powered on.
+
 ### Connect Bluetooth Device
 
 ```bash
-bluetoothctl
-> connect <MAC>
+# Already-paired device — just reconnect
+bluetoothctl connect <MAC>
+
+# List paired devices to find the MAC
+bluetoothctl devices Paired
 ```
 
 ### Switch to Bluetooth

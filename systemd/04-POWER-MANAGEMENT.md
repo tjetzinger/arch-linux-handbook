@@ -281,9 +281,9 @@ cat /sys/class/power_supply/BAT0/status
 TLP can set charge thresholds to preserve battery longevity:
 
 ```bash
-# In /etc/tlp.conf
-START_CHARGE_THRESH_BAT0=75
-STOP_CHARGE_THRESH_BAT0=80
+# In /etc/tlp.d/10-thinkpad.conf (drop-in overrides /etc/tlp.conf)
+START_CHARGE_THRESH_BAT0=85
+STOP_CHARGE_THRESH_BAT0=90
 ```
 
 ```bash
@@ -291,7 +291,7 @@ STOP_CHARGE_THRESH_BAT0=80
 sudo tlp-stat -b | grep -i threshold
 
 # Set manually
-echo 80 | sudo tee /sys/class/power_supply/BAT0/charge_control_end_threshold
+echo 90 | sudo tee /sys/class/power_supply/BAT0/charge_control_end_threshold
 ```
 
 ## Suspend/Hibernate

@@ -68,6 +68,7 @@ Tailscale VPN, DNS configuration, and network integration guides.
 | [06-TROUBLESHOOTING](./06-TROUBLESHOOTING.md) | Common issues and debugging |
 | [07-FIREWALL-UFW](./07-FIREWALL-UFW.md) | UFW rules for Docker, Waydroid, hotspot |
 | [08-WIFI-HOTSPOT](./08-WIFI-HOTSPOT.md) | Share ethernet via WiFi hotspot |
+| [09-WIFI-ROAMING](./09-WIFI-ROAMING.md) | Reduce mesh AP flip-flopping (bgscan) |
 
 ## Quick Reference
 

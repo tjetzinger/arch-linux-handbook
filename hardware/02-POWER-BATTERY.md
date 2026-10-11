@@ -42,19 +42,27 @@ ThinkPads support charge thresholds to preserve battery longevity.
 **File:** `/etc/tlp.d/10-thinkpad.conf`
 
 ```ini
-START_CHARGE_THRESH_BAT0=75
-STOP_CHARGE_THRESH_BAT0=80
+START_CHARGE_THRESH_BAT0=85
+STOP_CHARGE_THRESH_BAT0=90
 ```
 
 This means:
-- Charging starts when battery drops below 75%
-- Charging stops when battery reaches 80%
+- Charging starts when battery drops below 85%
+- Charging stops when battery reaches 90%
 
 ### Why Use Thresholds?
 
 - Li-ion batteries last longer when kept between 20-80%
 - Prevents constant trickle charging when plugged in
 - Recommended for laptops that are often docked
+
+**Why 85/90 and not 75/80:** the original 75/80 window did not leave enough usable
+runtime, so it was widened on 2026-09-15. Staying under a full 100% charge keeps most
+of the longevity benefit — resting at 100% on AC is the part that ages the cells.
+
+**Precedence:** TLP reads `/etc/tlp.conf` first, then `/etc/tlp.d/*.conf`, and the last
+value wins. `/etc/tlp.d/10-thinkpad.conf` is the only place these thresholds are set —
+the copies in `/etc/tlp.conf` are commented out to avoid two files claiming the value.
 
 ### Modify Thresholds
 
@@ -63,8 +71,8 @@ This means:
 sudo nano /etc/tlp.d/10-thinkpad.conf
 
 # Modify threshold values
-START_CHARGE_THRESH_BAT0=75
-STOP_CHARGE_THRESH_BAT0=80
+START_CHARGE_THRESH_BAT0=85
+STOP_CHARGE_THRESH_BAT0=90
 
 # Apply changes
 sudo tlp start
@@ -364,8 +372,8 @@ SATA_LINKPWR_ON_BAT=min_power
 USB_AUTOSUSPEND=1
 
 # Battery charge thresholds (preserve longevity)
-START_CHARGE_THRESH_BAT0=75
-STOP_CHARGE_THRESH_BAT0=80
+START_CHARGE_THRESH_BAT0=85
+STOP_CHARGE_THRESH_BAT0=90
 
 # Don't restore radio device state
 RESTORE_DEVICE_STATE_ON_STARTUP=0

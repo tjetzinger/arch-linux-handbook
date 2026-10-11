@@ -2,6 +2,8 @@
 
 Configuration files for Hyprland/ML4W desktop environment on ThinkPad X1 Carbon Gen 11.
 
+> Hyprland + ML4W were removed on 2026-02-20. Archive at `~/backup/ml4w-hyprland-archive-20260220.tar.gz`. The `hypr/`, `waybar/`, `hyprdynamicmonitors/` and `systemd/user/` files are kept for reference only. The `system/` configs (logind, WirePlumber, TLP) are still in use. See [desktop/14-NIRI](../desktop/14-NIRI.md) for the current desktop.
+
 ## Structure
 
 ```
@@ -102,7 +104,7 @@ sudo tlp start
 
 ### Power Management
 - **Logind**: Ignore lid switch on AC power or when docked
-- **TLP**: Battery thresholds 75-80%, turbo off on battery, USB denylist for eMeet Luna
+- **TLP**: Battery thresholds 85-90%, turbo off on battery, USB denylist for eMeet Luna
 - **WirePlumber**: Disable Bluetooth hardware volume (fixes volume control issues)
 
 ## Related Documentation

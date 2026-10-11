@@ -220,6 +220,15 @@ sudo systemctl enable borg-backup.timer
 sudo systemctl disable borg-backup.timer
 ```
 
+### Legacy (user-level, disabled)
+
+An older user-level setup still exists but is disabled. The system service above replaces it.
+
+| File | Purpose |
+|------|---------|
+| `/home/tt/.local/bin/borg-backup` | User backup script |
+| `~/.config/systemd/user/borg-backup.*` | User service/timer |
+
 ---
 
 ## Backup Drive
@@ -235,6 +244,18 @@ UUID=e767669c-10e1-47b8-81d0-10d0cb231dd9  /mnt/borg-backup  ext4  rw,noatime,no
 
 ```bash
 sudo mount /mnt/borg-backup
+```
+
+### Migration to Larger Drive
+
+When the repository fills up (~800GB):
+
+```bash
+# Copy entire repo to new drive
+sudo rsync -avP /mnt/borg-backup/repo/ /mnt/new-drive/repo/
+
+# Get the new drive's UUID, then update the fstab entry above
+sudo blkid /dev/sdX1
 ```
 
 ---

@@ -229,6 +229,89 @@ docker inspect <container>
 docker events --since 10m
 ```
 
+### Containers Stuck in "Created" After a System Update
+
+**Symptoms:** Containers show `state=created` and never start. `docker inspect`
+reveals `State.Error`:
+
+```
+failed to create task for container: failed to start shim: start failed:
+failed to create TTRPC connection: unsupported protocol: Yunix
+```
+
+**Cause:** The container's stored runtime spec was created under an older
+`containerd`/`runc` and is incompatible after a rolling upgrade (e.g. Arch/CachyOS
+`pacman -Syu` bumping `containerd` and `runc`). Restarting the Docker daemon alone
+does **not** fix it — the per-container shim state must be regenerated.
+
+```bash
+# Confirm: which containers are stuck and why
+docker ps -aq | xargs -r docker inspect \
+  --format '{{.Name}} state={{.State.Status}} exit={{.State.ExitCode}} error="{{.State.Error}}"'
+
+# Check whether containerd/runc were upgraded recently
+grep -iE 'upgraded (docker|containerd|runc)' /var/log/pacman.log | tail
+```
+
+**Fix:** Recreate the containers under the current runtime (regenerates the spec):
+
+```bash
+cd /path/to/compose/stack
+docker compose up -d --force-recreate
+# For plain `docker run` containers: docker rm <name> then re-run it
+```
+
+### Crashlooping Container Storms the Host Network (Chrome `ERR_NETWORK_CHANGED`)
+
+**Symptoms:** In **Chrome** (not Firefox), the first load of a URL frequently
+fails and a refresh fixes it. A `chrome://net-export` NetLog shows many
+`NETWORK_CHANGED` notifications and `ERR_NETWORK_CHANGED` / QUIC pool teardowns.
+
+**Cause:** A container in a **restart loop** (`restart: always` + a failing
+dependency) recreates its `veth` interface on every restart. Each veth
+create/destroy emits RTNETLINK link/route/address events, which Chrome's Linux
+`NetworkChangeNotifier` treats as network changes and reacts to by aborting
+in-flight navigations. Firefox does not abort on these events, so it is immune.
+See [networking/06-TROUBLESHOOTING.md](../networking/06-TROUBLESHOOTING.md).
+
+```bash
+# Find the crashlooping container (high RestartCount)
+docker ps -aq | xargs -r docker inspect \
+  --format '{{.Name}} restarts={{.RestartCount}} state={{.State.Status}} policy={{.HostConfig.RestartPolicy.Name}}' \
+  | sort -t= -k2 -rn | head
+
+# Watch the churn it causes on the host (veth/bridge flapping)
+timeout 20 ip monitor route address link | grep -iE 'veth|br-'
+
+# Why is it crashing?
+docker logs --tail 30 <container>
+```
+
+**Fix:**
+```bash
+# Immediate: stop the loop (churn stops instantly)
+docker stop <container>
+
+# Proper: start its missing dependency, then the container
+docker start <dependency> && docker start <container>
+```
+
+**Prevent recurrence:** in the compose file, cap the restart policy and gate on
+the dependency's health so a downstream outage can't storm the host network:
+
+```yaml
+services:
+  app:
+    restart: on-failure:5        # not "always"
+    depends_on:
+      db:
+        condition: service_healthy
+```
+
+> **Note on Watchtower:** auto-updating images that use `latest`/nightly tags
+> (e.g. `...-nightly`) can pull a broken build that then crashloops. Pin stable
+> tags for critical services, or exclude them from Watchtower.
+
 ### Network Issues
 
 ```bash

@@ -191,6 +191,78 @@ fi
 sudo chmod +x /etc/NetworkManager/dispatcher.d/99-tailscale-dns
 ```
 
+### First Page Load Fails, Refresh Works (MagicDNS EDNS0 Timeout)
+
+**Symptoms:** Typing a URL into the browser frequently fails to load the page on
+the first attempt (blank/error/hang), but an immediate refresh loads it instantly.
+Feels like a transient connectivity hiccup. Affects new/uncached domains only.
+
+> **If the issue is Chrome-only (Firefox is fine), this is probably NOT the cause.**
+> A Chrome-specific first-load failure is usually `ERR_NETWORK_CHANGED` from a
+> crashlooping Docker container flapping its `veth` and storming the host with
+> RTNETLINK events. Capture a `chrome://net-export` NetLog and check for
+> `NETWORK_CHANGED` bursts. See
+> [docker/09-MAINTENANCE.md](../docker/09-MAINTENANCE.md) →
+> "Crashlooping Container Storms the Host Network".
+
+**Cause:** systemd-resolved sends its first query to a DNS server with
+`UDP+EDNS0`. When all queries are routed through MagicDNS (`100.x.x.x`,
+`~.` domain) and a Mullvad exit node is active, the EDNS0 exchange can stall
+across a resolver/link transition (exit-node re-handshake, dock connect/disconnect,
+or WiFi roam — see [09-WIFI-ROAMING](./09-WIFI-ROAMING.md)). resolved eats a
+multi-second timeout, then downgrades to plain UDP:
+
+```
+systemd-resolved: Using degraded feature set UDP instead of UDP+EDNS0 for DNS server 100.x.x.x.
+```
+
+The single query the browser made for the new URL is the one that times out, so
+the page fails. The downgrade is cached, so the refresh resolves instantly. Cache
+hits never touch MagicDNS, which is why only the first, uncached navigation fails.
+
+```bash
+# Quantify it - high timeout count confirms the issue
+resolvectl statistics | grep -A1 'Failure Transactions'
+# Total Timeouts: a large fraction of Total Transactions = EDNS0 stalls
+
+# Look for the feature-set downgrade in the log
+journalctl -u systemd-resolved -b | grep -i 'degraded feature set'
+
+# Reproduce: force a fresh EDNS0 probe and time it
+resolvectl flush-caches
+resolvectl reset-server-features
+time resolvectl query --cache=no example.org   # slow/FAIL during a transition
+```
+
+**Note:** systemd-resolved has no per-server knob to disable EDNS0, and routing
+all DNS through MagicDNS is intentional (keeps DNS inside the Mullvad tunnel).
+The fix is resilience, not removing MagicDNS from the path.
+
+**Fix:** Serve the last-known-good answer while refreshing in the background, so a
+transient MagicDNS stall returns stale-but-valid data instead of a failed page.
+Requires systemd 254+ (`StaleRetentionSec`).
+
+Create `/etc/systemd/resolved.conf.d/magicdns-resilience.conf`:
+```ini
+[Resolve]
+Cache=yes
+StaleRetentionSec=86400   # serve stale answer while refreshing, instead of hanging
+```
+
+```bash
+sudo systemctl restart systemd-resolved
+resolvectl statistics    # watch Total Timeouts stop climbing during normal use
+```
+
+**Scope:** Eliminates the symptom for any domain resolved before (the bulk of
+browsing). It cannot help a genuinely never-before-seen domain on a cache miss
+during a transition — nothing local can, without taking DNS off MagicDNS.
+
+**Reduce the trigger frequency:** The most common trigger is link churn from
+running both WiFi and dock Ethernet with default routes simultaneously. Auto-disable
+WiFi when docked to remove the roam/route churn at its source (see
+[09-WIFI-ROAMING](./09-WIFI-ROAMING.md)).
+
 ## Exit Node Issues
 
 ### Exit Node Not Working
