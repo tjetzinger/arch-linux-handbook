@@ -302,11 +302,11 @@ On Btrfs, pick the cache mode by the image's COW state:
 
 | Image | Cache mode | Why |
 |-------|------------|-----|
-| datacow (no `C`, has checksums) | `cache='writeback'` (QEMU default) | Btrfs turns direct writes into buffered writes anyway, so `none` gains nothing. Host RAM caches reads. Guest flushes are honoured |
+| datacow (no `C`, has checksums) | `cache='writeback'` (QEMU default) | `none` causes false checksum errors on reads (see below). Host RAM caches reads. Guest flushes are honoured |
 | nodatacow (`lsattr` shows `C`) | `cache='none' io='native'` | True direct I/O, fastest |
 | any | `cache='writethrough'` | Safe fallback, slower writes |
 
-**Kernel note:** before kernel 6.14, `cache='none'` on a datacow image caused false checksum errors. The guest changes a buffer while Btrfs writes it, so data and checksum no longer match. Since 6.14, Btrfs falls back to buffered writes for files with checksums, so this combination is safe now, just not faster.
+**Never `cache='none'` on a datacow image.** With direct I/O, the guest can change a buffer while Btrfs checks or computes its checksum, so data and checksum no longer match. Kernel 6.14 fixed the write side (Btrfs falls back to buffered writes for files with checksums). Reads are still affected: on kernel 7.1.8, win11 with `cache='none'` logged 495 checksum errors in one day; with `writeback` only the one real bad block showed up.
 
 **Trade-off of nodatacow:** no checksums, so Btrfs cannot detect corruption in the image. Each snapper snapshot of `@vm` also forces COW again for changed blocks. `win11.qcow2` stays datacow on purpose: checksums caught the corruption in the incident below, and the `vm` snapper config protects it.
 

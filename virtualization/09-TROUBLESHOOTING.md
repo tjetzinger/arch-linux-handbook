@@ -279,32 +279,28 @@ For fixed resolution:
 
 ### Disk I/O Error
 
-**Current win11 has an I/O error:**
-```
-I/O error: disk='vdb', path='/mnt/vm/win11.qcow2'
-```
+Example from the log: `I/O error: disk='vdb', path='/mnt/vm/win11.qcow2'`
 
 **Diagnose:**
 ```bash
-# Check disk integrity
+# Btrfs checksum errors? (the usual cause on this system)
+sudo dmesg | grep -i 'csum failed'
+
+# Cache mode and COW state of the image
+virsh dumpxml win11 | grep "driver name='qemu'"
+lsattr /mnt/vm/win11.qcow2
+
+# qcow2 structure and disk space
 qemu-img check /mnt/vm/win11.qcow2
-
-# Check host filesystem
-dmesg | tail -50
-# Look for Btrfs or NVMe errors
-
-# Check disk space
 df -h /mnt/vm/
 ```
 
 **Fix:**
-```bash
-# If qcow2 corrupted, try repair
-qemu-img check -r all /mnt/vm/win11.qcow2
+- `csum failed` with changing checksums and `cache='none'`: switch the VM to `cache='writeback'`.
+- `csum failed` at the same offset every time: a real bad block. `qemu-img check -r all` cannot repair it. Restore from a snapshot or backup, or salvage with `ddrescue`.
+- Only qcow2 errors, no `csum failed`: `qemu-img check -r all /mnt/vm/win11.qcow2`.
 
-# If Btrfs issues, run scrub
-sudo btrfs scrub start /mnt/vm
-```
+Full analysis of the 2026-08 win11 incident: [12-BTRFS-CORRUPTION-VM-INCIDENT](../system-recovery/12-BTRFS-CORRUPTION-VM-INCIDENT.md).
 
 ### Disk Full
 

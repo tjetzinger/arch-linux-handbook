@@ -1,8 +1,8 @@
 # 12 - Btrfs Data Corruption & VM Image Incident
 
 Diagnosing btrfs checksum corruption, distinguishing **on-disk rot** from
-**transient in-memory (hardware) corruption**, and protecting VM images on the
-`@vm` subvolume. Written from a real incident on `win11.qcow2`.
+**transient checksum errors**, and protecting VM images on the `@vm` subvolume.
+Written from a real incident on `win11.qcow2` (2026-08-13/14).
 
 ## Summary of the incident
 
@@ -16,12 +16,28 @@ Diagnosing btrfs checksum corruption, distinguishing **on-disk rot** from
 | Boot attempt | Windows 11 booted, but logged **20** csum errors during boot |
 | After `sfc`/`chkdsk` | Windows **crashed**; **920** csum errors, at offsets scrub reads clean |
 | Scrub #2 | Still only **1 uncorrectable** on disk — the 920 were **transient** |
+| Cache mode switched | win11 ran 2 more times with `cache='writeback'`: **no** transient errors, only the 1 bad block (same checksum every read) |
 
-**Root cause:** the data on disk is intact (scrub proves it), but it was being
-corrupted **in memory, in flight, under load** — the same block read back with a
-**different wrong checksum each time**. That signature = an active, load-dependent
-hardware fault (marginal RAM, unstable XMP/EXPO memory overclock, or CPU/SoC
-memory controller), which a single quick Memtest pass can miss.
+**Root cause (most likely, re-analysed 2026-10-11):** two separate problems.
+
+1. **Transient errors = direct I/O reads, not hardware.** win11 ran with
+   `cache='none'` on a datacow (checksummed) image. With direct I/O, btrfs
+   verifies the checksum on the guest's own read buffer. Windows can change that
+   buffer while the read is still in flight, so the computed checksum differs
+   on every read and btrfs returns `EIO`. The kernel 6.14 fix (fallback to
+   buffered I/O) covers writes only.
+
+   | Runs | Cache mode | csum errors in the kernel log |
+   |------|------------|-------------------------------|
+   | 2026-08-13, 2 runs | `none` (direct I/O) | 495 at 86 offsets; 56 offsets gave a different wrong checksum per read |
+   | 2026-08-14, 2 runs | `writeback` (page cache) | 10, all at one offset, always the same checksum |
+
+   A RAM fault would also corrupt reads through the page cache. The
+   `writeback` runs show none of that. Caveat: the 08-14 runs may have had
+   lighter load, so hardware is unlikely, not ruled out.
+2. **One real bad block on disk** (offset `22750773248` in `win11.qcow2`). Scrub
+   finds it every run, with the same checksum. Single-device btrfs has no second
+   copy to repair it from.
 
 ## Diagnostic commands
 
@@ -43,25 +59,30 @@ sudo btrfs scrub start /mnt/vm
 sudo btrfs scrub status /mnt/vm                  # poll until "finished"
 ```
 
-### The key distinction: on-disk rot vs transient corruption
+### The key distinction: on-disk rot vs transient errors
 
 - **On-disk rot:** `btrfs scrub` reports the same bad block(s) every run; the file
   is genuinely damaged. Single-device btrfs cannot repair (no second copy).
-- **Transient / in-memory corruption:** the guest or an app hits many csum errors,
-  but a **scrub reads those same offsets clean**, and repeated reads of one block
-  produce **different** computed checksums. The bytes on disk are fine — they are
-  corrupted after being read, in RAM/DMA. **This points at hardware, not the disk.**
+- **Transient errors:** the guest or an app hits many csum errors, but a
+  **scrub reads those same offsets clean**, and repeated reads of one block
+  produce **different** computed checksums. The bytes on disk are fine.
+  - First check the cache mode: `cache='none'` on a datacow image explains this
+    (see Root cause). Switch to `writeback` and re-test.
+  - Errors that persist with `writeback` point at hardware (RAM, memory controller).
 
 ```bash
 # Tell them apart: compare guest-visible error count vs what scrub finds on disk.
-# Many guest errors + scrub finds ~none at those offsets = transient (hardware).
+# Many guest errors + scrub finds ~none at those offsets = transient.
+virsh dumpxml <vm> | grep "driver name='qemu'"   # cache='none'? -> direct I/O reads
+lsattr /mnt/vm/*.qcow2                           # no 'C' = datacow (checksummed)
 sudo dmesg | grep -c 'ino <ino>'                # guest-visible csum reads
 sudo btrfs scrub status /mnt/vm | grep -i uncorrect   # persistent on-disk damage
 ```
 
-## Hardware root-cause (do this BEFORE trusting the machine under load)
+## Rule out hardware (if errors persist with `writeback`)
 
-A healthy SSD + checksum mismatches that change per read = memory-path fault.
+A healthy SSD + checksum mismatches that change per read, **with buffered I/O**,
+= memory-path fault.
 
 1. **Memtest86+ — multiple full passes / overnight** (already a systemd-boot entry
    here; `memtest86+-efi` installed). One quick pass is not enough for marginal faults.
@@ -84,8 +105,8 @@ ddrescue /mnt/vm/win11.qcow2 /mnt/vm/win11.salvaged.qcow2 /mnt/vm/win11.mapfile
 Data in the corrupted regions is already lost. If a bad block landed in qcow2
 metadata, the image may not open — then rebuild from scratch.
 
-> Do **not** keep booting a VM that triggers transient corruption — each run risks
-> writing more bad data. Clear the hardware first.
+> Do **not** keep booting a VM that triggers transient errors. Switch it to
+> `cache='writeback'` first; if errors continue, clear the hardware before the next run.
 
 ## Prevention: protect the `@vm` subvolume
 
