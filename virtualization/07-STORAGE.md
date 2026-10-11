@@ -298,17 +298,29 @@ sudo mount -t 9p -o trans=virtio,version=9p2000.L hostshare /mnt/shared
 
 ### Cache Modes
 
-| Mode | Performance | Safety | Use Case |
-|------|-------------|--------|----------|
-| none | Best | Safe | Production |
-| writeback | Good | Risky | Development |
-| writethrough | OK | Safe | Fallback |
+On Btrfs, pick the cache mode by the image's COW state, not by speed alone:
+
+| Image | Cache mode | Why |
+|-------|------------|-----|
+| nodatacow (`lsattr` shows `C`) | `cache='none' io='native'` | Direct I/O, fastest |
+| datacow (no `C`) | `cache='writeback'` | Direct I/O on a datacow file can cause checksum errors |
+| any | `cache='writethrough'` | Safe fallback, slower writes |
+
+Current images:
+
+| Image | COW | Cache |
+|-------|-----|-------|
+| `/mnt/vm/win11.qcow2` | datacow | `writeback` |
+| `/mnt/vm/kali-linux-*.qcow2` | datacow | default |
+| `/var/lib/libvirt/images/arch-vm-minimal.qcow2` | nodatacow | default |
+
+See [12-BTRFS-CORRUPTION-VM-INCIDENT](../system-recovery/12-BTRFS-CORRUPTION-VM-INCIDENT.md) for the incident behind this rule.
 
 ### Set Cache Mode
 
 ```xml
 <disk type='file' device='disk'>
-  <driver name='qemu' type='qcow2' cache='none' discard='unmap'/>
+  <driver name='qemu' type='qcow2' cache='writeback' discard='unmap'/>
   <source file='/mnt/vm/win11.qcow2'/>
   <target dev='vda' bus='virtio'/>
 </disk>
@@ -353,24 +365,25 @@ mv disk-trimmed.qcow2 disk.qcow2
 ### Best Practices
 
 1. **Use VirtIO** disk bus
-2. **cache=none** for safety
-3. **io=native** for direct I/O
-4. **discard=unmap** for TRIM
-5. Store on **SSD/NVMe**
-6. Use **Btrfs subvolume** (COW disabled for qcow2)
+2. **Cache mode by COW state**: `cache=none` + `io=native` only for nodatacow images, `cache=writeback` for datacow images (see [Disk Caching](#disk-caching))
+3. **discard=unmap** for TRIM
+4. Store on **SSD/NVMe**
+5. Use a **Btrfs subvolume** (`@vm`) with `chattr +C` on the directory for new images
 
 ### Disable Btrfs COW for VM Images
 
 ```bash
-# For new directory
-mkdir /mnt/vm-nocow
-chattr +C /mnt/vm-nocow
+# Set on the directory: only NEW files inherit it (already set on /mnt/vm)
+chattr +C /mnt/vm
 
-# Check
-lsattr -d /mnt/vm-nocow
+# Check directory and images
+lsattr -d /mnt/vm
+lsattr /mnt/vm/*.qcow2
 ```
 
-### Optimal Disk Config
+Existing images keep their COW state. A copy (`cp`, `qemu-img convert`) creates a new file, which inherits `+C`. After that, switch the VM to `cache='none' io='native'`.
+
+### Optimal Disk Config (nodatacow image)
 
 ```xml
 <disk type='file' device='disk'>
@@ -409,3 +422,4 @@ cp disk.qcow2 backup/
 - [01-OVERVIEW](./01-OVERVIEW.md) - Storage layout
 - [04-WINDOWS-VM](./04-WINDOWS-VM.md) - Windows virtiofs
 - [08-PERFORMANCE](./08-PERFORMANCE.md) - I/O tuning
+- [12-BTRFS-CORRUPTION-VM-INCIDENT](../system-recovery/12-BTRFS-CORRUPTION-VM-INCIDENT.md) - win11.qcow2 corruption and prevention
