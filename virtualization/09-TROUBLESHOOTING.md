@@ -143,7 +143,9 @@ virsh dumpxml win11 | grep -A5 "<disk"
 
 # Check cache mode
 virsh dumpxml win11 | grep cache
-# Recommended: cache='none'
+# nodatacow image: cache='none' io='native'
+# datacow image:   cache='writeback' (see 07-STORAGE.md)
+lsattr /mnt/vm/*.qcow2   # 'C' = nodatacow
 
 # In guest - check TRIM
 fstrim -av

@@ -145,14 +145,19 @@ For multi-socket systems:
 </disk>
 ```
 
+This example is for a nodatacow image. New images in `/mnt/vm` are nodatacow, because the directory has `chattr +C`.
+
 ### Cache Modes
 
-| Mode | Safety | Performance | Use Case |
-|------|--------|-------------|----------|
-| none | High | Best | Production |
-| writeback | Low | Good | Testing |
-| writethrough | High | OK | Legacy |
-| directsync | Highest | Slow | Critical data |
+| Mode | Host page cache | Guest flushes | Use on Btrfs |
+|------|-----------------|---------------|--------------|
+| none | No (direct I/O) | Honoured | nodatacow images |
+| writeback | Yes | Honoured | datacow images (QEMU default) |
+| writethrough | Yes, every write synced | Not needed | Safe fallback, slow writes |
+| directsync | No, every write synced | Not needed | Slowest |
+| unsafe | Yes | Ignored | Throwaway VMs only |
+
+See [07-STORAGE](./07-STORAGE.md#disk-caching) for how to pick by COW state.
 
 ### I/O Threads
 

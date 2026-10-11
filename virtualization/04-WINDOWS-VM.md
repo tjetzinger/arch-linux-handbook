@@ -100,7 +100,7 @@ virt-install \
     --memory 16384 \
     --vcpus 6 \
     --cpu host-passthrough \
-    --disk path=/mnt/vm/win11.qcow2,size=60,format=qcow2,bus=virtio,cache=none,discard=unmap \
+    --disk path=/mnt/vm/win11.qcow2,size=60,format=qcow2,bus=virtio,cache=none,io=native,discard=unmap \
     --cdrom /mnt/vm/iso/Win11.iso \
     --disk /mnt/vm/iso/virtio-win.iso,device=cdrom \
     --network network=default,model=virtio \
@@ -362,7 +362,7 @@ virsh snapshot-create-as win11 snapshot1 --disk-only --atomic
 
 1. **Use VirtIO** for disk and network
 2. **Enable CPU pinning** for consistent performance
-3. **Use cache=none** for disk (if host has good I/O)
+3. **Match the cache mode to the image**: `cache=none` for nodatacow images, `cache=writeback` for datacow images. The current `win11.qcow2` is datacow and runs `writeback` (see [07-STORAGE](./07-STORAGE.md#disk-caching))
 4. **Enable hugepages** for large memory VMs
 5. **Install guest tools** (SPICE, QEMU agent)
 6. **Disable Windows features** you don't need
