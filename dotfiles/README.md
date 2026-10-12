@@ -70,7 +70,7 @@ systemctl --user daemon-reload
 # Lid switch behavior
 sudo mkdir -p /etc/systemd/logind.conf.d
 sudo cp system/logind.conf.d/10-lid-switch.conf /etc/systemd/logind.conf.d/
-sudo systemctl restart systemd-logind
+sudo systemctl reload systemd-logind   # not restart: that ends the session
 
 # Bluetooth volume fix
 sudo mkdir -p /etc/wireplumber/wireplumber.conf.d

@@ -578,9 +578,9 @@ busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedeskt
 ### Apply Changes
 
 ```bash
-sudo systemctl restart systemd-logind
-# Note: This will terminate your current session!
-# Alternative: reboot
+sudo systemctl reload systemd-logind
+# Reload re-reads the config and keeps your session (systemd 262: CanReload=yes).
+# Do not use restart: it ends the current graphical session.
 ```
 
 ## Fan Control
