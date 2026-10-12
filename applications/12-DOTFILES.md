@@ -4,130 +4,73 @@ Dotfiles structure and management.
 
 ## Overview
 
-Configuration files are managed through a dotfiles repository with symlinks.
+Desktop configs come from the **niri-setup** repository, symlinked into `~/.config/`. System configs (logind, TLP, WirePlumber) are kept as copies in this handbook under [dotfiles/](../dotfiles/).
 
 | Component | Location |
 |-----------|----------|
-| Repository | `~/dotfiles/` |
-| Target | `~/.config/` |
-| Backup | `~/.ml4w-hyprland/backup/` |
+| Desktop repo | `~/.config/niri-setup/` (fork of acaibowlz/niri-setup, remote `github.com/youruser/niri-setup`) |
+| Target | `~/.config/` (symlinks) |
+| System config copies | `~/Workspace/arch-linux-guides/dotfiles/system/` |
+| Backup | Borg (`/home/tt` daily), see [system-recovery/07](../system-recovery/07-BORG-BACKUP-AUTOMATION.md) |
+
+The ML4W `~/dotfiles/` repo is gone since the switch to Niri on 2026-02-20. `~/.ml4w-hyprland/` is an empty leftover.
 
 ## Repository Structure
 
-**Directory:** `~/dotfiles/`
+**Directory:** `~/.config/niri-setup/`
 
 ```
-~/dotfiles/
-└── .config/
-    ├── ags/              # AGS shell
-    ├── bashrc/           # Bash config
-    ├── dunst/            # Notifications
-    ├── fastfetch/        # System info
-    ├── gtk-3.0/          # GTK3 theme
-    ├── gtk-4.0/          # GTK4 theme
-    ├── hypr/             # Hyprland
-    ├── kitty/            # Terminal
-    ├── matugen/          # Material colors
-    ├── ml4w/             # ML4W scripts
-    ├── nvim/             # Neovim
-    ├── nwg-dock-hyprland/
-    ├── ohmyposh/         # Shell prompt
-    ├── qt6ct/            # Qt6 theme
-    ├── rofi/             # Launcher
-    ├── swaync/           # Notifications
-    ├── vim/              # Vim
-    ├── wal/              # Pywal
-    ├── waybar/           # Status bar
-    ├── waypaper/         # Wallpaper
-    ├── wlogout/          # Logout menu
-    ├── xsettingsd/       # X settings
-    └── zshrc/            # Zsh config
+~/.config/niri-setup/
+├── alacritty/      # Terminal
+├── dunst/          # Notifications
+├── fuzzel/         # Launcher
+├── niri/           # Compositor (config.kdl + included *.kdl files)
+├── niriswitcher/   # Window switcher
+├── scripts/        # swayidle, swaylock, wallpaper, power profile helpers
+├── wallpapers/
+├── waybar/         # Status bar
+├── wlogout/        # Logout menu
+└── setup.sh        # Package install + $NIRICONF path substitution
 ```
 
 ## Symlinks
 
-Configurations are symlinked from dotfiles to `~/.config/`:
-
-```bash
-# Example symlinks
-~/.config/nvim -> ~/dotfiles/.config/nvim
-~/.config/hypr -> ~/dotfiles/.config/hypr
-~/.config/kitty -> ~/dotfiles/.config/kitty
-~/.config/zshrc -> ~/dotfiles/.config/zshrc
 ```
+~/.config/niri          -> ~/.config/niri-setup/niri
+~/.config/niri-scripts  -> ~/.config/niri-setup/scripts
+~/.config/waybar        -> ~/.config/niri-setup/waybar
+~/.config/dunst         -> ~/.config/niri-setup/dunst
+~/.config/fuzzel        -> ~/.config/niri-setup/fuzzel
+~/.config/wlogout       -> ~/.config/niri-setup/wlogout
+~/.config/niriswitcher  -> ~/.config/niri-setup/niriswitcher
+~/.config/alacritty     -> ~/.config/niri-setup/alacritty
+```
+
+`~/.config/google-chrome` is also a symlink, but to `/run/user/1000/psd/…` (profile-sync-daemon keeps the profile in RAM).
 
 ### View Symlinks
 
 ```bash
-# List all symlinks in .config
-ls -la ~/.config/ | grep "^l"
-
-# Check specific symlink
-ls -la ~/.config/nvim
+find ~/.config -maxdepth 1 -type l -printf '%f -> %l\n'
 ```
 
 ## Symlinked vs Local
 
-### Symlinked (from dotfiles)
-
-- ags
-- bashrc
-- dunst
-- fastfetch
-- gtk-3.0, gtk-4.0
-- hypr
-- kitty
-- matugen
-- ml4w
-- nvim, vim
-- nwg-dock-hyprland
-- ohmyposh
-- qt6ct
-- rofi
-- swaync
-- wal
-- waybar
-- waypaper
-- wlogout
-- xsettingsd
-- zshrc
-
-### Local (not symlinked)
-
-- google-chrome/
-- Code/
-- vlc/
-- btop/
-- superfile/
-- warp-terminal/
-- And others with user-specific data
-
-## Backup Location
-
-**Directory:** `~/.ml4w-hyprland/backup/`
-
-Contains backup copies of dotfiles made during ML4W updates:
-
-```
-~/.ml4w-hyprland/backup/
-├── dotfiles/
-│   └── .config/
-│       └── nvim/       # Full Lua neovim config
-└── ...
-```
+- **Symlinked:** the niri-setup folders above.
+- **Local, not in a repo:** everything else in `~/.config/` (nvim, kitty, btop, Code, …) and the home files below. Borg backs them up.
 
 ## Managing Dotfiles
 
 ### Add New Configuration
 
-1. Move config to dotfiles:
+1. Move config into the repo:
    ```bash
-   mv ~/.config/newapp ~/dotfiles/.config/newapp
+   mv ~/.config/newapp ~/.config/niri-setup/newapp
    ```
 
 2. Create symlink:
    ```bash
-   ln -s ~/dotfiles/.config/newapp ~/.config/newapp
+   ln -s ~/.config/niri-setup/newapp ~/.config/newapp
    ```
 
 3. Verify:
@@ -137,7 +80,7 @@ Contains backup copies of dotfiles made during ML4W updates:
 
 ### Update Dotfiles
 
-Changes in `~/.config/` automatically apply to `~/dotfiles/` due to symlinks.
+Edits in `~/.config/<app>` land in `~/.config/niri-setup/` through the symlinks. Commit and push them from there.
 
 ### Remove Symlink
 
@@ -146,40 +89,29 @@ Changes in `~/.config/` automatically apply to `~/dotfiles/` due to symlinks.
 rm ~/.config/appname
 
 # Copy back if needed
-cp -r ~/dotfiles/.config/appname ~/.config/
+cp -r ~/.config/niri-setup/appname ~/.config/
 ```
 
 ## Version Control
 
-### Initialize Git
-
 ```bash
-cd ~/dotfiles
-git init
-git add .
-git commit -m "Initial dotfiles"
-```
-
-### Push to GitHub
-
-```bash
-# Create repo on GitHub first
-gh repo create dotfiles --private
-
-# Push
-git remote add origin git@github.com:username/dotfiles.git
-git push -u origin main
+cd ~/.config/niri-setup
+git status
+git add -A && git commit -m "Update config"
+git push
 ```
 
 ### Clone on New System
 
 ```bash
-git clone git@github.com:username/dotfiles.git ~/dotfiles
-
-# Create symlinks
-ln -s ~/dotfiles/.config/nvim ~/.config/nvim
-# ... repeat for each config
+git clone https://github.com/youruser/niri-setup ~/.config/niri-setup
+cd ~/.config/niri-setup
+./setup.sh          # installs packages, fills in $NIRICONF paths, links niri/config.kdl
+# then create the remaining symlinks (see Symlinks above)
+niri validate
 ```
+
+`setup.sh` only links `niri/config.kdl`; the folder symlinks listed above were created by hand.
 
 ## Home Directory Dotfiles
 
@@ -197,30 +129,9 @@ Some configs live directly in home:
 
 ```bash
 # Add to dotfiles repo
-mv ~/.gitconfig ~/dotfiles/
-ln -s ~/dotfiles/.gitconfig ~/.gitconfig
+mv ~/.gitconfig ~/.config/niri-setup/home/.gitconfig
+ln -s ~/.config/niri-setup/home/.gitconfig ~/.gitconfig
 ```
-
-## ML4W Framework
-
-ML4W manages many dotfiles through its installer and updater:
-
-```bash
-# Update ML4W
-ml4w-update
-
-# Or
-~/.config/ml4w/update.sh
-```
-
-### ML4W Paths
-
-| Path | Purpose |
-|------|---------|
-| `~/.config/ml4w/` | ML4W configuration |
-| `~/.config/ml4w/scripts/` | Custom scripts |
-| `~/.config/ml4w/settings/` | Settings files |
-| `~/.ml4w-hyprland/` | ML4W data |
 
 ## Stow Alternative
 
@@ -291,22 +202,21 @@ Thumbs.db
 ls -la ~/.config/ | grep "^l"
 
 # Create symlink
-ln -s ~/dotfiles/.config/app ~/.config/app
+ln -s ~/.config/niri-setup/app ~/.config/app
 
 # Remove symlink
 rm ~/.config/app
 
-# Dotfiles repo
-cd ~/dotfiles
+# Desktop config repo
+cd ~/.config/niri-setup
 git status
 git add .
 git commit -m "Update config"
 git push
 
 # Locations
-~/dotfiles/                      # Repository
+~/.config/niri-setup/            # Repository
 ~/.config/                       # Symlink target
-~/.ml4w-hyprland/backup/         # Backups
 ```
 
 ## Related
