@@ -301,18 +301,19 @@ readlink /sys/class/net/enp0s13f0u3u1/device/driver | xargs basename
 
 **Root Cause (2025-12-31):** xHCI runtime power management was set to `auto`, causing the controller to not properly handle hot-plug events.
 
-**Fix:** Remove `xhci_hcd` from TLP's `RUNTIME_PM_DRIVER_DENYLIST` so TLP sets xHCI to `on` on AC power.
+**Fix (live since 2026-01-03):** a udev rule keeps only the Thunderbolt 4 xHCI controller (`8086:a71e`, `0000:00:0d.0`) at runtime PM `on`. TLP keeps `xhci_hcd` in its denylist, so the PCH USB controller (`00:14.0`) stays at `auto` and still saves power.
 
-```bash
-# Add to /etc/tlp.conf:
-RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"  # removed xhci_hcd
+**File:** `/etc/udev/rules.d/99-thunderbolt-xhci-no-pm.rules`
+
+```
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x8086", ATTR{device}=="0xa71e", ATTR{power/control}="on"
 ```
 
-**Note:** TLP ships with `xhci_hcd` in the default denylist (`defaults.conf`), which leaves xHCI at kernel default (`auto`). This prevents TLP from managing the xHCI controller.
+**Earlier fix (2025-12-31, replaced):** removing `xhci_hcd` from TLP's `RUNTIME_PM_DRIVER_DENYLIST` also worked, but it put every xHCI controller under TLP. `/etc/tlp.conf` has `xhci_hcd` back in the denylist.
 
 **Verify fix is applied:**
 ```bash
-# Check xHCI runtime PM (should be "on" on AC)
+# Check Thunderbolt xHCI runtime PM (should be "on")
 cat /sys/bus/pci/devices/0000:00:0d.0/power/control
 
 # Check TLP effective settings

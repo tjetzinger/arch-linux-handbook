@@ -215,11 +215,15 @@ Wallpaper files: `~/.config/niri-setup/wallpapers/`
 
 ## Alacritty
 
-Config: `~/.config/niri-setup/alacritty/alacritty.toml`
+Configs in `~/.config/niri-setup/alacritty/` (also linked as `~/.config/alacritty/`):
 
-| Keybinding | Action |
-|-----------|--------|
-| `Shift+Return` | Send `Esc + Return` (useful for niri's consume-or-expel in terminal) |
+| File | Used by |
+|------|---------|
+| `default.toml` | Mod+Return (font, opacity, Solarized Dark) |
+| `float.toml` | Floating helpers (Mod+U, Mod+Ctrl+W, nmtui) |
+| `alacritty.toml` | Plain `alacritty` started without `--config-file` |
+
+`alacritty.toml` holds only one binding: `Shift+Return` sends `Esc + Return`. Mod+Return passes `--config-file default.toml`, so that binding is not active there. See [10-TERMINALS](./10-TERMINALS.md).
 
 ## Monitor Configuration (outputs.kdl)
 
@@ -233,7 +237,7 @@ niri msg outputs | grep "^Output"
 # Output "AU Optronics 0xD291 Unknown" (eDP-1)
 ```
 
-### Dock Setup (2x BenQ BL2581T + Laptop)
+### Dock Setup (2x BenQ BL2581T + HP 24m + Laptop)
 
 ```kdl
 // Left: BenQ BL2581T (serial ..48SL0)
@@ -250,6 +254,14 @@ output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" {
     scale 1.0
     transform "normal"
     position x=1920 y=0
+}
+
+// Above laptop: HP 24m
+output "HP Inc. HP 24m 1CR1030T2C" {
+    mode "1920x1080@60"
+    scale 1.0
+    transform "normal"
+    position x=3648 y=-1080
 }
 
 // Right: Laptop display

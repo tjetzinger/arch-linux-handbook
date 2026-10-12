@@ -261,9 +261,11 @@ Good for Windows with SPICE:
 
 ```xml
 <video>
-  <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1'/>
+  <model type='qxl' ram='131072' vram='65536' vgamem='65536' heads='1' primary='yes'/>
 </video>
 ```
+
+`vgamem='65536'` (64 MiB) is needed on this HiDPI host; 16 MiB caps the guest below full-window size. See [04-WINDOWS-VM - SPICE with QXL](./04-WINDOWS-VM.md#spice-with-qxl).
 
 ### SPICE Optimizations
 

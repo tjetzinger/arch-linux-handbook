@@ -7,16 +7,17 @@ Power management services for the ThinkPad X1 Carbon Gen 11.
 | Service | Purpose | Status |
 |---------|---------|--------|
 | tlp | Advanced power management | Running |
-| cpupower | CPU frequency/governor | Running |
-| laptop-mode-tools | Additional power savings | Running (timer) |
+| intel_pstate | CPU frequency driver, governor set by TLP | Kernel built-in |
 | upower | Power device monitoring | Running |
+
+`cpupower` and `laptop-mode-tools` are not installed. TLP does both jobs.
 
 ## System Information
 
 ```
 System: ThinkPad X1 Carbon Gen 11
 CPU: Intel (13th Gen)
-Kernel: linux-lts
+Kernel: linux-cachyos (fallbacks: linux-zen, linux-lts)
 Suspend: s2idle
 ```
 
@@ -130,111 +131,21 @@ sudo tlp ac
 sudo tlp bat
 ```
 
-## cpupower
+## CPU Frequency (intel_pstate)
 
-CPU frequency scaling control.
-
-### Status
+The `intel_pstate` driver scales the CPU. TLP sets the governor and the energy policy (`CPU_SCALING_GOVERNOR_ON_BAT=powersave`, `CPU_ENERGY_PERF_POLICY_ON_BAT=power` in `/etc/tlp.d/10-thinkpad.conf`).
 
 ```bash
-systemctl status cpupower
-cpupower frequency-info
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver     # intel_pstate
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor   # powersave
+sudo tlp-stat -p                                            # TLP view of the CPU
 ```
 
-### Configuration
+With intel_pstate, `powersave` still boosts under load. The energy policy decides how eagerly.
 
-**File:** `/etc/default/cpupower`
+## laptop-mode-tools (removed)
 
-```bash
-# CPU governor
-governor='powersave'
-
-# Optional frequency limits
-#min_freq="2.25GHz"
-#max_freq="3GHz"
-```
-
-### Commands
-
-```bash
-# Current frequency
-cpupower frequency-info
-
-# Set governor
-sudo cpupower frequency-set -g powersave
-sudo cpupower frequency-set -g performance
-
-# Monitor frequency
-watch -n1 cpupower frequency-info | grep "current CPU"
-```
-
-### Available Governors
-
-| Governor | Description |
-|----------|-------------|
-| powersave | Lowest frequency |
-| performance | Highest frequency |
-| schedutil | Kernel scheduler controlled |
-
-## laptop-mode-tools
-
-Additional power management (works alongside TLP).
-
-### Timer
-
-```bash
-systemctl status laptop-mode.timer
-```
-
-**File:** `/usr/lib/systemd/system/laptop-mode.timer`
-
-```ini
-[Timer]
-OnUnitActiveSec=150s
-OnActiveSec=150s
-Unit=lmt-poll.service
-```
-
-Polls battery status every 150 seconds.
-
-### Configuration
-
-**Directory:** `/etc/laptop-mode/`
-
-**Main config:** `/etc/laptop-mode/laptop-mode.conf`
-
-Key settings:
-```bash
-ENABLE_LAPTOP_MODE_TOOLS=1
-ENABLE_LAPTOP_MODE_ON_BATTERY=1
-ENABLE_LAPTOP_MODE_ON_AC=0
-MINIMUM_BATTERY_CHARGE_PERCENT=3
-```
-
-### Module Configs
-
-```
-/etc/laptop-mode/conf.d/
-├── battery-level-polling.conf
-├── cpufreq.conf
-├── hdparm.conf
-├── intel-sata-powermgmt.conf
-├── lcd-brightness.conf
-└── ...
-```
-
-### Commands
-
-```bash
-# Check status
-sudo laptop_mode status
-
-# Force enable
-sudo laptop_mode force
-
-# Manual start
-sudo laptop_mode auto
-```
+Not installed, and `/etc/laptop-mode/` is gone. `systemctl list-timers --all` still shows `laptop-mode.timer` as a leftover entry without a unit file. TLP covers its job.
 
 ## upower
 
@@ -326,7 +237,7 @@ Hibernate saves RAM to swap and powers off completely.
 | Resume device | `/dev/mapper/cryptroot` |
 | Resume offset | `126887168` |
 
-**Kernel parameters** (in `/boot/loader/entries/arch-lts.conf`):
+**Kernel parameters** (in every boot entry, for example `/boot/loader/entries/linux-cachyos.conf`):
 ```
 resume=/dev/mapper/cryptroot resume_offset=126887168
 ```
@@ -436,17 +347,11 @@ Boot
   │
   ├── tlp.service (applies power settings)
   │
-  ├── cpupower.service (sets CPU governor)
-  │
-  └── laptop-mode.timer (starts polling)
-        │
-        └── lmt-poll.service (every 150s)
+  └── intel_pstate (TLP sets governor and energy policy)
 
 Power Event (AC/Battery)
   │
-  ├── TLP adjusts settings automatically
-  │
-  └── laptop-mode reacts to battery level
+  └── TLP adjusts settings automatically
 ```
 
 ## Quick Reference
@@ -458,12 +363,8 @@ sudo tlp-stat -b          # Battery
 sudo tlp-stat -p          # Processor
 sudo tlp ac/bat           # Force mode
 
-# cpupower
-cpupower frequency-info
-sudo cpupower frequency-set -g <governor>
-
-# laptop-mode
-sudo laptop_mode status
+# CPU frequency
+cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
 # upower
 upower -i /org/freedesktop/UPower/devices/battery_BAT0

@@ -271,7 +271,7 @@ If the guest stays at a smaller resolution with black bars, `vgamem` is probably
 For fixed resolution:
 ```xml
 <video>
-  <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1'>
+  <model type='qxl' ram='131072' vram='65536' vgamem='65536' heads='1' primary='yes'>
     <resolution x='1920' y='1080'/>
   </model>
 </video>

@@ -13,9 +13,7 @@ Custom scripts for Hyprland and ML4W desktop environment.
 | [03-WALLPAPER-THEMING](./03-WALLPAPER-THEMING.md) | Wallpaper and visual effects |
 | [04-MONITORS](./04-MONITORS.md) | Monitor management scripts |
 | [05-UTILITIES](./05-UTILITIES.md) | Config reload, GTK, XDG |
-| [06-SYSTEM-MAINTENANCE](./06-SYSTEM-MAINTENANCE.md) | Updates, snapshots, cleanup |
-| [07-WAYBAR-INTEGRATION](./07-WAYBAR-INTEGRATION.md) | Scripts for Waybar modules |
-| [08-CUSTOMIZATION](./08-CUSTOMIZATION.md) | Creating new scripts |
+| [06-CUSTOMIZATION](./06-CUSTOMIZATION.md) | Creating new scripts |
 
 ## Script Locations
 

@@ -9,7 +9,7 @@ Documentation for systemd services, timers, and configuration on this Arch Linux
 | [01-OVERVIEW](./01-OVERVIEW.md) | Systemd basics and architecture |
 | [02-CORE-SERVICES](./02-CORE-SERVICES.md) | Essential system services |
 | [03-NETWORK-SERVICES](./03-NETWORK-SERVICES.md) | Networking daemons |
-| [04-POWER-MANAGEMENT](./04-POWER-MANAGEMENT.md) | TLP, cpupower, laptop-mode |
+| [04-POWER-MANAGEMENT](./04-POWER-MANAGEMENT.md) | TLP, intel_pstate, hibernate |
 | [05-TIMERS](./05-TIMERS.md) | Maintenance timers |
 | [06-SECURITY](./06-SECURITY.md) | UFW firewall |
 | [07-DESKTOP-SERVICES](./07-DESKTOP-SERVICES.md) | SDDM and user services |
@@ -43,7 +43,7 @@ Documentation for systemd services, timers, and configuration on this Arch Linux
 | snapper-cleanup | Hourly | Clean old snapshots |
 | reflector | Weekly | Update mirrorlist |
 | fstrim | Weekly | SSD TRIM |
-| laptop-mode | 150s | Battery polling |
+| borg-backup | Daily | Borg system backup |
 
 ## Quick Reference
 
@@ -87,8 +87,7 @@ systemd-analyze blame
 
 ```
 /etc/default/
-├── tailscaled              # Tailscale port/flags
-└── cpupower                # CPU governor settings
+└── tailscaled              # Tailscale port/flags
 ```
 
 ## Related

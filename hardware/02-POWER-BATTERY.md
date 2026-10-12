@@ -435,7 +435,7 @@ Drivers in the denylist are excluded from runtime power management to prevent is
 sudo tlp-stat -e | grep "Driver denylist"
 ```
 
-**Note:** Removing `xhci_hcd` from the denylist saves power but may cause USB devices to not wake properly. Keep the default for reliability.
+**Note:** Keep `xhci_hcd` in the denylist. The dock's Thunderbolt xHCI controller is forced to `on` by a separate udev rule instead, see [08-PERIPHERALS - USB 3.0 Hot-Plug](./08-PERIPHERALS.md).
 
 ### TLP Commands
 

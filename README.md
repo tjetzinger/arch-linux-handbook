@@ -134,7 +134,7 @@ See [Applications](./applications/README.md) for installed apps and configuratio
 | 01-OVERVIEW | Systemd basics and architecture |
 | 02-CORE-SERVICES | journald, resolved, timesyncd |
 | 03-NETWORK-SERVICES | NetworkManager, Tailscale, SSH |
-| 04-POWER-MANAGEMENT | TLP, cpupower, laptop-mode |
+| 04-POWER-MANAGEMENT | TLP, intel_pstate, hibernate |
 | 05-TIMERS | Snapper, reflector, fstrim |
 | 06-SECURITY | UFW firewall configuration |
 | 07-DESKTOP-SERVICES | SDDM, PipeWire, user services |

@@ -15,7 +15,7 @@ Zsh configuration with oh-my-zsh and oh-my-posh.
 
 ### Modular Structure
 
-**Directory:** `~/.config/zshrc/` (symlinked from dotfiles)
+**Directory:** `~/.config/zshrc/` (plain local directory, not in a repo)
 
 ```
 ~/.config/zshrc/
@@ -24,7 +24,7 @@ Zsh configuration with oh-my-zsh and oh-my-posh.
 ├── 20-customization  # oh-my-zsh, oh-my-posh
 ├── 25-aliases        # Command aliases
 ├── 30-autostart      # Autostart scripts
-└── custom/           # Custom overrides (not tracked)
+└── mutagen-sync.zsh  # Mutagen sync auto-start per directory
 ```
 
 ### Main Loader
@@ -158,8 +158,6 @@ alias wifi='nmtui'
 ### System Aliases
 
 ```bash
-alias ts='~/.config/ml4w/scripts/snapshot.sh'
-alias cleanup='~/.config/ml4w/scripts/cleanup.sh'
 alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
 ```
 

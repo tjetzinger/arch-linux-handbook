@@ -71,11 +71,11 @@ waydroid session start/stop      # Manage session
 | Git | `~/.gitconfig` |
 | SSH | `~/.ssh/config` |
 | mpv | `~/.config/mpv/` |
-| Dotfiles | `~/dotfiles/` |
+| Desktop dotfiles | `~/.config/niri-setup/` |
 
 ## Dotfiles
 
-Most configurations are symlinked from `~/dotfiles/.config/` for version control.
+Desktop configs (Niri, Waybar, Alacritty, Fuzzel, Dunst) are symlinked from the niri-setup repo at `~/.config/niri-setup/`. The other paths in this table are plain local files, not in a repo. See [12-DOTFILES](./12-DOTFILES.md).
 
 ## Related
 

@@ -92,8 +92,8 @@ sudo pacman -S scx-scheds scx-tools
 
 | Scheduler | Best For |
 |-----------|----------|
-| `scx_bpfland` | General desktop, balanced (recommended) |
-| `scx_lavd` | Gaming, latency-sensitive |
+| `scx_bpfland` | General desktop, balanced (upstream's usual pick) |
+| `scx_lavd` | Latency-sensitive, power-aware Auto mode (**live here**) |
 | `scx_rusty` | Mixed workloads, tunable |
 | `scx_flash` | Fairness, predictable performance |
 | `scx_cosmos` | Locality-focused, general purpose |

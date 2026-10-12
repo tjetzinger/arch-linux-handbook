@@ -446,10 +446,10 @@ sudo fstrim -av
 
 ```bash
 cat /sys/block/nvme0n1/queue/scheduler
-# [none] mq-deadline kyber bfq
+# none [mq-deadline] kyber adios bfq
 ```
 
-`none` is optimal for NVMe SSDs (no scheduling needed for parallel access).
+Live: `mq-deadline`, the kernel default for this NVMe. No udev rule changes it. `none` would also suit NVMe; the difference is small on this laptop.
 
 ### Mount Options
 

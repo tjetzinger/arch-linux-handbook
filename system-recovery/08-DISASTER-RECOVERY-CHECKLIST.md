@@ -291,8 +291,8 @@ sudo smartctl -a /dev/nvme0n1
 # 3. Create fresh snapshot
 sudo snapper create -d "Post-recovery verified working"
 
-# 4. Run backup
-sudo borg-backup
+# 4. Run backup (runs /usr/local/bin/borg-backup-system)
+sudo systemctl start borg-backup.service
 
 # 5. Update recovery documentation if procedures changed
 ```

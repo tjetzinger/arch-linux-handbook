@@ -131,7 +131,7 @@ Lid behavior also configured in:
 - `/etc/systemd/logind.conf` - System level
 - Hyprland `misc` section - Desktop level
 
-See [../hardware/03-POWER-BATTERY](../hardware/03-POWER-BATTERY.md) for details.
+See [../hardware/02-POWER-BATTERY](../hardware/02-POWER-BATTERY.md#lid-switch-behavior) for details.
 
 ## Move Windows (moveTo.sh)
 

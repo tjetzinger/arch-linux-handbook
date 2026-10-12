@@ -370,52 +370,9 @@ Niri uses `outputs.kdl` for monitor configuration. Unlike Hyprland, there is no 
 
 **File:** `~/.config/niri/outputs.kdl`
 
-### Identifying Monitors
+### Monitor Names and Dock Layout
 
-```bash
-niri msg outputs | grep "^Output"
-# Output "PNP(BNQ) BenQ BL2581T ET1CL03348SL0" (DP-8)
-# Output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" (DP-9)
-# Output "AU Optronics 0xD291 Unknown" (eDP-1)
-```
-
-### Stable Identifiers (EDID Description)
-
-Connector names (`DP-6`, `DP-8`) change on every dock disconnect/reconnect. Use the full EDID description string from `niri msg outputs` as the output name — it includes the serial number and is stable across hotplug events.
-
-| Identifier type | Example | Stable across hotplug? |
-|----------------|---------|----------------------|
-| Connector name | `DP-8` | No — changes every reconnect |
-| EDID description | `PNP(BNQ) BenQ BL2581T ET1CL03348SL0` | Yes — tied to physical monitor |
-| `eDP-1` | Laptop panel | Yes — always the same |
-
-### Dock Setup (2x BenQ BL2581T + Laptop)
-
-```kdl
-// Left: BenQ BL2581T (serial ..48SL0)
-output "PNP(BNQ) BenQ BL2581T ET1CL03348SL0" {
-    mode "1920x1200@59.950"
-    scale 1.0
-    transform "normal"
-    position x=0 y=0
-}
-
-// Center: BenQ BL2581T (serial ..42SL0)
-output "PNP(BNQ) BenQ BL2581T ET1CL03342SL0" {
-    mode "1920x1200@59.950"
-    scale 1.0
-    transform "normal"
-    position x=1920 y=0
-}
-
-// Right: Laptop display
-output "eDP-1" {
-    mode "1920x1200@60.026"
-    scale 1.25
-    transform "normal"
-    position x=3840 y=0
-}
-```
+See [14-NIRI - Monitor Configuration](./14-NIRI.md#monitor-configuration-outputskdl): `niri msg outputs` names, why EDID descriptions beat connector names, and the live dock layout.
 
 ### Runtime Commands
 

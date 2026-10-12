@@ -242,22 +242,6 @@ sudo updatedb
 locate <filename>
 ```
 
-## laptop-mode.timer
-
-Battery polling for power management.
-
-### Status
-
-```bash
-systemctl status laptop-mode.timer
-```
-
-**Schedule:** Every 150 seconds
-
-### Purpose
-
-Monitors battery level and triggers power saving actions.
-
 ## systemd-tmpfiles-clean.timer
 
 Cleans temporary files daily.
@@ -363,4 +347,4 @@ systemd-analyze calendar "*-*-* 02:00:00"
 
 - [../system-recovery/03-SNAPPER-DAILY-USAGE.md](../system-recovery/03-SNAPPER-DAILY-USAGE.md) - Snapper usage
 - [01-OVERVIEW](./01-OVERVIEW.md) - Unit file syntax
-- [04-POWER-MANAGEMENT](./04-POWER-MANAGEMENT.md) - laptop-mode
+- [04-POWER-MANAGEMENT](./04-POWER-MANAGEMENT.md) - TLP power management
