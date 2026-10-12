@@ -256,11 +256,9 @@ volumes:
 
 ### 3. Exclude Sensitive Data from Git
 
-```gitignore
-**/data/
-**/.env
-**/acme.json
-```
+Keep runtime data and secrets out of git; see [08-SECURITY - Git Ignore Secrets](./08-SECURITY.md#git-ignore-secrets) for the full `.gitignore`.
+
+Untrack a file with `git rm --cached <file>`. Plain `git rm` also deletes it from disk: on 2026-10-11 that removed `traefik/data/acme.json`, and after the next reboot Docker created an empty directory in its place and Traefik could not start.
 
 ### 4. Regular Backups
 

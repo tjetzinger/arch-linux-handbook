@@ -133,10 +133,24 @@ DB_PASSWORD=database-password
 
 ```gitignore
 **/.env
+**/*.env
 !**/.env.example
+!**/*.env.example
 **/acme.json
 **/secrets/
 ```
+
+Live layout in `~/Workspace/containers/open-webui-stack`:
+
+| File | Used for | In git |
+|------|----------|--------|
+| `.env` | Compose variable substitution (`${POSTGRES_PASSWORD}`, `${WEBUI_SECRET_KEY}` in `docker-compose.yml`) | no |
+| `litellm.env` | `env_file:` of the LiteLLM container (API keys) | no |
+| `.env.example`, `litellm.env.example` | Key names only | yes |
+
+Keep the two apart: `env_file: .env` would pass *every* key in `.env` into that container, including secrets meant for other services.
+
+If a secret was committed before, removing the file is not enough, it stays in history. Rewrite with `git filter-repo --invert-paths --path <file>` and `--replace-text` (back up `.git` first), and rotate the secret if the repo was ever pushed or copied.
 
 ### Docker Secrets (Swarm)
 

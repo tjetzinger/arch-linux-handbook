@@ -128,7 +128,15 @@ certificatesResolvers:
       keyType: EC384
       dnsChallenge:
         provider: cloudflare
-        resolvers: 1.1.1.1:53
+        resolvers:
+          - 1.1.1.1:53
+          - 8.8.8.8:53
+        propagation:
+          # The Tailscale exit node can intercept DNS to Cloudflare's
+          # authoritative servers (REFUSED), so check via recursive resolvers.
+          disableANSChecks: true
+          requireAllRNS: true
+          delayBeforeChecks: 30s
 ```
 
 ## Dynamic Configuration
