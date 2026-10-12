@@ -367,15 +367,19 @@ Create `~/.config/systemd/user/wlsunset.service`:
 Description=Day/night gamma adjustments
 Documentation=man:wlsunset(1)
 PartOf=graphical-session.target
+After=graphical-session.target
 
 [Service]
 Type=simple
 ExecStart=/usr/bin/wlsunset -l <lat> -L <lon> -t 4000 -T 6500
 Restart=on-failure
+RestartSec=2
 
 [Install]
 WantedBy=graphical-session.target
 ```
+
+Replace `<lat>` / `<lon>` with your latitude and longitude (one decimal is enough). `-t 4000` is the night colour temperature, `-T 6500` the day temperature.
 
 Enable and start:
 
