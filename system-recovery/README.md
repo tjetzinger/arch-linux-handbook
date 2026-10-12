@@ -99,9 +99,4 @@ sudo btrfs device stats /
 
 ## Pre-Disaster Checklist
 
-- [ ] LUKS header backup exists
-- [ ] Borg repository key exported
-- [ ] Borg backup tested (extract works)
-- [ ] Arch Live USB prepared
-- [ ] Passwords stored in password manager
-- [ ] This documentation accessible offline
+See [08-DISASTER-RECOVERY-CHECKLIST - Pre-Disaster Preparation Checklist](./08-DISASTER-RECOVERY-CHECKLIST.md#pre-disaster-preparation-checklist). Open setup tasks and their live status: [TODO.md](./TODO.md).

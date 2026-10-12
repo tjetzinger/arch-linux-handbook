@@ -40,7 +40,7 @@ sudo btrfs scrub status -d /
 
 ```bash
 # Arch provides btrfs-scrub@.timer
-sudo systemctl enable btrfs-scrub@-.timer  # For root
+sudo systemctl enable btrfs-scrub@-.timer  # For root (enabled 2026-10-12)
 sudo systemctl start btrfs-scrub@-.timer
 
 # Check timer status
