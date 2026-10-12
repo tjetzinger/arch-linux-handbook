@@ -354,4 +354,4 @@ sudo snapper rollback 5
 
 ## Next Step
 
-Proceed to [07-DESKTOP-HYPRLAND.md](./07-DESKTOP-HYPRLAND.md) for desktop environment setup.
+Proceed to [desktop/14-NIRI](../desktop/14-NIRI.md) for the desktop environment. ([07-DESKTOP-HYPRLAND.md](./07-DESKTOP-HYPRLAND.md) is the archived Hyprland setup.)

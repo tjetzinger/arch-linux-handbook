@@ -3,6 +3,9 @@
 # Arch Linux Installation - Step 4: Desktop Environment
 # ============================================================
 # Run this after first boot, as regular user with sudo
+#
+# ARCHIVED: installs Hyprland + ML4W, which this system dropped on
+# 2026-02-20 for Niri. See desktop/14-NIRI.md for the current setup.
 # ============================================================
 
 set -e

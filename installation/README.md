@@ -11,7 +11,7 @@ Complete guide for installing Arch Linux with modern security and recovery featu
 | Filesystem | Btrfs | Snapshots, compression, modern |
 | Init hooks | systemd | Modern, faster boot |
 | Snapshots | Snapper + snap-pac | Automatic pre/post package snapshots |
-| Desktop | Hyprland (ml4w) | Modern Wayland compositor |
+| Desktop | Niri (scrollable-tiling Wayland compositor) | Installed via [desktop/14-NIRI](../desktop/14-NIRI.md); Hyprland/ML4W until 2026-02-20 |
 
 ## Features
 
@@ -37,7 +37,7 @@ Complete guide for installing Arch Linux with modern security and recovery featu
 | 04 | [BOOTLOADER.md](./04-BOOTLOADER.md) | systemd-boot, mkinitcpio, LUKS keyfile |
 | 05 | [SYSTEM-CONFIG.md](./05-SYSTEM-CONFIG.md) | Locale, users, network, essential services |
 | 06 | [SNAPPER-SETUP.md](./06-SNAPPER-SETUP.md) | Snapper configuration, snap-pac, automation |
-| 07 | [DESKTOP-HYPRLAND.md](./07-DESKTOP-HYPRLAND.md) | Hyprland via ml4w, Wayland essentials |
+| 07 | [DESKTOP-HYPRLAND.md](./07-DESKTOP-HYPRLAND.md) | Archived: Hyprland via ml4w. Current desktop: [desktop/14-NIRI](../desktop/14-NIRI.md) |
 | 08 | [POST-INSTALL.md](./08-POST-INSTALL.md) | Essential packages, AUR, dotfiles, hardening |
 | 09 | [CACHYOS-KERNEL.md](./09-CACHYOS-KERNEL.md) | CachyOS kernel setup with custom EFI paths |
 
@@ -51,7 +51,7 @@ Automated installation scripts in [`scripts/`](./scripts/):
 | `01-partition.sh` | Disk partitioning and encryption |
 | `02-install.sh` | Base system installation |
 | `03-configure.sh` | System configuration in chroot |
-| `04-desktop.sh` | Desktop environment setup |
+| `04-desktop.sh` | Archived: Hyprland/ML4W setup |
 
 ---
 
@@ -75,8 +75,8 @@ vim 00-vars.sh
 ./01-partition.sh
 ./02-install.sh
 ./03-configure.sh
-# Reboot, then run:
-./04-desktop.sh
+# Reboot, then set up the desktop per desktop/14-NIRI.md
+# (04-desktop.sh is the archived Hyprland/ML4W installer)
 ```
 
 ---

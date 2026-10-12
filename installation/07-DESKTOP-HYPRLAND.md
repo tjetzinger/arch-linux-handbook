@@ -2,6 +2,8 @@
 
 Install Hyprland using the ML4W (My Linux For Work) setup.
 
+> **Archived.** This system ran Hyprland + ML4W until 2026-02-20; the desktop is now Niri. For a new install, use [desktop/14-NIRI](../desktop/14-NIRI.md#installation-acaibowlzniri-setup) instead of this step. Kept for reference.
+
 ## Overview
 
 We'll use [ML4W Hyprland](https://github.com/mylinuxforwork/dotfiles) which provides:

@@ -147,7 +147,7 @@ dotfiles config --local status.showUntrackedFiles no
 
 # Add files
 dotfiles add ~/.zshrc
-dotfiles add ~/.config/hypr/
+dotfiles add ~/.config/niri/
 dotfiles commit -m "Initial dotfiles"
 dotfiles push
 ```
@@ -163,11 +163,11 @@ cd ~/dotfiles
 
 # Create package structure
 mkdir -p zsh/.config
-mkdir -p hypr/.config/hypr
+mkdir -p niri/.config/niri
 # Move configs...
 
 # Deploy
-stow zsh hypr
+stow zsh niri
 ```
 
 ---
@@ -375,7 +375,7 @@ After completing all steps, your system should have:
 | Boot entries | Main + LTS + Recovery |
 | Power management | TLP enabled |
 | Firewall | UFW enabled |
-| Desktop | Hyprland with ML4W |
+| Desktop | Niri |
 | Backup | Borg + rclone ready |
 | Maintenance | Monthly automation |
 
