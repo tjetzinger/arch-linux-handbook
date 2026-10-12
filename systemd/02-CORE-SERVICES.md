@@ -25,49 +25,31 @@ systemctl status systemd-journald
 
 ### Configuration
 
-**File:** `/etc/systemd/journald.conf`
+**File:** `/etc/systemd/journald.conf.d/size.conf` (drop-in since 2026-10-12; `journald.conf` itself is untouched)
 
 ```ini
 [Journal]
-Storage=persistent
 SystemMaxUse=500M
 MaxRetentionSec=1month
 ```
 
-### Common Commands
+Storage is persistent because `/var/log/journal/` exists (default `Storage=auto`). Without the drop-in the journal grew to 1.1 GB (default limit: 10% of the filesystem, max 4 GB). Applying `MaxRetentionSec` deletes older logs immediately.
+
+The journal lives inside `@arch`, so every snapper snapshot pins its changing files; keeping it small also keeps snapshots small.
 
 ```bash
-# View all logs
-journalctl
-
-# Follow logs
-journalctl -f
-
-# Logs since boot
-journalctl -b
-
-# Logs from previous boot
-journalctl -b -1
-
-# Logs for service
-journalctl -u <service>
-
-# Kernel messages
-journalctl -k
-
-# By priority
-journalctl -p err    # Errors and above
-
-# Time range
-journalctl --since "1 hour ago"
-journalctl --since "2025-01-01" --until "2025-01-02"
-
-# Disk usage
+sudo systemctl restart systemd-journald      # apply, keeps the session
+systemd-analyze cat-config systemd/journald.conf | grep -E 'MaxUse|Retention'
 journalctl --disk-usage
+```
 
-# Clean old logs
-sudo journalctl --vacuum-time=7d
-sudo journalctl --vacuum-size=100M
+### Common Commands
+
+See [09-TROUBLESHOOTING - journalctl](./09-TROUBLESHOOTING.md#journalctl-logs) for filtering by unit, priority, time and executable, output formats and cleanup.
+
+```bash
+journalctl -b -p err        # errors this boot
+journalctl -u <service> -f  # follow one service
 ```
 
 ## systemd-resolved
