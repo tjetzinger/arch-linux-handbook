@@ -8,7 +8,7 @@ CachyOS provides x86-64-v3 optimized packages and performance-tuned kernels with
 |-----------|---------|
 | **Repositories** | cachyos, cachyos-v3, cachyos-core-v3, cachyos-extra-v3 |
 | **Kernel** | linux-cachyos 6.18.2-2 |
-| **Scheduler** | scx_bpfland (sched-ext) |
+| **Scheduler** | scx_lavd (sched-ext, via scx_loader) |
 | **CPU requirement** | x86-64-v3 (AVX2, BMI2, FMA) |
 
 ## CPU Compatibility
@@ -63,39 +63,19 @@ This upgrades ~1000+ packages to x86-64-v3 optimized versions including:
 sudo pacman -S linux-cachyos linux-cachyos-headers
 ```
 
-### 3. Create Boot Entry
+### 3. Boot Entry and Kernel Updates
+
+Follow [installation/09-CACHYOS-KERNEL](../installation/09-CACHYOS-KERNEL.md): the mkinitcpio preset writes kernel and initramfs straight to `/boot/EFI/arch/`, and the systemd-boot entry `linux-cachyos.conf` points there.
+
+Do **not** copy the kernel with a pacman hook. The hook ran in the wrong order relative to mkinitcpio, so kernel and initramfs got out of sync after an upgrade and the system failed to boot. That is the incident in `installation/09`.
+
+Live check:
 
 ```bash
-# Copy kernel to EFI partition
-sudo cp /boot/vmlinuz-linux-cachyos /boot/EFI/arch/
-sudo cp /boot/initramfs-linux-cachyos.img /boot/EFI/arch/
-
-# Create boot entry
-sudo tee /boot/loader/entries/linux-cachyos.conf << 'EOF'
-title Arch Linux (CachyOS)
-linux /EFI/arch/vmlinuz-linux-cachyos
-initrd /intel-ucode.img
-initrd /EFI/arch/initramfs-linux-cachyos.img
-options rd.luks.name=dd8c7166-cbef-454c-a046-9a7efc26bb60=cryptroot root=/dev/mapper/cryptroot rd.luks.key=dd8c7166-cbef-454c-a046-9a7efc26bb60=/luks-keyfile.bin:UUID=c55a9bf0-7a6b-4299-ab21-1e3af3d36657 rd.luks.options=dd8c7166-cbef-454c-a046-9a7efc26bb60=keyfile-timeout=5s rootflags=subvol=@arch resume=/dev/mapper/cryptroot resume_offset=126887168 rw quiet splash
-EOF
-```
-
-### 4. Create Pacman Hook for Updates
-
-```bash
-sudo mkdir -p /etc/pacman.d/hooks
-sudo tee /etc/pacman.d/hooks/100-linux-cachyos.hook << 'EOF'
-[Trigger]
-Operation = Install
-Operation = Upgrade
-Type = Package
-Target = linux-cachyos
-
-[Action]
-Description = Copying linux-cachyos kernel to EFI partition...
-When = PostTransaction
-Exec = /bin/sh -c 'cp /boot/vmlinuz-linux-cachyos /boot/EFI/arch/ && cp /boot/initramfs-linux-cachyos.img /boot/EFI/arch/'
-EOF
+grep -E '^(ALL_kver|default_image)' /etc/mkinitcpio.d/linux-cachyos.preset
+# ALL_kver="/boot/EFI/arch/vmlinuz-linux-cachyos"
+# default_image="/boot/EFI/arch/initramfs-linux-cachyos.img"
+ls /etc/pacman.d/hooks/     # no linux-cachyos copy hook
 ```
 
 ## sched-ext Schedulers
@@ -122,10 +102,15 @@ sudo pacman -S scx-scheds scx-tools
 
 **Create config file:**
 
+Live config (`scx_lavd`, Auto mode with power-aware tuning on this laptop):
+
 ```bash
 sudo tee /etc/scx_loader.toml << 'EOF'
-default_sched = "scx_bpfland"
+default_sched = "scx_lavd"
 default_mode = "Auto"
+
+[scheds.scx_lavd]
+auto_mode = ["--autopower"]
 EOF
 ```
 
@@ -168,7 +153,7 @@ scxctl restore
 
 ```bash
 cat /sys/kernel/sched_ext/root/ops
-# bpfland_1.0.19_...
+# lavd_1.1.3_x86_64_unknown_linux_gnu
 ```
 
 ## Verification
@@ -263,7 +248,7 @@ sudo pacman -R linux-cachyos linux-cachyos-headers
 sudo rm /boot/loader/entries/linux-cachyos.conf
 sudo rm /boot/EFI/arch/vmlinuz-linux-cachyos
 sudo rm /boot/EFI/arch/initramfs-linux-cachyos.img
-sudo rm /etc/pacman.d/hooks/100-linux-cachyos.hook
+sudo rm -f /etc/pacman.d/hooks/100-linux-cachyos.hook   # only if an old copy hook exists
 ```
 
 ### Remove CachyOS Repositories
