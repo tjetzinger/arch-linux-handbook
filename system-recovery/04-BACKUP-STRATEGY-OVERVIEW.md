@@ -25,7 +25,7 @@ Comprehensive guide to the backup and recovery infrastructure on this system.
 | Subvolume | Snapshotted |
 |-----------|-------------|
 | `@arch` (/) | Yes |
-| `@Documents` | No (separate management needed) |
+| `@Documents` | No; synced to the Synology NAS by Synology Drive Client (off-machine copy) |
 | `@vm` | No |
 
 ### Automated Snapshots

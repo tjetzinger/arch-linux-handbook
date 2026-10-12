@@ -138,7 +138,7 @@ echo "Backup finished successfully"
 
 | Category | Paths |
 |----------|-------|
-| Large data | Documents, Downloads, vm-backups, Ollama models |
+| Large data | Documents (synced to the Synology NAS instead), Downloads, vm-backups, Ollama models |
 | Dev tools | node_modules, .cargo/registry, .rustup, .nvm |
 | Caches | .cache, .thumbnails, /var/cache |
 | Apps | waydroid, lmstudio models, Steam, Wine |
