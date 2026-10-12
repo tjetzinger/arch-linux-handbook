@@ -147,70 +147,49 @@ reboot
 
 ### Recovery Steps
 
+Borg holds **data and configs only** (`/home/tt`, `/etc`, `/boot`, `/usr/local`, `/root`), not `/usr` or the package database. So the order is: fresh base system first, then restore from Borg. Full step-by-step: [11-BORG-RESTORE-X250](./11-BORG-RESTORE-X250.md) (written for the X250 over SSH; on the X1 the disk is `/dev/nvme0n1` and the repo is local).
+
 ```bash
-# 1. Boot from Arch ISO
+# 1. Boot the Arch ISO, partition, LUKS, Btrfs
+#    p1: 512M EFI (vfat), p2: LUKS2 -> Btrfs with
+#    @arch @.snapshots @Documents @vm @swap @arch-live
+#    (see 11-BORG-RESTORE-X250 steps 3-6)
 
-# 2. Partition new disk (match original layout)
-fdisk /dev/nvme0n1
-# Create:
-# - 512MB EFI partition (type: EFI System)
-# - Remaining space for LUKS (type: Linux filesystem)
+# 2. Install a fresh base system
+pacstrap -K /mnt base linux linux-firmware intel-ucode btrfs-progs borg
+genfstab -U /mnt >> /mnt/etc/fstab
 
-# 3. Format EFI
-mkfs.fat -F32 /dev/nvme0n1p1
+# 3. Mount the backup drive (repo is the repo/ folder on it)
+mkdir /borg && mount /dev/sdX1 /borg
+export BORG_REPO=/borg/repo
+borg list                      # archives are named <hostname>-YYYY-MM-DD_HHMMSS
 
-# 4. Setup LUKS
-cryptsetup luksFormat /dev/nvme0n1p2
-cryptsetup open /dev/nvme0n1p2 cryptroot
-
-# 5. Create Btrfs and subvolumes
-mkfs.btrfs /dev/mapper/cryptroot
-mount /dev/mapper/cryptroot /mnt
-btrfs subvolume create /mnt/@arch
-btrfs subvolume create /mnt/@.snapshots
-btrfs subvolume create /mnt/@Documents
-btrfs subvolume create /mnt/@vm
-umount /mnt
-
-# 6. Mount subvolumes
-mount -o subvol=@arch /dev/mapper/cryptroot /mnt
-mkdir -p /mnt/{boot,.snapshots,home/tt/Documents,mnt/vm}
-mount /dev/nvme0n1p1 /mnt/boot
-mount -o subvol=@.snapshots /dev/mapper/cryptroot /mnt/.snapshots
-mount -o subvol=@Documents /dev/mapper/cryptroot /mnt/home/tt/Documents
-mount -o subvol=@vm /dev/mapper/cryptroot /mnt/mnt/vm
-
-# 7. Mount Borg backup source
-mkdir /borg
-mount /dev/sdX1 /borg  # External drive with borg repo
-
-# 8. Extract Borg backup
-export BORG_PASSPHRASE="your-passphrase"
+# 4. Restore home, root's files (package lists) and configs
 cd /mnt
-borg extract /borg/borg-backup::latest-archive
+borg extract ::<archive> home/tt root/pkglist-native.txt root/pkglist-foreign.txt
+borg extract ::<archive> etc --exclude etc/fstab   # keep the new fstab
+chown -R 1000:1000 /mnt/home/tt
 
-# 9. Reinstall bootloader and regenerate initramfs
+# 5. Reinstall packages from the saved lists (in the chroot)
 arch-chroot /mnt
+pacman -S --needed - < /root/pkglist-native.txt
+# AUR packages: install an AUR helper as user tt, then
+#   paru -S --needed - < /root/pkglist-foreign.txt
+
+# 6. Point boot config at the new disk
+blkid                                   # new LUKS / Btrfs UUIDs
+vim /boot/loader/entries/*.conf         # rd.luks.name=<new LUKS UUID>
+vim /etc/crypttab                       # if used
+# The LUKS keyfile is read from a separate device (rd.luks.key=...:UUID=<keyfile device>).
+# Add it to the new LUKS volume: cryptsetup luksAddKey /dev/nvme0n1p2 <keyfile>
+
+# 7. Bootloader and initramfs
 bootctl install
 mkinitcpio -P
-
-# 10. Update fstab with new UUIDs
-blkid  # Get new UUIDs
-vim /etc/fstab  # Update UUIDs
-
-# 11. Setup LUKS keyfile (optional)
-dd if=/dev/urandom of=/boot/luks-keyfile.bin bs=4096 count=1
-chmod 400 /boot/luks-keyfile.bin
-cryptsetup luksAddKey /dev/nvme0n1p2 /boot/luks-keyfile.bin
-
-# 12. Update crypttab/cmdline with new UUID
-vim /boot/loader/entries/arch.conf  # Update LUKS UUID
-
-# 13. Exit and reboot
-exit
-umount -R /mnt
-reboot
+exit; umount -R /mnt; reboot
 ```
+
+Before 2026-10-12 the Borg script did not save package lists; archives older than that have no `root/pkglist-*.txt`.
 
 **Time:** 1-3 hours
 

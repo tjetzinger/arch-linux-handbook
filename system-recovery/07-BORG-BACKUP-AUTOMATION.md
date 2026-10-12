@@ -60,6 +60,10 @@ fi
 
 echo "Starting backup: $BACKUP_NAME"
 
+# Save package lists so a fresh install can reinstall everything
+pacman -Qqen > /root/pkglist-native.txt
+pacman -Qqem > /root/pkglist-foreign.txt
+
 # Create backup
 borg create \
     --verbose \
