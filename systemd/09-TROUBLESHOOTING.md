@@ -290,15 +290,20 @@ sudo sshd -t
 
 ### Emergency Mode
 
-If system won't boot normally:
+If the system won't boot normally, systemd can start a minimal shell instead of the full system:
 
 ```bash
-# At boot, add to kernel command line:
-systemd.unit=emergency.target
-
-# Or
-systemd.unit=rescue.target
+systemd.unit=emergency.target   # root fs read-only, almost nothing started
+systemd.unit=rescue.target      # local filesystems mounted, single user
 ```
+
+Both ask for the **root password** (set on this system).
+
+On this laptop the boot menu cannot edit the kernel command line: `/boot/loader/loader.conf` has `editor false`, on purpose, so nobody at the keyboard can add `init=/bin/sh` after the keyfile unlocks the disk. So use one of:
+
+- **Arch Linux (Live)** in the boot menu, see [system-recovery/01](../system-recovery/01-MANUAL-ARCH-LIVE-RECOVERY.md)
+- A dedicated boot entry with `systemd.unit=rescue.target` appended to the `options` line (not set up)
+- Temporarily `editor true` in `loader.conf` (only from a working system or arch-live)
 
 ### Reset Failed State
 

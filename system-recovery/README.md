@@ -64,15 +64,15 @@ sudo snapper undochange <pre>..<post>
 ```
 
 ### Emergency Boot Recovery
-1. Select `Arch Linux Live` at boot
+1. Select `Arch Linux (Live)` at boot
 2. `cryptsetup open /dev/nvme0n1p2 cryptroot`
 3. `mount -o subvolid=5 /dev/mapper/cryptroot /mnt`
 4. See [01-MANUAL-ARCH-LIVE-RECOVERY.md](./01-MANUAL-ARCH-LIVE-RECOVERY.md)
 
 ### Monthly Maintenance
+Automated since 2026-10-12: `btrfs-scrub@-.timer` (monthly scrub) and `btrfs-balance-metadata.timer` (metadata balance on the 15th), see [06-BTRFS-MAINTENANCE](./06-BTRFS-MAINTENANCE.md#automated-maintenance-live). Manual check:
 ```bash
-sudo btrfs scrub start /
-sudo btrfs balance start -musage=50 /
+systemctl list-timers 'btrfs*'
 sudo btrfs device stats /
 ```
 
