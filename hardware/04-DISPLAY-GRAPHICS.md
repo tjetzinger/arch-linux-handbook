@@ -2,12 +2,14 @@
 
 Intel Iris Xe graphics and display configuration.
 
+> Desktop: **Niri**. Output settings live in `~/.config/niri/outputs.kdl`; Niri reloads them when the file is saved. Hyprland-era commands (`hyprctl`) no longer apply.
+
 ## Display
 
 ### Panel Information
 
 ```bash
-hyprctl monitors
+niri msg outputs
 ```
 
 | Specification | Value |
@@ -22,16 +24,18 @@ hyprctl monitors
 ### Current Configuration
 
 ```bash
-hyprctl monitors
+niri msg outputs
 ```
 
 ```
-Monitor eDP-1 (ID 0):
-    1920x1200@60.02600 at 0x0
-    scale: 1.00
-    transform: 0
-    dpmsStatus: 1
+Output "AU Optronics 0xD291 Unknown" (eDP-1)
+  Current mode: 1920x1200 @ 60.026 Hz (preferred)
+  Variable refresh rate: supported, disabled
+  Scale: 1.25
+  Logical size: 1536x960
 ```
+
+The internal panel runs at scale 1.25.
 
 ## Intel Graphics
 
@@ -140,12 +144,13 @@ brightnessctl set +10%
 brightnessctl set 10%-
 ```
 
-### Hyprland Keybinds
+### Niri Keybinds
 
-```bash
-# In hyprland.conf
-bind = , XF86MonBrightnessUp, exec, brightnessctl set +5%
-bind = , XF86MonBrightnessDown, exec, brightnessctl set 5%-
+**File:** `~/.config/niri/binds.kdl`
+
+```kdl
+XF86MonBrightnessUp   allow-when-locked=true { spawn-sh "brightnessctl set +5%" ; }
+XF86MonBrightnessDown allow-when-locked=true { spawn-sh "brightnessctl set 5%-" ; }
 ```
 
 ### Backlight Device
@@ -170,37 +175,39 @@ cat /sys/class/backlight/intel_backlight/max_brightness
 ### Detect Displays
 
 ```bash
-hyprctl monitors
+niri msg outputs
 ```
 
-### Configure External Monitor
+### Configure External Monitors
 
-**File:** `~/.config/hypr/hyprland.conf`
+**File:** `~/.config/niri/outputs.kdl`
 
-```bash
-# Mirror
-monitor=HDMI-A-1,preferred,0x0,1,mirror,eDP-1
+Docked layout in use: two BenQ BL2581T side by side, an HP 24m above the laptop, the laptop panel on the right. External monitors are matched by their EDID name (make, model, serial), so they keep their place even when the dock renumbers the ports.
 
-# Extend (to the right)
-monitor=eDP-1,1920x1200@60,0x0,1
-monitor=HDMI-A-1,2560x1440@60,1920x0,1
+```kdl
+// Left external monitor
+output "PNP(BNQ) BenQ BL2581T <serial>" {
+    mode "1920x1200@59.950"
+    scale 1.0
+    position x=0 y=0
+}
 
-# Only external
-monitor=eDP-1,disable
-monitor=HDMI-A-1,2560x1440@60,0x0,1
+// Laptop panel
+output "eDP-1" {
+    mode "1920x1200@60.026"
+    scale 1.25
+    position x=3840 y=0
+}
 ```
+
+Turn an output off with `off` inside its block. Positions use logical pixels, so the laptop panel at scale 1.25 is 1536 px wide in the layout.
 
 ### Runtime Monitor Configuration
 
 ```bash
-# List monitors
-hyprctl monitors
-
-# Disable internal
-hyprctl keyword monitor eDP-1,disable
-
-# Enable with position
-hyprctl keyword monitor HDMI-A-1,2560x1440@60,1920x0,1
+niri msg outputs             # list outputs with EDID names
+niri msg output eDP-1 off    # temporary, not saved to the config
+niri msg output eDP-1 on
 ```
 
 ## Color Management
@@ -217,15 +224,7 @@ colormgr device-get-default-profile
 
 ### Night Light
 
-Hyprland doesn't have built-in night light. Use:
-
-```bash
-# gammastep
-gammastep -O 4500K
-
-# Or in config for Wayland
-gammastep -m wayland
-```
+Niri has no built-in night light. `wlsunset` runs as a user service (`systemctl --user status wlsunset`), see [systemd/07-DESKTOP-SERVICES](../systemd/07-DESKTOP-SERVICES.md).
 
 ## Screen Recording
 
@@ -261,13 +260,17 @@ grim -g "$(slurp)" screenshot.png
 grim -o eDP-1 screenshot.png
 ```
 
-### Hyprland Keybinds
+### Niri Screenshots
 
-```bash
-# In hyprland.conf
-bind = , Print, exec, grim ~/Pictures/screenshot-$(date +%Y%m%d-%H%M%S).png
-bind = SHIFT, Print, exec, grim -g "$(slurp)" ~/Pictures/screenshot-$(date +%Y%m%d-%H%M%S).png
-```
+Niri has built-in screenshots (`~/.config/niri/binds.kdl`):
+
+| Key | Action |
+|-----|--------|
+| Print | Whole screen (`screenshot-screen`) |
+| Ctrl+Print | Focused window (`screenshot-window`) |
+| Shift+Print | Interactive selection (`screenshot`) |
+
+Files go to `~/Pictures/Screenshots/` (`screenshot-path` in `misc.kdl`) and to the clipboard.
 
 ## Power Saving
 
@@ -284,17 +287,11 @@ cat /sys/kernel/debug/dri/0/i915_edp_psr_status
 ### DPMS
 
 ```bash
-# Turn off display
-hyprctl dispatch dpms off
-
-# Turn on display
-hyprctl dispatch dpms on
-
-# Idle timeout in hyprland.conf
-misc {
-    dpms_timeout = 300  # 5 minutes
-}
+# Turn off all displays (any input turns them back on)
+niri msg action power-off-monitors
 ```
+
+Idle handling is done by `swayidle`, started from `spawn-at-startup.kdl`, see [desktop/14-NIRI](../desktop/14-NIRI.md).
 
 ## Troubleshooting
 
@@ -321,8 +318,8 @@ export LIBVA_DRIVER_NAME=iHD
 ### External Monitor Not Detected
 
 ```bash
-# Force detection
-hyprctl monitors
+# List outputs Niri sees
+niri msg outputs
 
 # Check DRM
 cat /sys/class/drm/card0-HDMI-A-1/status
@@ -332,7 +329,7 @@ cat /sys/class/drm/card0-HDMI-A-1/status
 
 ```bash
 # Monitor info
-hyprctl monitors
+niri msg outputs
 
 # Brightness
 brightnessctl set 50%
@@ -343,11 +340,11 @@ vainfo
 # Screenshot
 grim ~/screenshot.png
 
-# DPMS
-hyprctl dispatch dpms off/on
+# Displays off
+niri msg action power-off-monitors
 
-# External monitor
-hyprctl keyword monitor HDMI-A-1,2560x1440@60,1920x0,1
+# Output on/off at runtime
+niri msg output eDP-1 off
 ```
 
 ## Related
