@@ -274,10 +274,14 @@ echo "hostshare /mnt/shared virtiofs defaults 0 0" | sudo tee -a /etc/fstab
 ### Mount in Windows Guest
 
 1. Install WinFsp: https://winfsp.dev/
-2. Install virtiofs driver from virtio-win
-3. Run: `net use Z: \\?\virtiofs\hostshare`
+2. Install the virtiofs driver and service from virtio-win
+3. Set `VirtioFsSvc` to automatic and start it; the share appears as `Z:`
+
+See [04-WINDOWS-VM - virtiofs](./04-WINDOWS-VM.md#virtiofs---shared-folders) for the live win11 setup.
 
 ## 9p Filesystem (Alternative)
+
+Linux guests only: Windows has no 9p client, use virtiofs there.
 
 ### Configure 9p
 

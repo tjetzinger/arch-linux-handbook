@@ -266,6 +266,8 @@ virsh edit win11
 2. Resize virt-viewer window
 3. Resolution should auto-adjust
 
+If the guest stays at a smaller resolution with black bars, `vgamem` is probably too small for the requested mode (HiDPI hosts request physical pixels). See [04-WINDOWS-VM - SPICE with QXL](./04-WINDOWS-VM.md#spice-with-qxl).
+
 For fixed resolution:
 ```xml
 <video>

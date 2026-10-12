@@ -175,7 +175,6 @@ The win11 VM shares `/home/tt` from the host.
 ```xml
 <filesystem type='mount' accessmode='passthrough'>
   <driver type='virtiofs'/>
-  <binary path='/usr/lib/virtiofsd'/>
   <source dir='/home/tt'/>
   <target dir='x1-home'/>
 </filesystem>
@@ -190,17 +189,22 @@ The win11 VM shares `/home/tt` from the host.
 </memoryBacking>
 ```
 
+libvirt finds `/usr/lib/virtiofsd` (package `virtiofsd`) on its own, so no `<binary>` line is needed.
+
 ### Mount in Windows
 
 1. Install WinFsp: https://winfsp.dev/
-2. Install virtiofs driver from virtio-win
-3. The share appears as a network drive
+2. Install the virtiofs driver and service from the virtio-win ISO
+3. Set the `VirtIO-FS Service` to start automatically. It is installed as **manual**, so the share does not appear until it is started:
 
-Or manually:
 ```powershell
-# In elevated PowerShell
-net use Z: \\?\virtiofs\x1-home
+# Elevated PowerShell
+Set-Service VirtioFsSvc -StartupType Automatic
+Start-Service VirtioFsSvc
+Get-PSDrive Z          # Z:\  x1-home
 ```
+
+The service mounts the share as the first free drive letter from `Z:` down, labelled with the target tag (`x1-home`).
 
 ### Add virtiofs via virt-manager
 
@@ -340,9 +344,11 @@ Alternative from Safe Mode, no host write: `bcdedit /set {current} bootstatuspol
   <image compression='off'/>
 </graphics>
 <video>
-  <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1'/>
+  <model type='qxl' ram='131072' vram='65536' vgamem='65536' heads='1' primary='yes'/>
 </video>
 ```
+
+`vgamem` limits the largest resolution: width × height × 4 bytes must fit. The host desktop uses fractional scaling, so virt-manager asks for the window size in physical pixels (about 3042×1682 for a full-screen window, ≈ 20.5 MB). With the old `vgamem='16384'` (16 MiB) Windows rejected that mode and stayed at 1920×1440 with black bars; the SPICE agent log showed `failed SetDisplayConfig with 0x64a`. `65536` (64 MiB) covers 4K. After the change, set Windows display scaling to about 150–175%.
 
 ### Connect to Display
 
@@ -354,9 +360,11 @@ remote-viewer spice://localhost:5900
 
 ### Resolution Changes
 
-With SPICE guest tools installed:
-- Resize virt-viewer window
+With SPICE guest tools installed (`vdagent` running) and auto-resize enabled in virt-manager for the VM:
+- Resize the viewer window
 - Resolution auto-adjusts
+
+If it does not, check the agent log in the guest: `Get-Content C:\Windows\Temp\vdagent.log -Tail 20` (look for `SetDisplayConfig`).
 
 ## USB Passthrough
 
