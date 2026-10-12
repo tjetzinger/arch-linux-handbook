@@ -1,296 +1,115 @@
 # 10 - Terminals
 
-Terminal emulator configuration - Warp (primary) and Kitty (backup).
+Terminal emulators: **Alacritty** is the daily terminal. Warp and Kitty are installed as extras.
 
-## Current Default
+> Until 2026-02-20 the ML4W setup used Warp as default (set in `~/.config/ml4w/settings/terminal.sh`) with Kitty as backup. Under Niri, Mod+Return opens Alacritty.
 
-**Warp Terminal** is the configured default.
-
-```bash
-cat ~/.config/ml4w/settings/terminal.sh
-# warp-terminal
-```
-
-## Warp Terminal
-
-Modern terminal with AI features.
-
-### Launch
-
-```bash
-warp-terminal
-
-# Or keybinding
-# Super + Return
-```
-
-### Configuration
-
-**File:** `~/.config/warp-terminal/user_preferences.json`
-
-### Key Settings
+## Alacritty (Default)
 
 | Setting | Value |
 |---------|-------|
-| Font Size | 15.0 |
-| Opacity | 57% |
-| Vim Mode | Enabled |
-| Zoom | 100% |
+| Launch | Mod+Return (`~/.config/niri/binds.kdl`) |
+| Config | `~/.config/niri-setup/alacritty/default.toml` (passed with `--config-file`) |
+| Font | JetBrainsMono Nerd Font, Regular, size 12 |
+| Window | opacity 0.93, padding 15 px |
+| Colors | Solarized Dark (`#002b36` background, `#839496` foreground) |
 
-### Features
-
-- **AI Assistant** - Command suggestions and explanations
-- **Vim Mode** - Modal editing in command line
-- **Blocks** - Command output grouping
-- **Workflows** - Saved command sequences
-- **SSH Integration** - Uses tmux wrapper
-
-### Vim Mode
-
-Enabled in preferences:
-
-```json
-"VimModeEnabled": "true"
+```kdl
+Mod+Return      { spawn-sh "alacritty --config-file $NIRICONF/alacritty/default.toml"; }
 ```
 
-Toggle with `Ctrl+Shift+V` in Warp.
+```toml
+[font]
+size = 12
 
-### Transparency
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
 
-```json
-"OverrideOpacity": "57"
+[window]
+opacity = 0.93
+
+[window.padding]
+x = 15
+y = 15
 ```
 
-### SSH
+The config lives in the niri-setup repo, not in `~/.config/alacritty/`; edit it there and commit (see [applications/12-DOTFILES](../applications/12-DOTFILES.md)). Alacritty reloads its config file automatically when it changes.
 
-Warp uses tmux wrapper for SSH sessions:
+### Floating Helper Windows
 
-```json
-"UseSshTmuxWrapper": "true"
+`float.toml` is the same config with opacity 0.9. Niri opens these Alacritty windows floating (`~/.config/niri/rules.kdl`, matched by title):
+
+| Title | Started by |
+|-------|------------|
+| `Updater` | Mod+U (system update) |
+| `Wallpaper Selector` | Mod+Ctrl+W |
+| `nmtui` | Waybar network module |
+
+```kdl
+// excerpt; the same rule also floats Calculator and pwvucontrol
+window-rule {
+    match app-id="Alacritty" title="Updater"
+    match app-id="Alacritty" title="nmtui"
+    match app-id="Alacritty" title="Wallpaper Selector"
+    open-floating true
+}
 ```
 
-## Kitty (Backup)
+## Warp (Installed)
 
-GPU-accelerated terminal emulator.
+`warp-terminal-bin`, launched with `warp-terminal`. Config: `~/.config/warp-terminal/user_preferences.json`. Not bound to a key under Niri.
 
-### Installation
+## Kitty (Installed)
 
-Already installed:
+Launched with `kitty`. Config: `~/.config/kitty/kitty.conf`. The ML4W-era config there may still include pywal/matugen color files that no longer update.
 
-```bash
-which kitty
-# /usr/bin/kitty
+## Changing the Default Terminal
+
+Edit the Mod+Return line in `~/.config/niri/binds.kdl`, for example:
+
+```kdl
+Mod+Return      { spawn "warp-terminal"; }
 ```
 
-### Configuration
-
-**Directory:** `~/.config/kitty/`
-
-```
-~/.config/kitty/
-├── kitty.conf              # Main config
-├── custom.conf             # Custom overrides
-├── colors.conf             # Pywal colors
-├── current-theme.conf      # Active theme
-└── Catppuccin-Macchiato.conf  # Theme file
-```
-
-### Main Settings
-
-**File:** `~/.config/kitty/kitty.conf`
-
-```bash
-font_family                 JetBrainsMono Nerd Font
-font_size                   12
-remember_window_size        no
-initial_window_width        950
-initial_window_height       500
-cursor_blink_interval       0.5
-scrollback_lines            2000
-enable_audio_bell           no
-window_padding_width        10
-hide_window_decorations     yes
-background_opacity          0.7
-dynamic_background_opacity  yes
-confirm_os_window_close     0
-```
-
-### Custom Config
-
-**File:** `~/.config/kitty/custom.conf`
-
-Add your customizations here:
-
-```bash
-# Example: Change font size
-font_size 14
-
-# Example: Different opacity
-background_opacity 0.8
-```
-
-### Launch Kitty
-
-```bash
-kitty
-```
-
-### Kitty Commands
-
-```bash
-# New tab
-Ctrl+Shift+T
-
-# New window
-Ctrl+Shift+Enter
-
-# Close window
-Ctrl+Shift+W
-
-# Scroll up/down
-Ctrl+Shift+Up/Down
-
-# Change font size
-Ctrl+Shift+Plus/Minus
-
-# Reset font size
-Ctrl+Shift+Backspace
-```
-
-### Themes
-
-Catppuccin is pre-configured:
-
-```bash
-include ./Catppuccin-Macchiato.conf
-```
-
-### Pywal Integration
-
-In `kitty.conf`:
-
-```bash
-# Uncomment to use pywal colors
-#include $HOME/.cache/wal/colors-kitty.conf
-```
-
-## Switching Default Terminal
-
-### Via ML4W Settings
-
-```bash
-ml4w-hyprland-settings
-```
-
-Navigate to terminal settings.
-
-### Manual Change
-
-Edit `~/.config/ml4w/settings/terminal.sh`:
-
-```bash
-# For Warp
-warp-terminal
-
-# For Kitty
-kitty
-```
-
-## Terminal Features Comparison
-
-| Feature | Warp | Kitty |
-|---------|------|-------|
-| GPU Acceleration | Yes | Yes |
-| AI Integration | Yes | No |
-| Vim Mode | Yes | Partial |
-| Multiplexing | Built-in | Via tabs |
-| Configuration | JSON | Plain text |
-| Transparency | Yes | Yes |
-| Ligatures | Yes | Yes |
-| Image Display | Yes | Yes |
-
-## Common Environment
-
-Both terminals respect these environment variables:
-
-```bash
-# In ~/.config/hypr/conf/custom.conf or shell profile
-export EDITOR=nvim
-export VISUAL=nvim
-export TERMINAL=warp-terminal
-```
-
-## Floating Terminal
-
-For dropdown/floating terminal windows:
-
-```bash
-# Kitty with specific class
-kitty --class floating-terminal
-
-# Then add window rule
-# windowrule = float,class:(floating-terminal)
-```
+Niri reloads the file on save; check it with `niri validate`. The Mod+U and Mod+Ctrl+W helpers keep using Alacritty unless their lines are changed too.
 
 ## Troubleshooting
 
 ### Terminal Won't Launch
 
 ```bash
-# Check if installed
-which warp-terminal
-which kitty
+# Start from another terminal to see errors
+alacritty --config-file ~/.config/niri-setup/alacritty/default.toml
 
-# Try running directly
-warp-terminal
-kitty
-
-# Check errors
-journalctl --user -n 50
+# Niri spawn errors
+journalctl --user -u niri -b | grep -i alacritty
 ```
 
-### Font Issues
+### Font Missing
+
+The font is installed by hand in `~/.local/share/fonts/JetBrainsMonoNerd/` (no package owns it), so a fresh install needs it copied back or the package instead:
 
 ```bash
-# Check if Nerd Font is installed
-fc-list | grep -i "JetBrains"
-
-# Install if missing
-sudo pacman -S ttf-jetbrains-mono-nerd
+fc-list | grep -i "JetBrainsMono Nerd"
+sudo pacman -S ttf-jetbrains-mono-nerd   # packaged alternative
+fc-cache -f
 ```
 
 ### Transparency Not Working
 
-```bash
-# Check compositor settings
-# Hyprland should handle this automatically
-
-# Verify opacity setting in terminal config
-```
+Check `opacity` in the `[window]` section; Niri itself needs no setting for transparent windows.
 
 ## Quick Reference
 
 ```bash
-# Launch default terminal
-~/.config/ml4w/settings/terminal.sh
-
-# Launch Warp
-warp-terminal
-
-# Launch Kitty
-kitty
-
-# Change default
-$EDITOR ~/.config/ml4w/settings/terminal.sh
-
-# Kitty config
-$EDITOR ~/.config/kitty/kitty.conf
-
-# Warp preferences location
-~/.config/warp-terminal/user_preferences.json
+alacritty                               # default terminal (Mod+Return)
+alacritty --config-file ~/.config/niri-setup/alacritty/float.toml   # floating variant
+warp-terminal                           # Warp
+kitty                                   # Kitty
 ```
 
 ## Related
 
-- [03-KEYBINDINGS](./03-KEYBINDINGS.md) - Terminal keybindings
-- [09-THEMING](./09-THEMING.md) - Terminal colors
+- [09-THEMING](./09-THEMING.md) - Colors and fonts
+- [14-NIRI](./14-NIRI.md) - Keybindings
