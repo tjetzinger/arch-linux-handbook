@@ -147,8 +147,26 @@ qemu-img check -r all disk.qcow2
 
 | Type | Description | Use Case |
 |------|-------------|----------|
-| Internal | Stored in qcow2 file | Simple, single file |
-| External | Separate overlay file | Production, backups |
+| Btrfs (snapper `vm` config) | Snapshot of the whole `@vm` subvolume | **Used here**: protects every image in `/mnt/vm` at once |
+| Internal (libvirt) | Stored in the qcow2 file | Simple, single file |
+| External (libvirt) | Separate overlay file | Production, backups |
+
+### Btrfs Snapshots of `@vm` (in use)
+
+Snapper config `vm` covers `/mnt/vm`. Timeline is off; snapshots are taken by hand before risky changes, ideally with the VMs shut down so the images are consistent. Setup and background: [system-recovery/12](../system-recovery/12-BTRFS-CORRUPTION-VM-INCIDENT.md#snapshot-protection-snapper-config-for-vm).
+
+```bash
+sudo snapper -c vm create -d "before <change>" --userdata important=yes
+sudo snapper -c vm list
+# Restore one image from snapshot N (VM off)
+sudo cp --reflink=always /mnt/vm/.snapshots/N/snapshot/win11.qcow2 /mnt/vm/win11.qcow2
+```
+
+Live: snapshot #5 "win11 known-good 2026-10-12" (after the boot-loop fix, VBS running, bad block removed). A snapshot is on the same disk, so it is not a backup; `/mnt/vm` is not in Borg.
+
+### libvirt Snapshots
+
+Not used for win11. win11 boots UEFI with an NVRAM file (`pflash`); libvirt has refused internal snapshots for such VMs in the past. Not tested with libvirt 12.8, so check before relying on it.
 
 ### Internal Snapshots
 
