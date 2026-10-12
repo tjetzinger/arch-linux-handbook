@@ -362,10 +362,20 @@ fstrim -av
 
 ### Reclaim Space on Host
 
+With `discard='unmap'`, QEMU frees the space by itself: a TRIM in the guest punches a hole in the qcow2 file. Seen on 2026-10-12: deleting `C:\Windows\MEMORY.DMP` in win11 plus a retrim removed the bad block from `win11.qcow2`.
+
 ```bash
-# After TRIM in guest
-qemu-img convert -O qcow2 disk.qcow2 disk-trimmed.qcow2
-mv disk-trimmed.qcow2 disk.qcow2
+# Check that the guest range is unallocated now
+qemu-img map -U --output=json /mnt/vm/win11.qcow2 | head
+du -h --apparent-size /mnt/vm/win11.qcow2; du -h /mnt/vm/win11.qcow2
+```
+
+`qemu-img convert` is only needed to compact or defragment the image, with the VM shut down. The copy is a new file in `/mnt/vm`, which has `chattr +C`, so it becomes **nodatacow** (no checksums) unless you remove the flag first:
+
+```bash
+touch /mnt/vm/disk-new.qcow2 && chattr -C /mnt/vm/disk-new.qcow2   # keep datacow
+qemu-img convert -O qcow2 /mnt/vm/disk.qcow2 /mnt/vm/disk-new.qcow2
+lsattr /mnt/vm/disk-new.qcow2   # no 'C' = datacow; else switch the VM to cache='none'
 ```
 
 ## Storage Performance

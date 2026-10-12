@@ -200,8 +200,8 @@ Separate I/O from vCPU threads:
 # Check current scheduler
 cat /sys/block/nvme0n1/queue/scheduler
 
-# Use none/mq-deadline for NVMe
-echo none | sudo tee /sys/block/nvme0n1/queue/scheduler
+# none or mq-deadline both suit NVMe; live is mq-deadline (kernel default)
+echo none | sudo tee /sys/block/nvme0n1/queue/scheduler   # not persistent
 ```
 
 ## Network Performance
