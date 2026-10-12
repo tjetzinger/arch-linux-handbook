@@ -1,389 +1,119 @@
 # 09 - Theming
 
-Colors, wallpapers, and visual customization.
-
-## Color System
-
-ML4W 2.9.9+ uses **matugen** for Material You dynamic color generation (replaced pywal).
-
-### Matugen Colors
-
-**Generated file:** `~/.config/hypr/colors.conf`
-
-Colors are extracted from the current wallpaper and applied to:
-- Hyprland borders and decorations
-- Waybar
-- Rofi
-- SwayNC
-- hyprlock
-- Kitty terminal (`~/.config/kitty/colors-matugen.conf`)
-
-### Color Variables
-
-```bash
-$background = rgba(...)
-$foreground = rgba(...)
-$color0 through $color15  # Terminal colors
-$primary
-$secondary
-```
-
-### Regenerate Colors
-
-```bash
-# Apply matugen to current wallpaper
-matugen image /path/to/wallpaper.jpg
-
-# Or use waypaper (applies matugen automatically)
-waypaper
-
-# Reload Hyprland to apply
-hyprctl reload
-
-# Reload kitty colors (send SIGUSR1)
-pkill -USR1 kitty
-```
-
-## Wallpapers
-
-### waypaper
-
-GUI wallpaper selector.
-
-```bash
-waypaper
-
-# Or keybinding
-# Super + Ctrl + W
-```
-
-### Random Wallpaper
-
-```bash
-waypaper --random
-
-# Or keybinding
-# Super + Shift + W
-```
-
-### Wallpaper Location
-
-Default folder:
-
-```bash
-cat ~/.config/ml4w/settings/wallpaper-folder.sh
-# Usually ~/Pictures/wallpapers or ~/wallpaper
-```
-
-### swww
-
-Backend for displaying wallpapers (ML4W 2.9.9.5+ default).
-
-```bash
-# Set wallpaper directly
-swww img /path/to/wallpaper.jpg
-
-# With transition effect
-swww img /path/to/wallpaper.jpg --transition-type grow
-
-# Check daemon status
-pgrep swww-daemon
-```
-
-**Note:** hyprpaper is still installed (ML4W dependency) but not used.
-
-### Restore Wallpaper
-
-```bash
-~/.config/hypr/scripts/wallpaper-restore.sh
-```
-
-## GTK Theme
-
-### Settings
-
-```bash
-~/.config/hypr/scripts/gtk.sh
-```
-
-### Configuration Tools
-
-```bash
-# GTK settings
-nwg-look
-
-# Or
-lxappearance
-```
-
-### Theme Files
-
-```
-~/.config/gtk-3.0/settings.ini
-~/.config/gtk-4.0/settings.ini
-```
-
-## Qt Theme
-
-### Environment Variable
-
-In `~/.config/hypr/conf/custom.conf`:
-
-```bash
-env = QT_QPA_PLATFORMTHEME,qt5ct
-```
-
-### Configuration
-
-```bash
-qt5ct
-qt6ct
-```
-
-## Cursor Theme
-
-### Configuration
-
-**File:** `~/.config/hypr/conf/cursor.conf`
-
-```bash
-env = XCURSOR_SIZE,24
-env = XCURSOR_THEME,Bibata-Modern-Classic
-```
-
-### Set Cursor
-
-```bash
-# Via hyprctl
-hyprctl setcursor Bibata-Modern-Classic 24
-```
-
-## Icon Theme
-
-Set via GTK settings:
-
-```bash
-# In ~/.config/gtk-3.0/settings.ini
-gtk-icon-theme-name=Papirus-Dark
-```
-
-## Fonts
-
-### System Font
-
-```bash
-# Check current
-fc-match
-
-# Set via GTK
-# In settings.ini
-gtk-font-name=Noto Sans 11
-```
-
-### Nerd Fonts
-
-Required for icons in Waybar and terminals:
-
-- JetBrainsMono Nerd Font
-- Font Awesome
-
-## Waybar Themes
-
-### Theme Switcher
-
-```bash
-~/.config/waybar/themeswitcher.sh
-
-# Or keybinding
-# Super + Ctrl + T
-```
-
-### Theme Location
-
-```
-~/.config/waybar/themes/
-```
-
-## Animations
-
-### Toggle Animations
-
-```bash
-~/.config/hypr/scripts/toggle-animations.sh
-
-# Or keybinding
-# Super + Shift + A
-```
-
-### Animation Presets
-
-```
-~/.config/hypr/conf/animations/
-```
-
-### Configuration
-
-**File:** `~/.config/hypr/conf/animation.conf`
-
-```bash
-source = ~/.config/hypr/conf/animations/animation-moving.conf
-```
-
-## Decorations
-
-### Window Decorations
-
-**File:** `~/.config/hypr/conf/decoration.conf`
-
-```bash
-source = ~/.config/hypr/conf/decorations/decoration-rounding.conf
-```
-
-### Border Colors
-
-From matugen in `colors.conf`:
-
-```bash
-general {
-    col.active_border = $color11
-    col.inactive_border = $color8
+Colors, wallpapers, and visual settings for the Niri desktop.
+
+> The Hyprland/ML4W theming (matugen, pywal, hyprshade, `~/.config/hypr/scripts/`) was removed on 2026-02-20. This page describes the current setup from `~/.config/niri-setup`. Archive: `~/backup/ml4w-hyprland-archive-20260220.tar.gz`.
+
+## Color Palette
+
+niri-setup ships the **Frosted Midnight** palette (`~/.config/niri-setup/COLOR_PALETTE.md`). Waybar, Dunst and Fuzzel use it.
+
+| Role | Hex |
+|------|-----|
+| Foreground | `#d8dadd` |
+| Background | `#0b0b0c` |
+| Accent 1 (red slot) | `#61768F` |
+| Accent 2 (green slot) | `#758A9B` |
+| Accent 3 (cyan slot) | `#B7D4ED` |
+
+Exception: Alacritty uses **Solarized Dark** (since 2026-10-12, see [Terminal](#terminal)).
+
+## Niri Window Decoration
+
+**File:** `~/.config/niri/layout.kdl`
+
+```kdl
+layout {
+    gaps 7
+    focus-ring {
+        width 1
+        active-color "#FF8C00"
+        inactive-color "#0b0b0c"
+    }
+    border {
+        off
+    }
+    background-color "transparent"
 }
 ```
 
-## Screen Shaders (hyprshade)
+The focused window gets a thin orange ring; there are no window borders.
 
-Visual effects/filters using hyprshade.
+## Wallpapers
 
-### Toggle Shader
+Two layers, started from `~/.config/niri/wallpapers.kdl`:
+
+| Layer | Tool | File |
+|-------|------|------|
+| Backdrop (overview, behind workspaces) | `swww` | `~/.config/niri-setup/wallpapers/backdrop.png` |
+| Workspace background | `swaybg` (`-m fill`) | `~/.config/niri-setup/wallpapers/workspace.png` |
+
+```kdl
+spawn-sh-at-startup "swww-daemon & swww img $NIRICONF/wallpapers/backdrop.png"
+spawn-sh-at-startup "swaybg -i $NIRICONF/wallpapers/workspace.png -m fill -c '#010102'"
+layer-rule {
+    match namespace="^swww-daemon$"
+    place-within-backdrop true
+}
+```
+
+### Change Wallpaper
+
+**Mod+Ctrl+W** opens the wallpaper selector (`scripts/change-wallpaper.sh`). It lists images from `~/Pictures/Wallpapers`, asks for a mode (stretch, fill, fit, center, tile), and copies the choice to `wallpapers/workspace.*`.
+
+## GTK
+
+**File:** `~/.config/gtk-3.0/settings.ini` (same values in gsettings)
+
+| Setting | Value |
+|---------|-------|
+| Theme | Adwaita, `color-scheme` = `prefer-dark` |
+| Icons | Colloid |
+| Cursor | ArcStarry-cursors, size 24 |
+| Font | Cantarell 11, monospace Adwaita Mono 11 |
 
 ```bash
-~/.config/hypr/scripts/hyprshade.sh
-
-# Or keybinding
-# Super + Shift + H
+gsettings get org.gnome.desktop.interface color-scheme
+gsettings set org.gnome.desktop.interface icon-theme 'Colloid'
 ```
 
-### Shader Selector GUI
+Leftover: `~/.config/gtk-3.0/gtk.css` still imports `colors.css` (dated 2026-01-10, generated by the ML4W/matugen setup), so GTK3 apps get those old colors on top of Adwaita. Delete both lines/files to get plain Adwaita dark.
+
+## Qt
+
+**File:** `~/.config/qt6ct/qt6ct.conf`: style Breeze, color scheme `darker.conf`, icons `breeze-dark`.
+
+`QT_QPA_PLATFORMTHEME` is not set in the session (checked with `systemctl --user show-environment`), so Qt apps probably ignore qt6ct and use their defaults. To apply it, set `QT_QPA_PLATFORMTHEME=qt6ct` in an `environment {}` block of the Niri config.
+
+## Bar, Notifications, Launcher
+
+| Component | File | Colors |
+|-----------|------|--------|
+| Waybar | `~/.config/niri-setup/waybar/style.css` | Translucent dark (`rgba(25,25,25,0.65)`), white text |
+| Dunst | `~/.config/niri-setup/dunst/dunstrc` | `#0b0b0ccc` background, `#d8dadd` text, accent frames |
+| Fuzzel | `~/.config/niri-setup/fuzzel/*.ini` | `#0b0b0ce6` background, `#758a9b99` selection |
+
+Fuzzel uses `Ubuntu Mono Nerd Font` 14.
+
+## Terminal
+
+**Files:** `~/.config/niri-setup/alacritty/default.toml`, `float.toml` (floating helper windows)
+
+- Font: JetBrainsMono Nerd Font, size 12
+- Opacity: 0.93 (`float.toml`: 0.9)
+- Colors: Solarized Dark (`#002b36` background, `#839496` foreground)
+
+## Night Light
+
+`wlsunset` runs as a user service (no Hyprland-style shaders). See [14-NIRI - Blue Light Filter](./14-NIRI.md#blue-light-filter-wlsunset).
 
 ```bash
-~/.config/hypr/scripts/hyprshade.sh rofi
-```
-
-### Available Shaders
-
-```
-~/.config/hypr/shaders/
-├── blue-light-filter-25.glsl
-├── blue-light-filter-50.glsl
-├── blue-light-filter-75.glsl
-└── invert-colors.glsl
-```
-
-### Automatic Scheduling (Sunset/Sunrise)
-
-**Config:** `~/.config/hyprshade/config.toml`
-
-```toml
-[[shades]]
-name = "blue-light-filter-50"
-start_time = 16:30:00
-end_time = 07:30:00
-
-[[shades]]
-name = "vibrance"
-default = true
-```
-
-**Systemd timer:** Checks every 5 minutes and applies correct shader.
-
-```bash
-# Install systemd units
-hyprshade install
-
-# Enable timer
-systemctl --user enable --now hyprshade.timer
-
-# Check status
-systemctl --user status hyprshade.timer
-
-# Manual apply
-hyprshade auto
-
-# Check current shader
-hyprshade current
-```
-
-**Timer config:** `~/.config/systemd/user/hyprshade.timer`
-
-```ini
-[Timer]
-OnBootSec=1min
-OnUnitActiveSec=5min
-Persistent=true
-```
-
-**Disable timer for manual control:**
-
-If the automatic timer conflicts with manual toggling (shader turns back on after you toggle it off), disable the timer:
-
-```bash
-systemctl --user disable --now hyprshade.timer
-```
-
-With timer disabled, use `Super + Shift + H` to manually toggle shaders.
-
-### Game Mode
-
-Disables effects for gaming:
-
-```bash
-~/.config/hypr/scripts/gamemode.sh
-
-# Or keybinding
-# Super + Alt + G
-```
-
-## ML4W Settings App
-
-GUI for many theme settings:
-
-```bash
-ml4w-hyprland-settings
-```
-
-Configures:
-- Blur
-- Animations
-- Decorations
-- Waybar options
-- And more
-
-## Quick Reference
-
-```bash
-# Wallpaper
-waypaper                              # GUI selector
-waypaper --random                     # Random
-~/.config/hypr/scripts/wallpaper-restore.sh  # Restore
-
-# Colors
-matugen image /path/to/image          # Generate colors
-
-# Themes
-~/.config/waybar/themeswitcher.sh     # Waybar theme
-
-# GTK
-nwg-look                              # GTK settings
-
-# Animations
-~/.config/hypr/scripts/toggle-animations.sh
-
-# Settings app
-ml4w-hyprland-settings
+systemctl --user status wlsunset
+pkill -USR1 wlsunset    # cycle auto / forced night / forced day
 ```
 
 ## Related
 
-- [05-WAYBAR](./05-WAYBAR.md) - Bar theming
-- [06-LAUNCHERS](./06-LAUNCHERS.md) - Rofi theming
-- [08-LOCKSCREEN](./08-LOCKSCREEN.md) - Lock screen theming
+- [14-NIRI](./14-NIRI.md) - Niri setup and keybindings
+- [05-WAYBAR](./05-WAYBAR.md) - Status bar (legacy Hyprland page)
+- [../applications/12-DOTFILES](../applications/12-DOTFILES.md) - niri-setup repository

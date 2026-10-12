@@ -2,6 +2,8 @@
 
 Keyboard shortcuts for Hyprland with ML4W configuration.
 
+> **Legacy Hyprland/ML4W page, reference only.** Hyprland + ML4W were removed on 2026-02-20; the desktop is Niri. Current setup: [14-NIRI](./14-NIRI.md).
+
 ## Modifier Key
 
 The main modifier is **Super** (Windows key).

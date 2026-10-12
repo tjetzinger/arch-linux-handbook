@@ -2,6 +2,8 @@
 
 SwayNC notification center configuration.
 
+> **Legacy Hyprland/ML4W page, reference only.** Hyprland + ML4W were removed on 2026-02-20; the desktop is Niri. Current setup: [14-NIRI](./14-NIRI.md).
+
 ## Overview
 
 SwayNC (Sway Notification Center) is a notification daemon with a notification center panel.

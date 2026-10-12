@@ -12,11 +12,11 @@ Documentation for the Niri scrollable-tiling Wayland compositor.
 | [02-CONFIGURATION](./02-CONFIGURATION.md) | Config file structure (legacy Hyprland) |
 | [03-KEYBINDINGS](./03-KEYBINDINGS.md) | Keyboard shortcuts (legacy Hyprland) |
 | [04-MONITORS](./04-MONITORS.md) | Display configuration (legacy Hyprland) |
-| [05-WAYBAR](./05-WAYBAR.md) | Status bar |
+| [05-WAYBAR](./05-WAYBAR.md) | Status bar (legacy Hyprland/ML4W config) |
 | [06-LAUNCHERS](./06-LAUNCHERS.md) | Launchers (legacy Hyprland — now uses Fuzzel) |
 | [07-NOTIFICATIONS](./07-NOTIFICATIONS.md) | Notifications (legacy Hyprland — now uses Dunst) |
-| [08-LOCKSCREEN](./08-LOCKSCREEN.md) | Lock screen (legacy Hyprland — now uses swaylock) |
-| [09-THEMING](./09-THEMING.md) | Colors and wallpapers |
+| [08-LOCKSCREEN](./08-LOCKSCREEN.md) | swaylock-effects and swayidle for Niri |
+| [09-THEMING](./09-THEMING.md) | Colors, wallpapers, GTK/Qt, Alacritty, night light (Niri) |
 | [10-TERMINALS](./10-TERMINALS.md) | Terminal emulators |
 | [11-CUSTOMIZATION](./11-CUSTOMIZATION.md) | Custom configs (legacy Hyprland) |
 | [12-KEYRING](./12-KEYRING.md) | GNOME Keyring credential storage |

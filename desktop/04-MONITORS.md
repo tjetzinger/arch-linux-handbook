@@ -2,6 +2,8 @@
 
 Display configuration and multi-monitor setup.
 
+> **Legacy Hyprland/ML4W page, reference only.** Hyprland + ML4W were removed on 2026-02-20; the desktop is Niri. Current setup: [14-NIRI](./14-NIRI.md). For Niri outputs see [hardware/04-DISPLAY-GRAPHICS](../hardware/04-DISPLAY-GRAPHICS.md); the Niri parts of this page still apply.
+
 ## Current Display
 
 ```bash

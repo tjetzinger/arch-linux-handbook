@@ -2,6 +2,8 @@
 
 Status bar configuration and customization.
 
+> **Legacy Hyprland/ML4W page, reference only.** Hyprland + ML4W were removed on 2026-02-20; the desktop is Niri. Current setup: [14-NIRI](./14-NIRI.md).
+
 ## Overview
 
 Waybar is a highly customizable status bar for Wayland.
