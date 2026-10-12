@@ -20,7 +20,6 @@ Zsh configuration with oh-my-zsh and oh-my-posh.
 ```
 ~/.config/zshrc/
 ├── 00-init           # Initialization, exports
-├── 01-tmux           # Tmux auto-start
 ├── 20-customization  # oh-my-zsh, oh-my-posh
 ├── 25-aliases        # Command aliases
 ├── 30-autostart      # Autostart scripts
@@ -42,10 +41,6 @@ export EDITOR=nvim
 export PATH="/usr/lib/ccache/bin/:$PATH"
 export ZSH="$HOME/.oh-my-zsh"
 ```
-
-## 01-tmux
-
-Auto-starts tmux with grouped sessions. See [14-TMUX](./14-TMUX.md) for details.
 
 ## 20-customization
 
@@ -142,38 +137,31 @@ source /usr/share/nvm/init-nvm.sh
 ### General Aliases
 
 ```bash
-alias sudo='sudo '              # Expand aliases after sudo
+alias sudo='sudo '              # Expand aliases after sudo (set in 20-customization)
 alias c='clear'
-alias nf='fastfetch'
+alias nf='fastfetch'            # also pf, ff
 alias ls='eza -a --icons=always'
 alias ll='eza -al --icons=always'
 alias lt='eza -a --tree --level=1 --icons=always'
 alias shutdown='systemctl poweroff'
-alias v='nvim'
-alias vim='nvim'
-alias sv='sudo -E nvim'         # sudo nvim with user's LazyVim config
+alias v='$EDITOR'               # EDITOR=nvim (00-init)
+alias vim='$EDITOR'
 alias wifi='nmtui'
+alias lock='swaylock'
+alias clock='tty-clock'
 ```
 
 ### System Aliases
 
 ```bash
-alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
+alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'   # unused: this system boots with systemd-boot
 ```
 
-### Tool Aliases
+### Network Aliases
 
-```bash
-alias yt-dlp='yt-dlp --cookies-from-browser chrome'
-alias chrome-debug='/usr/bin/google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable'
-alias ollama='docker exec ollama ollama'
-```
+`wx1-up` / `wx1-down` switch the `wx1` NetworkManager connection. `wpi2-on` / `wpi2-off` / `wpi2-status` control the hotspot on the `wpi2` host over SSH.
 
-### Flatpak Applications
-
-```bash
-alias firefox='flatpak run org.mozilla.firefox'
-```
+> The tool aliases `sv`, `yt-dlp`, `chrome-debug`, `ollama` and `firefox` and the tmux auto-start (`01-tmux`) were lost in the Niri switch on 2026-02-20 and are not set. The pages that used them now show the full commands.
 
 ## 30-autostart
 

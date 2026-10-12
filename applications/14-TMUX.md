@@ -15,17 +15,16 @@ Terminal multiplexer with session persistence, configured for Kitty, Warp, and S
 
 **File:** `~/.tmux.conf`
 
-### Auto-Start
+### Starting Tmux
 
-**File:** `~/.config/zshrc/01-tmux`
+Tmux does not start by itself. The auto-start script `~/.config/zshrc/01-tmux` was lost in the Niri switch on 2026-02-20. Start or attach by hand:
 
-Tmux auto-starts on terminal launch using **grouped sessions**:
-- First terminal creates base session (`main` or `ssh-<hostname>`)
-- Additional terminals create linked sessions with independent views
-- Windows are shared, but each terminal can navigate independently
-- Skipped in IDE terminals (VSCode, Emacs) and Warp
+```bash
+tmux new -A -s main     # attach to 'main', create it if missing
+tmux new -t main        # extra view on the same windows (grouped session)
+```
 
-**Multiple terminals:**
+A grouped session shares the windows of `main`, but each terminal picks its own window:
 
 ```
 Terminal 1: main   │ 1:zsh* 2:nvim  3:htop    ← viewing window 1
@@ -181,10 +180,6 @@ listen_on unix:/tmp/kitty
 shell_integration enabled
 clipboard_control write-clipboard write-primary read-clipboard read-primary
 ```
-
-### Warp / VS Code
-
-Tmux auto-start is disabled in Warp and VS Code (detected via `$TERM_PROGRAM`). This prevents conflicts with Claude Code and other IDE terminals.
 
 ### SSH
 
@@ -354,7 +349,6 @@ set -s copy-command 'wl-copy'  # Wayland
 | File | Purpose |
 |------|---------|
 | `~/.tmux.conf` | Main configuration |
-| `~/.config/zshrc/01-tmux` | Auto-start script |
 | `~/.tmux/plugins/` | TPM plugins |
 | `~/.tmux/resurrect/` | Saved sessions |
 

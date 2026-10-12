@@ -129,28 +129,22 @@ xyz.chatboxapp.app/
 
 ## Ollama (Docker)
 
-Ollama runs as a Docker container.
-
-### Alias
-
-```bash
-alias ollama='docker exec ollama ollama'
-```
+Ollama runs as a Docker container. There is no `ollama` command on the host; run it inside the container.
 
 ### Commands
 
 ```bash
 # List models
-ollama list
+docker exec ollama ollama list
 
 # Run model
-ollama run llama2
+docker exec -it ollama ollama run llama2
 
 # Pull model
-ollama pull mistral
+docker exec ollama ollama pull mistral
 
 # Remove model
-ollama rm model-name
+docker exec ollama ollama rm model-name
 ```
 
 ### API
@@ -211,8 +205,8 @@ claude "prompt"        # With prompt
 chatbox                # Launch GUI
 
 # Ollama (Docker)
-ollama list            # List models
-ollama run llama2      # Run model
+docker exec ollama ollama list          # List models
+docker exec -it ollama ollama run llama2   # Run model
 
 # Config locations
 ~/.claude.json

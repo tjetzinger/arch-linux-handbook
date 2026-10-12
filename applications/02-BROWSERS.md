@@ -47,8 +47,6 @@ For automation and testing:
 # Launch with remote debugging
 google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable
 
-# Alias defined
-chrome-debug
 ```
 
 ### Set as Default
@@ -72,8 +70,10 @@ Backup browser.
 ### Launch
 
 ```bash
-firefox
+flatpak run org.mozilla.firefox
 ```
+
+Firefox is a Flatpak, so there is no `firefox` command in the shell. Use `flatpak run org.mozilla.firefox` wherever this page shows `firefox`.
 
 ### Configuration
 
@@ -212,10 +212,7 @@ yt-dlp --cookies-from-browser chrome <url>
 yt-dlp --cookies-from-browser firefox <url>
 ```
 
-Alias configured:
-```bash
-alias yt-dlp='yt-dlp --cookies-from-browser chrome'
-```
+No alias is set, so pass `--cookies-from-browser` each time.
 
 ### mpv Integration
 
@@ -323,10 +320,10 @@ systemctl --user stop psd.service
 ```bash
 # Launch browsers
 google-chrome-stable
-firefox
+flatpak run org.mozilla.firefox
 
 # Debug mode
-chrome-debug
+google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-profile-stable
 
 # Set default browser
 xdg-settings set default-web-browser google-chrome.desktop

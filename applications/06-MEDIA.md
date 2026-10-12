@@ -119,12 +119,12 @@ yt-dlp -F "https://youtube.com/watch?v=..."
 
 **Directory:** `~/.config/yt-dlp/`
 
-### Alias
+### Cookies
 
-Configured alias uses Chrome cookies:
+No alias is set. For sites that need a login, pass Chrome's cookies:
 
 ```bash
-alias yt-dlp='yt-dlp --cookies-from-browser chrome'
+yt-dlp --cookies-from-browser chrome <url>
 ```
 
 ### Common Options
