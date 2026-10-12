@@ -218,7 +218,7 @@ systemctl status flatpak-update.timer
 systemctl list-timers flatpak-update.timer
 ```
 
-**Schedule:** Runs 2 minutes after boot, then every 24 hours.
+**Schedule:** Runs 2 minutes after boot, then every 24 hours. `OnActiveSec=2m` also fires it a few minutes after every `systemctl daemon-reload`, so an extra update after a reload is expected.
 
 **Service files:**
 

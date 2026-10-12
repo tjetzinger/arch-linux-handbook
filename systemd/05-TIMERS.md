@@ -5,20 +5,29 @@ Systemd timers for scheduled maintenance tasks.
 ## Active Timers
 
 ```bash
-systemctl list-timers
+systemctl list-timers --all
 ```
 
-| Timer | Schedule | Purpose |
-|-------|----------|---------|
-| snapper-timeline | Hourly | Create Btrfs snapshots |
-| snapper-cleanup | Hourly | Clean old snapshots |
-| snapper-boot | On boot | Boot snapshot |
-| reflector | Weekly | Update pacman mirrors |
-| fstrim | Weekly | SSD TRIM |
-| laptop-mode | 150s | Battery polling |
-| plocate-updatedb | Daily | Update file database |
-| shadow | Daily | Check password expiry |
-| systemd-tmpfiles-clean | Daily | Clean temp files |
+Live on 2026-10-12 (16 timers):
+
+| Timer | Schedule | Purpose | Doc |
+|-------|----------|---------|-----|
+| snapper-timeline | Hourly | Create Btrfs snapshots | below |
+| snapper-cleanup | 10 min after boot, then hourly | Clean old snapshots | below |
+| snapper-boot | At boot | Boot snapshot | below |
+| snapper-boot-entries | Hourly | systemd-boot entries for snapshots | [02-SNAPPER-SYSTEMD-BOOT](../system-recovery/02-SNAPPER-SYSTEMD-BOOT.md) |
+| borg-backup | Daily (±1h) | Borg backup to the external drive | [07-BORG](../system-recovery/07-BORG-BACKUP-AUTOMATION.md) |
+| btrfs-scrub@- | Monthly | Scrub `/` | [06-BTRFS](../system-recovery/06-BTRFS-MAINTENANCE.md) |
+| btrfs-balance-metadata | 15th, 03:00 | Metadata balance `-musage=50` | [06-BTRFS](../system-recovery/06-BTRFS-MAINTENANCE.md) |
+| reflector | 2 min after boot, then weekly | Update pacman mirrors (custom timer) | below |
+| flatpak-update | 2 min after boot, then daily | `flatpak update` | [07-DESKTOP-SERVICES](./07-DESKTOP-SERVICES.md#flatpak-services) |
+| paccache | Weekly | Prune the pacman cache (`paccache -r`) | - |
+| archlinux-keyring-wkd-sync | Weekly | Refresh Arch keyring keys | - |
+| fstrim | Weekly | SSD TRIM | - |
+| plocate-updatedb | Daily | Update file database | - |
+| shadow | Daily | Check password expiry | - |
+| systemd-tmpfiles-clean | 15 min after boot, then daily | Clean temp files | - |
+| laptop-mode | - | Listed, but the unit is not installed (leftover) | - |
 
 ## Snapper Timers
 
