@@ -262,10 +262,7 @@ Untrack a file with `git rm --cached <file>`. Plain `git rm` also deletes it fro
 
 ### 4. Regular Backups
 
-```bash
-# Cron job for daily backup
-0 2 * * * /home/tt/scripts/backup-docker.sh
-```
+Borg backs up everything under `/home/tt` daily, so bind mounts in `~/Workspace/containers` are covered. Named volumes in `/var/lib/docker/volumes/` are not (n8n's data is one). See [09-MAINTENANCE - Backups](./09-MAINTENANCE.md#what-actually-backs-up-docker-data).
 
 ### 5. Document Volume Contents
 

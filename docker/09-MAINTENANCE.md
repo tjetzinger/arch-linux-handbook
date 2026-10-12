@@ -49,7 +49,25 @@ docker image prune -f
 
 ## Backups
 
-### Backup Script
+### What Actually Backs Up Docker Data
+
+Borg (`borg-backup.timer`, daily, script `/usr/local/bin/borg-backup-system`) backs up `/home/tt`, `/etc`, `/boot`, `/usr/local` and `/root`. See [system-recovery/07-BORG-BACKUP-AUTOMATION](../system-recovery/07-BORG-BACKUP-AUTOMATION.md).
+
+| Data | Location | In Borg |
+|------|----------|---------|
+| Compose files, configs, `.env` files | `~/Workspace/containers/` | yes |
+| Open WebUI (`webui.db`), Postgres, Portainer, Traefik `acme.json` | bind mounts under `~/Workspace/containers/` | yes |
+| Ollama models | `open-webui-stack/ollama` | no (excluded, re-downloadable) |
+| n8n workflows and credentials | named volume `n8n_n8n_data` in `/var/lib/docker/volumes/` | **no** |
+| `tymeslot_trial_pg`, `tymeslot_trial_data` | named volumes, no container uses them | no |
+
+Named volumes live in `/var/lib/docker/volumes/`, outside the Borg paths. To cover n8n, add `/var/lib/docker/volumes/n8n_n8n_data` to the paths in `borg-backup-system`, or export the volume with the command in [07-STORAGE - Backup Named Volume](./07-STORAGE.md#backup-named-volume).
+
+Note: Borg copies live database files. Postgres is stopped; SQLite (`webui.db`) is usually fine but not guaranteed consistent while Open WebUI writes.
+
+### Example Backup Script (not deployed)
+
+A standalone script for the case without Borg. It is **not** installed: there is no `~/scripts/backup-docker.sh` and no cron job.
 
 ```bash
 #!/bin/bash
