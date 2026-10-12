@@ -1,6 +1,8 @@
 # 07 - Desktop Services
 
-Display manager and user-level services for the Hyprland desktop.
+Display manager and user-level services for the Niri desktop.
+
+> Hyprland/ML4W was removed on 2026-02-20. Its services (`hypridle`, `hyprpaper`, `hyprdynamicmonitors`, `xdg-desktop-portal-hyprland`) and their override files are gone.
 
 ## System-Level Desktop Services
 
@@ -53,12 +55,19 @@ systemctl --user list-units --type=service --state=running
 
 | Service | Purpose |
 |---------|---------|
-| pipewire | Audio/video server |
-| pipewire-pulse | PulseAudio compatibility |
-| wireplumber | PipeWire session manager |
+| niri | Compositor session (pulls in `graphical-session.target`) |
+| pipewire, pipewire-pulse, wireplumber | Audio/video server, PulseAudio compatibility, session manager |
 | dbus-broker | User D-Bus |
-| xdg-desktop-portal | Desktop integration |
-| ssh-agent | SSH key agent |
+| xdg-desktop-portal, xdg-desktop-portal-gtk | Desktop integration (file chooser etc.) |
+| gnome-keyring-daemon, gcr-ssh-agent | Secrets and SSH key agent |
+| wlsunset | Night light (custom unit in `~/.config/systemd/user/`) |
+| protonmail-bridge | Proton Mail IMAP/SMTP bridge |
+| psd | Profile-sync-daemon (browser profiles in RAM) |
+| openclaw-node | OpenClaw node host (custom unit) |
+| gvfs-daemon, gvfs-metadata | Virtual filesystem for file managers |
+| flatpak-session-helper | Flatpak sessions |
+
+`blueman` and `nm-applet` start via XDG autostart (`/etc/xdg/autostart/`), shown as `app-…@autostart.service`. `dunst` (notifications) is started by Niri with `-conf ~/.config/niri-setup/dunst/dunstrc`, not as a service.
 
 ## PipeWire Audio Stack
 
@@ -132,90 +141,49 @@ Used for desktop notifications, media keys, etc.
 
 ## XDG Desktop Portal
 
-Provides sandboxed access to desktop features.
+Provides sandboxed access to desktop features (file chooser, screen sharing, Flatpak integration).
 
 ```bash
-systemctl --user status xdg-desktop-portal
-systemctl --user status xdg-desktop-portal-hyprland
-systemctl --user status xdg-document-portal
+systemctl --user status xdg-desktop-portal xdg-desktop-portal-gtk
 ```
 
-**Purpose:**
-- File chooser dialogs for sandboxed apps
-- Screen sharing (OBS, Discord, browsers)
-- Notifications
-- Flatpak integration
+### Portal Backends for Niri
 
-### Portal Implementations
+Niri ships `/usr/share/xdg-desktop-portal/niri-portals.conf`:
 
-For Hyprland/Wayland:
-- `xdg-desktop-portal-hyprland` - Screen sharing, screenshots
-- `xdg-desktop-portal-gtk` - File chooser, app chooser
+```ini
+[preferred]
+default=gnome;gtk;
+org.freedesktop.impl.portal.Access=gtk;
+org.freedesktop.impl.portal.Notification=gtk;
+org.freedesktop.impl.portal.Secret=gnome-keyring;
+```
 
-**Configuration:** `~/.config/xdg-desktop-portal/portals.conf`
-
-### Startup Configuration (Important)
-
-The portals must be started via **systemd only** - not directly via binaries. The ML4W `xdg.sh` script handles this.
-
-**File:** `~/.config/hypr/scripts/xdg.sh`
+Installed backends: `xdg-desktop-portal-gtk` only. `xdg-desktop-portal-gnome` is **not installed**, so everything falls back to gtk, and screen sharing (ScreenCast) has no backend. Niri implements screencasting through the gnome portal; install it to make screen sharing work:
 
 ```bash
-# Stop all portal services first
-systemctl --user stop xdg-desktop-portal
-systemctl --user stop xdg-desktop-portal-hyprland
-
-# Set environment for portals
-dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=hyprland
-
-# Start via systemd (proper order: backend first, then main portal)
-systemctl --user start xdg-desktop-portal-hyprland
-sleep 0.1
-systemctl --user start xdg-desktop-portal
+sudo pacman -S xdg-desktop-portal-gnome
+systemctl --user restart xdg-desktop-portal
 ```
 
-**Warning:** Do NOT start portals directly via `/usr/lib/xdg-desktop-portal*` binaries. This causes DBus name conflicts:
-```
-[CRITICAL] Couldn't create the dbus connection (Failed to request bus name - File exists)
-```
+Start portals via systemd only, never by running the binaries in `/usr/lib/` directly; that causes D-Bus name conflicts (`Failed to request bus name - File exists`).
 
 ### Troubleshooting Portal Issues
 
 ```bash
-# Check portal status
-systemctl --user status xdg-desktop-portal-hyprland
-
-# If failed, reset and restart
-systemctl --user reset-failed xdg-desktop-portal-hyprland
-killall xdg-desktop-portal-hyprland xdg-desktop-portal 2>/dev/null
-systemctl --user start xdg-desktop-portal-hyprland
-systemctl --user start xdg-desktop-portal
-
-# Check logs
-journalctl --user -u xdg-desktop-portal-hyprland
-```
-
-### Screen Sharing Test
-
-```bash
-# Portal should show output names
-journalctl --user -u xdg-desktop-portal-hyprland | grep "Found output"
-# Should show: Found output name eDP-1, DP-8, etc.
+systemctl --user status xdg-desktop-portal
+journalctl --user -u xdg-desktop-portal -b
+busctl --user list | grep -i portal   # which portal backends are on the bus
 ```
 
 ## SSH Agent
 
+The SSH agent is gcr's, started by socket activation:
+
 ```bash
-systemctl --user status ssh-agent
+systemctl --user status gcr-ssh-agent.socket
+echo $SSH_AUTH_SOCK          # /run/user/1000/gcr/ssh
 ```
-
-**Purpose:** Caches SSH keys for passwordless authentication
-
-### Configuration
-
-**File:** `~/.config/systemd/user/ssh-agent.service` (if customized)
-
-Or use the system unit.
 
 ### Usage
 
@@ -396,104 +364,30 @@ systemctl --user daemon-reload
 systemctl --user enable --now myapp
 ```
 
-## Compositor-Conditional Services
+## Compositor-Specific Services
 
-When running multiple Wayland compositors (e.g., Hyprland and Niri), some services should only run under specific compositors.
-
-### Problem
-
-Hyprland-specific services have `ConditionEnvironment=WAYLAND_DISPLAY` which triggers on ANY Wayland session, including Niri:
+Only Niri is installed now, so no compositor conditions are needed. If a second compositor comes back, gate its services with an override:
 
 ```ini
-# These services would run under Niri (wrong!)
-hyprdynamicmonitors.service
-hypridle.service
-hyprpaper.service
-```
-
-### Solution: Override Files
-
-Create override files that add a compositor-specific condition:
-
-```bash
-# Create override directory
-mkdir -p ~/.config/systemd/user/<service>.d/
-
-# Create override file
-cat > ~/.config/systemd/user/<service>.d/hyprland-only.conf << 'EOF'
+# ~/.config/systemd/user/<service>.d/only-niri.conf
 [Unit]
-ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
-EOF
-
-# Reload systemd
-systemctl --user daemon-reload
+ConditionEnvironment=NIRI_SOCKET
 ```
-
-### Hyprland Services Override
-
-Services that should only run under Hyprland:
-
-| Service | Purpose |
-|---------|---------|
-| `hyprdynamicmonitors.service` | Dynamic monitor configuration |
-| `hyprdynamicmonitors-prepare.service` | Boot-time cleanup |
-| `hypridle.service` | Idle daemon (lock/suspend) |
-| `hyprpaper.service` | Wallpaper daemon |
-
-**Create all overrides:**
-
-```bash
-for service in hyprdynamicmonitors hyprdynamicmonitors-prepare hypridle hyprpaper; do
-  mkdir -p ~/.config/systemd/user/${service}.service.d
-  cat > ~/.config/systemd/user/${service}.service.d/hyprland-only.conf << 'EOF'
-[Unit]
-# Only run when Hyprland is the compositor
-ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
-EOF
-done
-systemctl --user daemon-reload
-```
-
-### Verify Conditions
-
-```bash
-# Check that both conditions are present
-systemctl --user cat hyprdynamicmonitors.service | grep Condition
-# Output should show:
-# ConditionEnvironment=WAYLAND_DISPLAY
-# ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
-```
-
-### Environment Variables by Compositor
 
 | Variable | Set By |
 |----------|--------|
 | `WAYLAND_DISPLAY` | Any Wayland compositor |
-| `HYPRLAND_INSTANCE_SIGNATURE` | Hyprland only |
 | `NIRI_SOCKET` | Niri only |
-| `XDG_CURRENT_DESKTOP` | Session (hyprland, niri, etc.) |
-
-### Override File Locations
-
-```
-~/.config/systemd/user/
-├── hyprdynamicmonitors.service.d/
-│   └── hyprland-only.conf
-├── hyprdynamicmonitors-prepare.service.d/
-│   └── hyprland-only.conf
-├── hypridle.service.d/
-│   └── hyprland-only.conf
-└── hyprpaper.service.d/
-    └── hyprland-only.conf
-```
+| `XDG_CURRENT_DESKTOP` | Session (`niri`) |
 
 ## Graphical Target
 
-User services start when reaching `default.target` (graphical session).
+The user manager's default target is `default.target`. Desktop services such as `wlsunset` use `WantedBy=graphical-session.target`, which `niri.service` activates when the session starts.
 
 ```bash
 systemctl --user get-default
-# graphical-session.target
+# default.target
+systemctl --user list-dependencies graphical-session.target
 ```
 
 ## Quick Reference
