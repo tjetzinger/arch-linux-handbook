@@ -159,11 +159,12 @@ org.freedesktop.impl.portal.Notification=gtk;
 org.freedesktop.impl.portal.Secret=gnome-keyring;
 ```
 
-Installed backends: `xdg-desktop-portal-gtk` only. `xdg-desktop-portal-gnome` is **not installed**, so everything falls back to gtk, and screen sharing (ScreenCast) has no backend. Niri implements screencasting through the gnome portal; install it to make screen sharing work:
+Installed backends: `xdg-desktop-portal-gnome` (screen sharing, screenshots) and `xdg-desktop-portal-gtk`. Niri implements screencasting through the gnome portal; without it, ScreenCast has no backend. It was missing until 2026-10-12:
 
 ```bash
 sudo pacman -S xdg-desktop-portal-gnome
 systemctl --user restart xdg-desktop-portal
+busctl --user introspect org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop | grep ScreenCast
 ```
 
 Start portals via systemd only, never by running the binaries in `/usr/lib/` directly; that causes D-Bus name conflicts (`Failed to request bus name - File exists`).

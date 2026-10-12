@@ -55,7 +55,7 @@ upower -i /org/freedesktop/UPower/devices/battery_BAT0
 fwupdmgr get-updates
 
 # Input devices
-hyprctl devices
+sudo libinput list-devices
 ```
 
 ## Linux Compatibility

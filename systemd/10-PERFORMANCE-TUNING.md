@@ -624,7 +624,7 @@ TimeoutStopSec=30s
 | Docker/containers | Yes | No |
 | libvirt/VMs | Yes | No |
 | Plymouth | Yes | No |
-| Desktop services | Hyprland, PipeWire, etc. | TTY only |
+| Desktop services | Niri, PipeWire, etc. | TTY only |
 
 ---
 

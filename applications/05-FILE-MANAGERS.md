@@ -215,13 +215,12 @@ xdg-mime default org.gnome.Nautilus.desktop inode/directory
 xdg-mime query default inode/directory
 ```
 
-### Hyprland Integration
+### Niri Integration
 
-File manager keybinding in Hyprland:
+File manager keybinding in `~/.config/niri/binds.kdl`:
 
-```bash
-# Super + E opens file manager
-bind = $mainMod, E, exec, nautilus
+```kdl
+Mod+E           { spawn-sh "nautilus"; }
 ```
 
 ## Quick Reference

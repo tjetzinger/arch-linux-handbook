@@ -79,5 +79,5 @@ Most configurations are symlinked from `~/dotfiles/.config/` for version control
 
 ## Related
 
-- [../desktop/](../desktop/) - Hyprland desktop environment
+- [../desktop/](../desktop/) - Niri desktop environment
 - [../systemd/](../systemd/) - System services

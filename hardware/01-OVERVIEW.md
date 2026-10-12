@@ -95,7 +95,7 @@ nvme0n1         2TB
 **AU Optronics 0xD291**
 
 ```bash
-hyprctl monitors
+niri msg outputs
 ```
 
 | Specification | Value |
@@ -169,7 +169,7 @@ bluetoothctl show
 ## Input Devices
 
 ```bash
-hyprctl devices
+sudo libinput list-devices
 ```
 
 | Device | Type |

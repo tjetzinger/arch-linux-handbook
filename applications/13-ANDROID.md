@@ -4,7 +4,7 @@ Running Android applications on Arch Linux using Waydroid container technology.
 
 ## Overview
 
-Waydroid uses Linux namespaces (LXC/LXD) to run a full Android system in a container. It provides native performance with GPU acceleration through Mesa, making it ideal for running Android apps on Wayland-based desktops like Hyprland.
+Waydroid uses Linux namespaces (LXC/LXD) to run a full Android system in a container. It provides native performance with GPU acceleration through Mesa, making it ideal for running Android apps on Wayland-based desktops like Niri.
 
 | Component | Value |
 |-----------|-------|
@@ -96,19 +96,17 @@ waydroid session stop
 waydroid session start
 ```
 
-### Hyprland Window Rules
+### Niri Window Rules
 
-Window rules are configured in `~/.config/hypr/conf/custom.conf`:
+No Waydroid rule is configured yet. Example for `~/.config/niri/rules.kdl` (not live):
 
-```bash
-# Waydroid window rules
-windowrulev2 = float, class:^(Waydroid)$
-windowrulev2 = size 480 800, class:^(Waydroid)$
-windowrulev2 = center, class:^(Waydroid)$
-windowrulev2 = idleinhibit focus, class:^(Waydroid)$
-# For specific Android apps
-windowrulev2 = float, title:^(Waydroid)$
-windowrulev2 = idleinhibit focus, title:^(Waydroid)$
+```kdl
+window-rule {
+    match app-id="^Waydroid$"
+    open-floating true
+    default-column-width { fixed 480; }
+    default-window-height { fixed 800; }
+}
 ```
 
 ---
@@ -442,22 +440,16 @@ update-desktop-database ~/.local/share/applications/
 
 ---
 
-### 4. Hyprland Keyboard Shortcuts
+### 4. Niri Keyboard Shortcuts
 
-Add keybindings for quick Android access:
+Example for `~/.config/niri/binds.kdl` (not live). Mod+A is already Niri's overview, so pick another key:
 
-**File:** `~/.config/hypr/conf/keybindings/custom.conf`
-
-```bash
-# Add to Actions section (around line 64)
-bind = $mainMod, A, exec, waydroid show-full-ui                    # Launch Android UI
-bind = $mainMod SHIFT, A, exec, waydroid session stop              # Stop Android session
+```kdl
+Mod+Ctrl+A       { spawn "waydroid" "show-full-ui"; }   // Launch Android UI
+Mod+Ctrl+Shift+A { spawn "waydroid" "session" "stop"; } // Stop Android session
 ```
 
-```bash
-# Reload config
-hyprctl reload
-```
+Niri reloads the file on save; check it with `niri validate`.
 
 ---
 

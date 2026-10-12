@@ -97,7 +97,7 @@ Per-project settings in `.vscode/settings.json`:
 code .
 
 # Open specific file
-code ~/.config/hypr/hyprland.conf
+code ~/.config/niri/config.kdl
 ```
 
 ### Install Extension

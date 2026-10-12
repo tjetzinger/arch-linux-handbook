@@ -122,21 +122,16 @@ xdg-mime default org.gnome.TextEditor.desktop text/plain
 
 ### Dotfiles Symlinks
 
-Most configurations are symlinked from `~/dotfiles/.config/`:
+Desktop configurations are symlinked from `~/.config/niri-setup/` (see [12-DOTFILES](./12-DOTFILES.md)):
 
 ```bash
-ls -la ~/.config/ | grep dotfiles
+ls -la ~/.config/ | grep niri-setup
 ```
 
-Symlinked applications include:
-- nvim, vim
-- kitty
-- zshrc, bashrc
-- hypr (Hyprland)
-- waybar, rofi, swaync
-- gtk-3.0, gtk-4.0
-- ohmyposh
-- fastfetch
+Symlinked from niri-setup:
+- niri, niri-scripts
+- waybar, dunst, fuzzel, wlogout, niriswitcher
+- alacritty
 
 ## Installed Package Count
 

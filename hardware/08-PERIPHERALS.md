@@ -169,28 +169,14 @@ journalctl -b -u logid | grep -E "found|WARN|ERROR"
 
 ### Volume Step Configuration
 
-The MX Master 3S thumbwheel sends `XF86AudioRaiseVolume`/`XF86AudioLowerVolume` keys. Volume step is configured in Hyprland keybindings.
+The MX Master 3S thumbwheel sends `XF86AudioRaiseVolume`/`XF86AudioLowerVolume` keys. Niri binds them once, with a 1% step (`~/.config/niri/binds.kdl`):
 
-**Problem:** ML4W's `default.conf` binds volume keys at 5% step. Adding bindings in `custom.conf` causes both to fire (6% total).
-
-**Solution:** Use `unbind` to remove defaults, then `bindle` for 1% step with hold-to-repeat.
-
-**File:** `~/.config/hypr/conf/keybindings/custom.conf`
-
-```bash
-# Volume keys - unbind defaults (5%) and rebind with 1% step
-unbind = , XF86AudioRaiseVolume
-unbind = , XF86AudioLowerVolume
-bindle = , XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+  # 1% step
-bindle = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-       # 1% step
+```kdl
+XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01+"; }
+XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01-"; }
 ```
 
-| Binding | Behavior |
-|---------|----------|
-| `bind` | Single keypress only |
-| `bindle` | Fires on hold/repeat (smooth scrolling) |
-
-This approach survives ML4W migrations since `custom.conf` is preserved.
+There is only one binding per key, so the double-firing from the ML4W era (5% default + 1% custom) cannot happen.
 
 ### Apply Configuration
 

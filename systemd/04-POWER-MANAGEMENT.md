@@ -387,7 +387,7 @@ sudo btrfs inspect-internal map-swapfile -r /swap/swapfile
 
 ### Lid Switch Behavior
 
-Controlled by systemd-logind, independent of hypridle.
+Controlled by systemd-logind, independent of the idle daemon (swayidle).
 
 **Current settings** (query via D-Bus):
 
@@ -401,9 +401,9 @@ busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedeskt
 |---------|---------|---------|------|
 | `HandleLidSwitch` | suspend | suspend | On battery, no external monitor |
 | `HandleLidSwitchDocked` | ignore | ignore | External monitor connected |
-| `HandleLidSwitchExternalPower` | (inherit) | suspend | On AC power |
+| `HandleLidSwitchExternalPower` | (inherit) | ignore | On AC power (set by `10-lid-switch.conf`) |
 
-**To disable lid suspend on AC power:**
+**To disable lid suspend on AC power** (already done on this system):
 
 ```bash
 sudo mkdir -p /etc/systemd/logind.conf.d
@@ -418,16 +418,16 @@ The live drop-in is `10-lid-switch.conf`, see [hardware/02-POWER-BATTERY - Lid S
 
 **All available actions:** `ignore`, `poweroff`, `reboot`, `halt`, `suspend`, `hibernate`, `lock`
 
-### Idle Suspend (hypridle)
+### Idle Suspend (swayidle)
 
-**Note:** hypridle's idle suspend is separate from lid behavior. See [desktop/08-LOCKSCREEN](../desktop/08-LOCKSCREEN.md) for hypridle configuration.
+Under Niri, idle handling is `swayidle`, started by `~/.config/niri-setup/scripts/swayidle.sh` from `spawn-at-startup.kdl`. The idle time comes from `~/.local/state/idle-time` and is changed with Mod+I. It is separate from lid behaviour.
 
-| Trigger | Source | Default |
+| Trigger | Source | Current |
 |---------|--------|---------|
-| Lid close | logind | suspend |
-| 30 min idle | hypridle | suspend (can be disabled) |
+| Lid close | logind | suspend on battery, ignore on AC or docked |
+| Idle | swayidle | `infinity`, so no idle actions |
 
-To disable idle suspend, use `hypridle-custom.conf` and comment out the 1800s listener.
+With a finite idle time (for example `10 minutes`), the script locks the screen, powers off the monitors and suspends after 30 minutes. See [desktop/14-NIRI](../desktop/14-NIRI.md).
 
 ## Service Interaction
 

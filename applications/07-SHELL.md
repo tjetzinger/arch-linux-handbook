@@ -155,15 +155,6 @@ alias sv='sudo -E nvim'         # sudo nvim with user's LazyVim config
 alias wifi='nmtui'
 ```
 
-### ML4W Aliases
-
-```bash
-alias ml4w='flatpak run com.ml4w.welcome'
-alias ml4w-settings='flatpak run com.ml4w.settings'
-alias ml4w-diagnosis='~/.config/hypr/scripts/diagnosis.sh'
-alias ml4w-update='~/.config/ml4w/update.sh'
-```
-
 ### System Aliases
 
 ```bash

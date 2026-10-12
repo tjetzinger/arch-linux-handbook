@@ -192,12 +192,7 @@ Both browsers support:
 
 ### Wayland Support
 
-Both browsers run natively on Wayland. Environment variables set in Hyprland:
-
-```bash
-# In ~/.config/hypr/conf/custom.conf
-env = MOZ_ENABLE_WAYLAND,1
-```
+The Niri config sets no browser environment variables. Firefox uses Wayland by default (the old `MOZ_ENABLE_WAYLAND=1` from the Hyprland setup is no longer needed).
 
 ### Hardware Acceleration
 
