@@ -407,12 +407,14 @@ busctl get-property org.freedesktop.login1 /org/freedesktop/login1 org.freedeskt
 
 ```bash
 sudo mkdir -p /etc/systemd/logind.conf.d
-cat << 'EOF' | sudo tee /etc/systemd/logind.conf.d/lid.conf
+cat << 'EOF' | sudo tee /etc/systemd/logind.conf.d/10-lid-switch.conf
 [Login]
 HandleLidSwitchExternalPower=ignore
 EOF
-sudo systemctl restart systemd-logind
+sudo systemctl reload systemd-logind   # not restart: that ends the session
 ```
+
+The live drop-in is `10-lid-switch.conf`, see [hardware/02-POWER-BATTERY - Lid Switch Behavior](../hardware/02-POWER-BATTERY.md#lid-switch-behavior).
 
 **All available actions:** `ignore`, `poweroff`, `reboot`, `halt`, `suspend`, `hibernate`, `lock`
 
