@@ -230,60 +230,59 @@ sudo mount -o remount,compress=zstd /
 
 ---
 
-## Automated Maintenance Script
+## Automated Maintenance (Live)
 
-```bash
-#!/bin/bash
-# /usr/local/bin/btrfs-maintenance
+Two timers, both enabled on 2026-10-12:
 
-set -e
+| Timer | Runs | Does |
+|-------|------|------|
+| `btrfs-scrub@-.timer` (Arch package) | monthly, `Persistent=true` | Scrub `/`: verifies every checksum |
+| `btrfs-balance-metadata.timer` (custom) | 15th of each month, 03:00 ±2h | `btrfs balance start -musage=50 /` |
 
-echo "=== Btrfs Maintenance $(date) ==="
+The metadata balance frees half-empty metadata chunks. After the August 2026 snapshot pile-up, metadata stayed allocated at 168 GiB for 9.5 GiB of use until a manual balance; the timer keeps that from building up again. It touches metadata only, so it finishes in seconds to minutes.
 
-echo "1. Checking device stats..."
-btrfs device stats / | grep -v "0$" && echo "WARNING: Errors detected!" || echo "No errors."
+**File:** `/etc/systemd/system/btrfs-balance-metadata.service`
 
-echo "2. Starting scrub..."
-btrfs scrub start -B /  # -B = foreground, wait for completion
-
-echo "3. Light balance..."
-btrfs balance start -musage=50 -dusage=50 /
-
-echo "4. Filesystem usage:"
-btrfs filesystem usage /
-
-echo "=== Maintenance complete ==="
-```
-
-```bash
-# Make executable
-sudo chmod +x /usr/local/bin/btrfs-maintenance
-
-# Create monthly timer
-sudo tee /etc/systemd/system/btrfs-maintenance.service << 'EOF'
+```ini
 [Unit]
-Description=Btrfs Monthly Maintenance
+Description=Btrfs metadata balance on / (frees half-empty metadata chunks)
+After=local-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/btrfs-maintenance
+ExecStart=/usr/bin/btrfs balance start -musage=50 /
 Nice=19
 IOSchedulingClass=idle
-EOF
+```
 
-sudo tee /etc/systemd/system/btrfs-maintenance.timer << 'EOF'
+**File:** `/etc/systemd/system/btrfs-balance-metadata.timer`
+
+```ini
 [Unit]
-Description=Monthly Btrfs Maintenance
+Description=Monthly Btrfs metadata balance (mid-month, apart from the scrub)
 
 [Timer]
-OnCalendar=monthly
+OnCalendar=*-*-15 03:00
 Persistent=true
+RandomizedDelaySec=2h
 
 [Install]
 WantedBy=timers.target
-EOF
+```
 
-sudo systemctl enable btrfs-maintenance.timer
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now btrfs-balance-metadata.timer btrfs-scrub@-.timer
+systemctl list-timers 'btrfs*'
+journalctl -u btrfs-balance-metadata.service -u 'btrfs-scrub@*' -b
+```
+
+A data balance (`-dusage=…`) is not scheduled: it rewrites far more on a 1 TB disk and is only worth running by hand when `btrfs filesystem usage /` shows much more data allocated than used.
+
+Device errors are not checked automatically; look at them when the scrub reports problems:
+
+```bash
+sudo btrfs device stats /
 ```
 
 ---
