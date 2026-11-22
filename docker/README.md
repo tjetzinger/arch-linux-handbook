@@ -19,6 +19,8 @@ Docker container infrastructure with Traefik reverse proxy.
 | portainer | Docker management | portainer.x1.example.com |
 | open-webui | AI chat interface | ai.x1.example.com |
 | ollama | Local LLM server | (internal) |
+| zimi | Offline ZIM reader (Wikipedia etc.) | zim.x1.example.com |
+| openzim-mcp | ZIM archives as MCP tools for Open WebUI | (internal) |
 | litellm | LLM proxy/router | llm.x1.example.com |
 | n8n | Workflow automation | n8n.x1.example.com |
 | postgres | Database | (internal) |
@@ -57,6 +59,7 @@ https://portainer.x1.example.com
 | [07-STORAGE](./07-STORAGE.md) | Volumes and persistence |
 | [08-SECURITY](./08-SECURITY.md) | SSL, auth, hardening |
 | [09-MAINTENANCE](./09-MAINTENANCE.md) | Updates, logs, troubleshooting |
+| [10-KIWIX-ZIM](./10-KIWIX-ZIM.md) | Offline ZIM library: Zimi reader + OpenZIM MCP for Open WebUI |
 
 ## Compose Files Location
 

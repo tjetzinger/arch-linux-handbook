@@ -127,6 +127,7 @@ See [Applications](./applications/README.md) for installed apps and configuratio
 | 07-STORAGE | Volumes and persistence |
 | 08-SECURITY | SSL, auth, hardening |
 | 09-MAINTENANCE | Updates and troubleshooting |
+| 10-KIWIX-ZIM | Offline ZIM library, Zimi + OpenZIM MCP |
 
 ### Systemd (./systemd/)
 | Document | Description |

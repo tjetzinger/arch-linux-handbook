@@ -41,7 +41,7 @@ mount -o subvolid=5 /dev/mapper/cryptroot /mnt
 ### Verify the mount
 ```bash
 ls /mnt
-# Expected: @arch  @.snapshots  @Documents  @vm  @arch-live  @swap
+# Expected: @arch  @.snapshots  @Documents  @vm  @arch-live  @swap  @zim
 ```
 
 ---

@@ -13,7 +13,8 @@ Top-level (subvolid=5)
 ├── @Documents     → /home/tt/Documents (not snapshotted by root config)
 ├── @.snapshots    → /.snapshots    (snapper metadata)
 ├── @swap          → /swap          (swapfile, nodatacow)
-└── @vm            → /mnt/vm        (not snapshotted)
+├── @vm            → /mnt/vm        (not snapshotted)
+└── @zim           → /srv/zim       (Kiwix ZIM archives, not snapshotted, not in Borg)
 ```
 
 Verify the live layout rather than trusting this diagram:

@@ -11,6 +11,7 @@ Regular maintenance tasks for the Btrfs filesystem.
 | `@Documents` | `/home/tt/Documents` | User documents |
 | `@.snapshots` | `/.snapshots` | Snapper snapshots |
 | `@vm` | `/mnt/vm` | Virtual machines |
+| `@zim` | `/srv/zim` | Kiwix ZIM archives ([10-KIWIX-ZIM](../docker/10-KIWIX-ZIM.md)) |
 
 **Device:** `/dev/mapper/cryptroot`
 **UUID:** `7baf5627-b3c5-4add-8b0e-fdd3488f00e0`

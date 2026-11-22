@@ -53,7 +53,7 @@ services:
       - OLLAMA_FLASH_ATTENTION=true
       - OLLAMA_KV_CACHE_TYPE=q8_0
       - OLLAMA_NUM_PARALLEL=1
-      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_KEEP_ALIVE=2h
       - OLLAMA_CONTEXT_LENGTH=65536
     networks:
       - proxy
@@ -174,9 +174,36 @@ Models are stored in:
 | OLLAMA_FLASH_ATTENTION | Enable flash attention (faster) | `true` |
 | OLLAMA_KV_CACHE_TYPE | Cache type (f16, q8_0, q4_0) | `q8_0` |
 | OLLAMA_NUM_PARALLEL | Parallel requests | `1` |
-| OLLAMA_KEEP_ALIVE | How long a model stays loaded after the last request | `10m` |
+| OLLAMA_KEEP_ALIVE | How long a model stays loaded after the last request | `2h` (was `10m`; a cold load of a 22 GB model took ~95 s) |
 | OLLAMA_CONTEXT_LENGTH | Default context window for all models (Ollama's own default is 4096) | `65536` |
 | OLLAMA_MAX_LOADED_MODELS | Max models in memory | not set |
+
+`2h` keeps a model in RAM for a working session. `qwen3.5:4b` plus `qwen3.5:2b` use about 8 GB of the 62 GB. Unload one by hand with `docker exec ollama ollama stop <model>`.
+
+### Installed Models and Speed (CPU only)
+
+Ollama runs 100% on the CPU (i7-1370P) unless the eGPU override is used. Measured 2026-11-21 **on battery** (`low-power` platform profile, cores at ~950 MHz), 1,100-token prompt, thinking off:
+
+| Model | Role | Prompt read | Answer | Notes |
+|-------|------|-------------|--------|-------|
+| `qwen3.5:4b` | Local chat + tools | 23 tok/s | 5 tok/s | Vision, tools, thinking |
+| `qwen3.5:2b` | Open WebUI task model | 23 tok/s | 8 tok/s | Titles, tags, follow-ups, search queries |
+
+All models larger than 4B were removed on 2026-11-21 (`qwen3:30b`, `huihui_ai/qwen3.5-abliterated:35b`, `mistral:7b`, `mistral:7b-instruct`, `deepseek-r1:8b`). For comparison, `qwen3:30b` measured 12 tok/s prompt read and 5-7 tok/s answer under the same conditions; it is MoE with ~3B active per token, so it was not slower than the 4B model at answering. Pull it again with `docker exec ollama ollama pull qwen3:30b` (18 GB) if answer quality matters more than disk space.
+
+What this means:
+
+- Battery mode is the biggest slowdown. Plug in and run `sudo tlp ac` before long AI sessions. Not yet measured on AC.
+- A 3,000-token tool result (for example from [OpenZIM MCP](./10-KIWIX-ZIM.md)) takes minutes to read on the CPU. Fast tool use needs the eGPU.
+- qwen3 "thinking" writes hundreds of hidden tokens first. Switch it off per model in Open WebUI when the answer matters more than the reasoning.
+
+```bash
+# Benchmark a model
+docker exec ollama sh -c 'printf "Say hello." | ollama run qwen3:30b --verbose --think=false' 2>&1 | grep rate
+
+# What is loaded, on CPU or GPU, and until when
+docker exec ollama ollama ps
+```
 
 ## Open WebUI
 
@@ -213,6 +240,35 @@ Environment variables in compose:
 | WEBUI_SECRET_KEY | Session encryption key |
 | ENABLE_SIGNUP | Allow new registrations |
 | DEFAULT_USER_ROLE | Default role for new users |
+
+### Task Model
+
+After each answer Open WebUI makes extra model calls: chat title, tags, follow-up questions, and search/retrieval queries. With no task model set, it uses the chat model itself. With `OLLAMA_NUM_PARALLEL=1` the next message waits behind these calls.
+
+| Setting (Admin Settings → Interface) | Value |
+|--------------------------------------|-------|
+| Task Model (local) | `qwen3.5:2b` |
+| Task model params | `{"think": false}` |
+
+These live in the `config` table of `webui.db` (keys `task.model.default`, `task.model.params`), not in compose. Set on 2026-11-21 with the container stopped and a backup at `./open-webui/webui.db.bak-20261121`.
+
+### Local Models: Builtin Tools Off
+
+With native function calling, Open WebUI sends the descriptions of all its builtin tools (time, knowledge, notes, chats, memory, ask-user, ...) with every message. A plain "hi" to `qwen3.5:2b` became a **9,389-token prompt**, which takes ~8 minutes to read at ~20 tok/s on the CPU. Qwen3.5 also cannot reuse the prompt cache between turns (hybrid memory), so every message pays this again.
+
+For `qwen3.5:2b` and `qwen3.5:4b` (Admin Settings → Models → edit):
+
+| Setting | Value |
+|---------|-------|
+| Capabilities → Builtin Tools | off (`meta.capabilities.builtin_tools = false`) |
+| Advanced params → think | `false` |
+
+Tools you switch on yourself in a chat (for example the `zim` MCP server) are separate from the builtin tools. Set on 2026-11-22, backup at `./open-webui/webui.db.bak-20261122`.
+
+```bash
+# Prompt size of the last requests (look for task.n_tokens)
+docker logs ollama --since 10m 2>&1 | grep "new prompt"
+```
 
 ### Admin Setup
 
@@ -426,3 +482,4 @@ docker compose pull && docker compose up -d
 - [01-OVERVIEW](./01-OVERVIEW.md) - Architecture
 - [03-TRAEFIK](./03-TRAEFIK.md) - Routing configuration
 - [07-STORAGE](./07-STORAGE.md) - Data persistence
+- [10-KIWIX-ZIM](./10-KIWIX-ZIM.md) - Offline Wikipedia as MCP tools for Open WebUI (`openzim-mcp`, `zimi` in the same compose file)

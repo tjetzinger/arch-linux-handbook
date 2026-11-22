@@ -27,6 +27,7 @@ Comprehensive guide to the backup and recovery infrastructure on this system.
 | `@arch` (/) | Yes |
 | `@Documents` | No; synced to the Synology NAS by Synology Drive Client (off-machine copy) |
 | `@vm` | No |
+| `@zim` | No; ZIM archives can be downloaded again, also not in Borg |
 
 ### Automated Snapshots
 - Hourly timeline snapshots

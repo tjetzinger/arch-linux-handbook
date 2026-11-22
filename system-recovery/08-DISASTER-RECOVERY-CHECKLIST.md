@@ -153,6 +153,7 @@ Borg holds **data and configs only** (`/home/tt`, `/etc`, `/boot`, `/usr/local`,
 # 1. Boot the Arch ISO, partition, LUKS, Btrfs
 #    p1: 512M EFI (vfat), p2: LUKS2 -> Btrfs with
 #    @arch @.snapshots @Documents @vm @swap @arch-live
+#    (+ @zim, optional: fstab mounts it with nofail, ZIMs are re-downloaded)
 #    (see 11-BORG-RESTORE-X250 steps 3-6)
 
 # 2. Install a fresh base system
