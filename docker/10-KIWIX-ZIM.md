@@ -226,6 +226,16 @@ On 2026-11-21 the first try failed and the retry worked.
 
 Use a model with solid native tool calling (`qwen3:30b` is stronger than `qwen3.5:4b`), set function calling to Native, and tell it in the system prompt to search the ZIM library before answering factual questions.
 
+### Map ZIM (`maps_en_europe`) shows only a black or white page
+
+The map uses MapLibre, which asks for a WebGL2 context with `powerPreference: "high-performance"`. With Chrome drawing through ANGLE on Vulkan (Intel Iris Xe), that request fails:
+
+```
+Failed to create WebGL2RenderingContext ... "message":"Failed to initialize WebGL"
+```
+
+Fix (2026-11-22): remove `Vulkan,VulkanFromANGLE,DefaultANGLEVulkan` from `--enable-features` in `~/.config/chrome-flags.conf`, then fully restart Chrome. ANGLE then uses OpenGL ES and the map renders. Backup of the old file: `~/.config/chrome-flags.conf.bak-20261122`.
+
 ### Zimi cannot download
 
 `/srv/zim` must be writable by uid 1000: `sudo chown tt:tt /srv/zim`.
